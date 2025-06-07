@@ -7,6 +7,8 @@ using Repositories.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using AuthDTO = Infertility_Treatment_Managements.DTOs;
+using RepoModels = Repositories.Models;
 
 namespace Infertility_Treatment_Managements.Controllers
 {
@@ -24,10 +26,11 @@ namespace Infertility_Treatment_Managements.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<UserDTO>> Login(DTOs.UserLoginDTO loginDto)
+        public async Task<ActionResult<AuthDTO.AuthResponseDTO>> Login(AuthDTO.UserLoginDTO loginDto)
         {
             // Validate credentials
-            var user = await _context.User
+            // Updated to use Users (plural) instead of User
+            var user = await _context.Users
                 .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Username == loginDto.Username && u.Password == loginDto.Password);
 
@@ -40,7 +43,7 @@ namespace Infertility_Treatment_Managements.Controllers
             var token = GenerateJwtToken(user);
 
             // Return token and user info
-            return new UserDTO
+            return new AuthDTO.AuthResponseDTO
             {
                 Token = token,
                 UserId = user.UserId,
@@ -56,11 +59,11 @@ namespace Infertility_Treatment_Managements.Controllers
             var secretKey = Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]);
 
             var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.Name, user.Username),
-            new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        };
+            {
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
 
             // Add role claim if user has a role
             if (user.Role != null)

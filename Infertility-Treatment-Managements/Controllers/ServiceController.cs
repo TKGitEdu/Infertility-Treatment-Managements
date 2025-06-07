@@ -25,7 +25,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ServiceDTO>>> GetServices()
         {
-            var services = await _context.Service
+            var services = await _context.Services
                 .Include(s => s.Booking)
                 .ToListAsync();
 
@@ -36,7 +36,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<ServiceDTO>> GetService(int id)
         {
-            var service = await _context.Service
+            var service = await _context.Services
                 .Include(s => s.Booking)
                 .FirstOrDefaultAsync(s => s.ServiceId == id);
 
@@ -52,7 +52,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet("Status/{status}")]
         public async Task<ActionResult<IEnumerable<ServiceDTO>>> GetServicesByStatus(string status)
         {
-            var services = await _context.Service
+            var services = await _context.Services
                 .Where(s => s.Status == status)
                 .Include(s => s.Booking)
                 .ToListAsync();
@@ -65,7 +65,7 @@ namespace Infertility_Treatment_Managements.Controllers
         public async Task<ActionResult<ServiceDTO>> CreateService(ServiceCreateDTO serviceCreateDTO)
         {
             var service = serviceCreateDTO.ToEntity();
-            _context.Service.Add(service);
+            _context.Services.Add(service);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetService), new { id = service.ServiceId }, service.ToDTO());
@@ -80,7 +80,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 return BadRequest("ID mismatch");
             }
 
-            var service = await _context.Service.FindAsync(id);
+            var service = await _context.Services.FindAsync(id);
             if (service == null)
             {
                 return NotFound();
@@ -112,7 +112,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpPatch("{id}/UpdateStatus")]
         public async Task<IActionResult> UpdateServiceStatus(int id, [FromBody] string status)
         {
-            var service = await _context.Service.FindAsync(id);
+            var service = await _context.Services.FindAsync(id);
             if (service == null)
             {
                 return NotFound();
@@ -144,20 +144,20 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteService(int id)
         {
-            var service = await _context.Service.FindAsync(id);
+            var service = await _context.Services.FindAsync(id);
             if (service == null)
             {
                 return NotFound();
             }
 
             // Check if this service is associated with any bookings
-            var hasBooking = await _context.Booking.AnyAsync(b => b.ServiceId == id);
+            var hasBooking = await _context.Bookings.AnyAsync(b => b.ServiceId == id);
             if (hasBooking)
             {
                 return BadRequest("Cannot delete service that is associated with bookings");
             }
 
-            _context.Service.Remove(service);
+            _context.Services.Remove(service);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -165,7 +165,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         private async Task<bool> ServiceExists(int id)
         {
-            return await _context.Service.AnyAsync(s => s.ServiceId == id);
+            return await _context.Services.AnyAsync(s => s.ServiceId == id);
         }
     }
 }

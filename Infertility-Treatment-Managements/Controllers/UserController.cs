@@ -27,7 +27,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserDTO>>> GetUser()
         {
-            var users = await _context.User
+            var users = await _context.Users
                 .Include(u => u.Role)
                 .ToListAsync();
 
@@ -56,7 +56,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<UserDTO>> GetUser(int id)
         {
-            var user = await _context.User
+            var user = await _context.Users
                 .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.UserId == id);
 
@@ -106,13 +106,13 @@ namespace Infertility_Treatment_Managements.Controllers
                         DateOfBirth = userCreateDTO.DateOfBirth
                     };
 
-                    _context.User.Add(user);
+                    _context.Users.Add(user);
                     await _context.SaveChangesAsync();
 
                     // Check user's role
                     if (userCreateDTO.RoleId.HasValue)
                     {
-                        var role = await _context.Role.FindAsync(userCreateDTO.RoleId.Value);
+                        var role = await _context.Roles.FindAsync(userCreateDTO.RoleId.Value);
 
                         // If the user has the Patient role, create a Patient record
                         if (role != null && role.RoleName.ToLower() == PATIENT_ROLE_NAME.ToLower())
@@ -128,7 +128,7 @@ namespace Infertility_Treatment_Managements.Controllers
                                 // Add any other necessary patient fields
                             };
 
-                            _context.Patient.Add(patient);
+                            _context.Patients.Add(patient);
                             await _context.SaveChangesAsync();
                         }
                         // If the user has the Doctor role, create a Doctor record
@@ -144,7 +144,7 @@ namespace Infertility_Treatment_Managements.Controllers
                                 Specialization = "General" // Default specialization
                             };
 
-                            _context.Doctor.Add(doctor);
+                            _context.Doctors.Add(doctor);
                             await _context.SaveChangesAsync();
                         }
                     }
@@ -185,7 +185,7 @@ namespace Infertility_Treatment_Managements.Controllers
             {
                 try
                 {
-                    var user = await _context.User
+                    var user = await _context.Users
                         .Include(u => u.Role)
                         .FirstOrDefaultAsync(u => u.UserId == id);
 
@@ -213,7 +213,7 @@ namespace Infertility_Treatment_Managements.Controllers
                     string newRoleName = "";
                     if (userUpdateDTO.RoleId.HasValue)
                     {
-                        var newRole = await _context.Role.FindAsync(userUpdateDTO.RoleId.Value);
+                        var newRole = await _context.Roles.FindAsync(userUpdateDTO.RoleId.Value);
                         newRoleName = newRole?.RoleName?.ToLower() ?? "";
                     }
 
@@ -224,7 +224,7 @@ namespace Infertility_Treatment_Managements.Controllers
                     if (isPatientNow && !wasPatient)
                     {
                         // User is becoming a Patient
-                        var existingPatient = await _context.Patient
+                        var existingPatient = await _context.Patients
                             .FirstOrDefaultAsync(p => p.UserId == id);
 
                         if (existingPatient == null)
@@ -239,14 +239,14 @@ namespace Infertility_Treatment_Managements.Controllers
                                 Address = user.Address
                             };
 
-                            _context.Patient.Add(patient);
+                            _context.Patients.Add(patient);
                             await _context.SaveChangesAsync();
                         }
                     }
                     else if (isPatientNow && wasPatient)
                     {
                         // User is still a Patient, update their Patient record
-                        var existingPatient = await _context.Patient
+                        var existingPatient = await _context.Patients
                             .FirstOrDefaultAsync(p => p.UserId == id);
 
                         if (existingPatient != null)
@@ -265,7 +265,7 @@ namespace Infertility_Treatment_Managements.Controllers
                     if (isDoctorNow && !wasDoctor)
                     {
                         // User is becoming a Doctor
-                        var existingDoctor = await _context.Doctor
+                        var existingDoctor = await _context.Doctors
                             .FirstOrDefaultAsync(d => d.UserId == id);
 
                         if (existingDoctor == null)
@@ -280,14 +280,14 @@ namespace Infertility_Treatment_Managements.Controllers
                                 Specialization = "General" // Default specialization
                             };
 
-                            _context.Doctor.Add(doctor);
+                            _context.Doctors.Add(doctor);
                             await _context.SaveChangesAsync();
                         }
                     }
                     else if (isDoctorNow && wasDoctor)
                     {
                         // User is still a Doctor, update their Doctor record
-                        var existingDoctor = await _context.Doctor
+                        var existingDoctor = await _context.Doctors
                             .FirstOrDefaultAsync(d => d.UserId == id);
 
                         if (existingDoctor != null)
@@ -327,7 +327,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 try
                 {
                     // Check if user exists
-                    var user = await _context.User
+                    var user = await _context.Users
                         .Include(u => u.Role)
                         .FirstOrDefaultAsync(u => u.UserId == id);
 
@@ -338,16 +338,16 @@ namespace Infertility_Treatment_Managements.Controllers
                     // Check if there's an associated patient record
                     if (roleName == PATIENT_ROLE_NAME.ToLower())
                     {
-                        var patient = await _context.Patient
+                        var patient = await _context.Patients
                             .FirstOrDefaultAsync(p => p.UserId == id);
 
                         if (patient != null)
                         {
                             // Check if this patient has any related records that would block deletion
-                            bool hasPatientDetails = await _context.PatientDetail
+                            bool hasPatientDetails = await _context.PatientDetails
                                 .AnyAsync(pd => pd.PatientId == patient.PatientId);
 
-                            bool hasBookings = await _context.Booking
+                            bool hasBookings = await _context.Bookings
                                 .AnyAsync(b => b.PatientId == patient.PatientId);
 
                             if (hasPatientDetails || hasBookings)
@@ -356,7 +356,7 @@ namespace Infertility_Treatment_Managements.Controllers
                             }
 
                             // Remove the patient record first
-                            _context.Patient.Remove(patient);
+                            _context.Patients.Remove(patient);
                             await _context.SaveChangesAsync();
                         }
                     }
@@ -364,13 +364,13 @@ namespace Infertility_Treatment_Managements.Controllers
                     // Check if there's an associated doctor record
                     if (roleName == DOCTOR_ROLE_NAME.ToLower())
                     {
-                        var doctor = await _context.Doctor
+                        var doctor = await _context.Doctors
                             .FirstOrDefaultAsync(d => d.UserId == id);
 
                         if (doctor != null)
                         {
                             // Check if this doctor has any related records that would block deletion
-                            bool hasBookings = await _context.Booking
+                            bool hasBookings = await _context.Bookings
                                 .AnyAsync(b => b.DoctorId == doctor.DoctorId);
 
                             if (hasBookings)
@@ -379,13 +379,13 @@ namespace Infertility_Treatment_Managements.Controllers
                             }
 
                             // Remove the doctor record first
-                            _context.Doctor.Remove(doctor);
+                            _context.Doctors.Remove(doctor);
                             await _context.SaveChangesAsync();
                         }
                     }
 
                     // Remove the user
-                    _context.User.Remove(user);
+                    _context.Users.Remove(user);
                     await _context.SaveChangesAsync();
 
                     await transaction.CommitAsync();
@@ -401,7 +401,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         private async Task<bool> UserExistsAsync(int id)
         {
-            return await _context.User.AnyAsync(u => u.UserId == id);
+            return await _context.Users.AnyAsync(u => u.UserId == id);
         }
     }
 }

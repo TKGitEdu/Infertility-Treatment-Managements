@@ -25,7 +25,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<PaymentDTO>>> GetPayments()
         {
-            var payments = await _context.Payment
+            var payments = await _context.Payments
                 .Include(p => p.Booking)
                 .ToListAsync();
 
@@ -36,7 +36,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<PaymentDTO>> GetPayment(int id)
         {
-            var payment = await _context.Payment
+            var payment = await _context.Payments
                 .Include(p => p.Booking)
                 .FirstOrDefaultAsync(p => p.PaymentId == id);
 
@@ -52,13 +52,13 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet("Booking/{bookingId}")]
         public async Task<ActionResult<PaymentDTO>> GetPaymentByBooking(int bookingId)
         {
-            var bookingExists = await _context.Booking.AnyAsync(b => b.BookingId == bookingId);
+            var bookingExists = await _context.Bookings.AnyAsync(b => b.BookingId == bookingId);
             if (!bookingExists)
             {
                 return NotFound("Booking not found");
             }
 
-            var payment = await _context.Payment
+            var payment = await _context.Payments
                 .Include(p => p.Booking)
                 .FirstOrDefaultAsync(p => p.BookingId == bookingId);
 
@@ -74,7 +74,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet("Status/{status}")]
         public async Task<ActionResult<IEnumerable<PaymentDTO>>> GetPaymentsByStatus(string status)
         {
-            var payments = await _context.Payment
+            var payments = await _context.Payments
                 .Where(p => p.Status == status)
                 .Include(p => p.Booking)
                 .ToListAsync();
@@ -89,14 +89,14 @@ namespace Infertility_Treatment_Managements.Controllers
             // Validate booking exists if provided
             if (paymentCreateDTO.BookingId.HasValue)
             {
-                var bookingExists = await _context.Booking.AnyAsync(b => b.BookingId == paymentCreateDTO.BookingId);
+                var bookingExists = await _context.Bookings.AnyAsync(b => b.BookingId == paymentCreateDTO.BookingId);
                 if (!bookingExists)
                 {
                     return BadRequest("Invalid BookingId: Booking does not exist");
                 }
 
                 // Check if payment already exists for this booking
-                var paymentExists = await _context.Payment.AnyAsync(p => p.BookingId == paymentCreateDTO.BookingId);
+                var paymentExists = await _context.Payments.AnyAsync(p => p.BookingId == paymentCreateDTO.BookingId);
                 if (paymentExists)
                 {
                     return BadRequest("A payment already exists for this booking");
@@ -104,11 +104,11 @@ namespace Infertility_Treatment_Managements.Controllers
             }
 
             var payment = paymentCreateDTO.ToEntity();
-            _context.Payment.Add(payment);
+            _context.Payments.Add(payment);
             await _context.SaveChangesAsync();
 
             // Reload with related data for return
-            var createdPayment = await _context.Payment
+            var createdPayment = await _context.Payments
                 .Include(p => p.Booking)
                 .FirstOrDefaultAsync(p => p.PaymentId == payment.PaymentId);
 
@@ -124,7 +124,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 return BadRequest("ID mismatch");
             }
 
-            var payment = await _context.Payment.FindAsync(id);
+            var payment = await _context.Payments.FindAsync(id);
             if (payment == null)
             {
                 return NotFound();
@@ -133,14 +133,14 @@ namespace Infertility_Treatment_Managements.Controllers
             // Validate booking exists if provided
             if (paymentUpdateDTO.BookingId.HasValue)
             {
-                var bookingExists = await _context.Booking.AnyAsync(b => b.BookingId == paymentUpdateDTO.BookingId);
+                var bookingExists = await _context.Bookings.AnyAsync(b => b.BookingId == paymentUpdateDTO.BookingId);
                 if (!bookingExists)
                 {
                     return BadRequest("Invalid BookingId: Booking does not exist");
                 }
 
                 // Check if another payment exists for this booking (excluding this one)
-                var duplicatePayment = await _context.Payment
+                var duplicatePayment = await _context.Payments
                     .AnyAsync(p => p.PaymentId != id && p.BookingId == paymentUpdateDTO.BookingId);
                 if (duplicatePayment)
                 {
@@ -174,7 +174,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpPatch("{id}/UpdateStatus")]
         public async Task<IActionResult> UpdatePaymentStatus(int id, [FromBody] string status)
         {
-            var payment = await _context.Payment.FindAsync(id);
+            var payment = await _context.Payments.FindAsync(id);
             if (payment == null)
             {
                 return NotFound();
@@ -206,20 +206,20 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePayment(int id)
         {
-            var payment = await _context.Payment.FindAsync(id);
+            var payment = await _context.Payments.FindAsync(id);
             if (payment == null)
             {
                 return NotFound();
             }
 
             // Check if this payment is associated with a booking
-            var hasBooking = await _context.Booking.AnyAsync(b => b.PaymentId == id);
+            var hasBooking = await _context.Bookings.AnyAsync(b => b.PaymentId == id);
             if (hasBooking)
             {
                 return BadRequest("Cannot delete payment that is associated with a booking");
             }
 
-            _context.Payment.Remove(payment);
+            _context.Payments.Remove(payment);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -227,7 +227,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         private async Task<bool> PaymentExists(int id)
         {
-            return await _context.Payment.AnyAsync(p => p.PaymentId == id);
+            return await _context.Payments.AnyAsync(p => p.PaymentId == id);
         }
     }
 }

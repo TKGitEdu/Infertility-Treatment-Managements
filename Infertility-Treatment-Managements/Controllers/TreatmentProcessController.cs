@@ -2,7 +2,6 @@
 using Infertility_Treatment_Managements.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Repositories.Context;
 using Repositories.Models;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,18 +13,18 @@ namespace Infertility_Treatment_Managements.Controllers
     [ApiController]
     public class TreatmentProcessController : ControllerBase
     {
-        private readonly SWP391_DATABASEContext _context;
+        private readonly InfertilityTreatmentManagementContext _dbContext;
 
-        public TreatmentProcessController(SWP391_DATABASEContext context)
+        public TreatmentProcessController(InfertilityTreatmentManagementContext context)
         {
-            _context = context;
+            _dbContext = context;
         }
 
         // GET: api/TreatmentProcess
         [HttpGet]
         public async Task<ActionResult<IEnumerable<TreatmentProcessDTO>>> GetTreatmentProcesses()
         {
-            var treatmentProcesses = await _context.TreatmentProcess
+            var treatmentProcesses = await _dbContext.TreatmentProcesses
                 .Include(tp => tp.PatientDetail)
                 .ThenInclude(pd => pd.Patient)
                 .ToListAsync();
@@ -37,7 +36,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<TreatmentProcessDTO>> GetTreatmentProcess(int id)
         {
-            var treatmentProcess = await _context.TreatmentProcess
+            var treatmentProcess = await _dbContext.TreatmentProcesses
                 .Include(tp => tp.PatientDetail)
                 .ThenInclude(pd => pd.Patient)
                 .FirstOrDefaultAsync(tp => tp.TreatmentProcessId == id);
@@ -55,24 +54,24 @@ namespace Infertility_Treatment_Managements.Controllers
         public async Task<ActionResult<TreatmentProcessDTO>> CreateTreatmentProcess(TreatmentProcessCreateDTO createDTO)
         {
             // Validate if PatientDetail exists
-            var patientDetailExists = await _context.PatientDetails.AnyAsync(pd => pd.PatientDetailId == createDTO.PatientDetailId);
+            var patientDetailExists = await _dbContext.PatientDetails.AnyAsync(pd => pd.PatientDetailId == createDTO.PatientDetailId);
             if (!patientDetailExists)
             {
                 return BadRequest("The specified PatientDetailId does not exist.");
             }
 
             var treatmentProcess = createDTO.ToEntity();
-            _context.TreatmentProcess.Add(treatmentProcess);
-            await _context.SaveChangesAsync();
+            _dbContext.TreatmentProcesses.Add(treatmentProcess);
+            await _dbContext.SaveChangesAsync();
 
             // Reload with related data
-            await _context.Entry(treatmentProcess)
+            await _dbContext.Entry(treatmentProcess)
                 .Reference(tp => tp.PatientDetail)
                 .LoadAsync();
 
             if (treatmentProcess.PatientDetail != null)
             {
-                await _context.Entry(treatmentProcess.PatientDetail)
+                await _dbContext.Entry(treatmentProcess.PatientDetail)
                     .Reference(pd => pd.Patient)
                     .LoadAsync();
             }
@@ -94,24 +93,24 @@ namespace Infertility_Treatment_Managements.Controllers
             }
 
             // Validate if PatientDetail exists
-            var patientDetailExists = await _context.PatientDetails.AnyAsync(pd => pd.PatientDetailId == updateDTO.PatientDetailId);
+            var patientDetailExists = await _dbContext.PatientDetails.AnyAsync(pd => pd.PatientDetailId == updateDTO.PatientDetailId);
             if (!patientDetailExists)
             {
                 return BadRequest("The specified PatientDetailId does not exist.");
             }
 
-            var treatmentProcess = await _context.TreatmentProcess.FindAsync(id);
+            var treatmentProcess = await _dbContext.TreatmentProcesses.FindAsync(id);
             if (treatmentProcess == null)
             {
                 return NotFound();
             }
 
             updateDTO.UpdateEntity(treatmentProcess);
-            _context.Entry(treatmentProcess).State = EntityState.Modified;
+            _dbContext.Entry(treatmentProcess).State = EntityState.Modified;
 
             try
             {
-                await _context.SaveChangesAsync();
+                await _dbContext.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -132,21 +131,21 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTreatmentProcess(int id)
         {
-            var treatmentProcess = await _context.TreatmentProcess.FindAsync(id);
+            var treatmentProcess = await _dbContext.TreatmentProcesses.FindAsync(id);
             if (treatmentProcess == null)
             {
                 return NotFound();
             }
 
-            _context.TreatmentProcess.Remove(treatmentProcess);
-            await _context.SaveChangesAsync();
+            _dbContext.TreatmentProcesses.Remove(treatmentProcess);
+            await _dbContext.SaveChangesAsync();
 
             return NoContent();
         }
 
         private async Task<bool> TreatmentProcessExists(int id)
         {
-            return await _context.TreatmentProcess.AnyAsync(tp => tp.TreatmentProcessId == id);
+            return await _dbContext.TreatmentProcesses.AnyAsync(tp => tp.TreatmentProcessId == id);
         }
     }
 }

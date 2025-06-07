@@ -25,7 +25,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<DoctorDTO>>> GetDoctors()
         {
-            var doctors = await _context.Doctor
+            var doctors = await _context.Doctors
                 .Include(d => d.User)  // Change from DoctorNavigation to User
                 .Include(d => d.Bookings)
                 .ToListAsync();
@@ -37,7 +37,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<DoctorDTO>> GetDoctor(int id)
         {
-            var doctor = await _context.Doctor
+            var doctor = await _context.Doctors
                 .Include(d => d.User)  // Change from DoctorNavigation to User
                 .Include(d => d.Bookings)
                 .FirstOrDefaultAsync(d => d.DoctorId == id);
@@ -54,13 +54,13 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet("User/{userId}")]
         public async Task<ActionResult<IEnumerable<DoctorDTO>>> GetDoctorsByUser(int userId)
         {
-            var userExists = await _context.User.AnyAsync(u => u.UserId == userId);
+            var userExists = await _context.Users.AnyAsync(u => u.UserId == userId);
             if (!userExists)
             {
                 return NotFound("User not found");
             }
 
-            var doctors = await _context.Doctor
+            var doctors = await _context.Doctors
                 .Where(d => d.UserId == userId)
                 .Include(d => d.User)  // Change from DoctorNavigation to User
                 .Include(d => d.Bookings)
@@ -73,7 +73,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet("Specialization/{specialization}")]
         public async Task<ActionResult<IEnumerable<DoctorDTO>>> GetDoctorsBySpecialization(string specialization)
         {
-            var doctors = await _context.Doctor
+            var doctors = await _context.Doctors
                 .Where(d => d.Specialization == specialization)
                 .Include(d => d.User)  // Change from DoctorNavigation to User
                 .Include(d => d.Bookings)
@@ -89,14 +89,14 @@ namespace Infertility_Treatment_Managements.Controllers
             // Validate UserId if provided
             if (doctorCreateDTO.UserId.HasValue)
             {
-                var userExists = await _context.User.AnyAsync(u => u.UserId == doctorCreateDTO.UserId);
+                var userExists = await _context.Users.AnyAsync(u => u.UserId == doctorCreateDTO.UserId);
                 if (!userExists)
                 {
                     return BadRequest("Invalid UserId: User does not exist");
                 }
                 
                 // Check if doctor with this user ID already exists
-                var doctorExists = await _context.Doctor.AnyAsync(d => d.UserId == doctorCreateDTO.UserId);
+                var doctorExists = await _context.Doctors.AnyAsync(d => d.UserId == doctorCreateDTO.UserId);
                 if (doctorExists)
                 {
                     return BadRequest("Doctor with this UserId already exists");
@@ -104,11 +104,11 @@ namespace Infertility_Treatment_Managements.Controllers
             }
 
             var doctor = doctorCreateDTO.ToEntity();
-            _context.Doctor.Add(doctor);
+            _context.Doctors.Add(doctor);
             await _context.SaveChangesAsync();
 
             // Reload with related data for return
-            var createdDoctor = await _context.Doctor
+            var createdDoctor = await _context.Doctors
                 .Include(d => d.User)  // Change from DoctorNavigation to User
                 .FirstOrDefaultAsync(d => d.DoctorId == doctor.DoctorId);
 
@@ -124,7 +124,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 return BadRequest("ID mismatch");
             }
 
-            var doctor = await _context.Doctor.FindAsync(id);
+            var doctor = await _context.Doctors.FindAsync(id);
             if (doctor == null)
             {
                 return NotFound();
@@ -133,14 +133,14 @@ namespace Infertility_Treatment_Managements.Controllers
             // Validate UserId if provided
             if (doctorUpdateDTO.UserId.HasValue)
             {
-                var userExists = await _context.User.AnyAsync(u => u.UserId == doctorUpdateDTO.UserId);
+                var userExists = await _context.Users.AnyAsync(u => u.UserId == doctorUpdateDTO.UserId);
                 if (!userExists)
                 {
                     return BadRequest("Invalid UserId: User does not exist");
                 }
                 
                 // Check if another doctor already has this UserId
-                var existingDoctor = await _context.Doctor
+                var existingDoctor = await _context.Doctors
                     .FirstOrDefaultAsync(d => d.UserId == doctorUpdateDTO.UserId && d.DoctorId != id);
                 if (existingDoctor != null)
                 {
@@ -178,14 +178,14 @@ namespace Infertility_Treatment_Managements.Controllers
             {
                 try
                 {
-                    var doctor = await _context.Doctor.FindAsync(id);
+                    var doctor = await _context.Doctors.FindAsync(id);
                     if (doctor == null)
                     {
                         return NotFound();
                     }
 
                     // Check if this doctor has associated bookings
-                    var hasBookings = await _context.Booking.AnyAsync(b => b.DoctorId == id);
+                    var hasBookings = await _context.Bookings.AnyAsync(b => b.DoctorId == id);
                     if (hasBookings)
                     {
                         return BadRequest("Cannot delete doctor with associated bookings");
@@ -195,16 +195,16 @@ namespace Infertility_Treatment_Managements.Controllers
                     int? userId = doctor.UserId;
 
                     // Remove the doctor
-                    _context.Doctor.Remove(doctor);
+                    _context.Doctors.Remove(doctor);
                     await _context.SaveChangesAsync();
 
                     // If there's an associated user, delete them too
                     if (userId.HasValue)
                     {
-                        var user = await _context.User.FindAsync(userId.Value);
+                        var user = await _context.Users.FindAsync(userId.Value);
                         if (user != null)
                         {
-                            _context.User.Remove(user);
+                            _context.Users.Remove(user);
                             await _context.SaveChangesAsync();
                         }
                     }
@@ -222,7 +222,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         private async Task<bool> DoctorExists(int id)
         {
-            return await _context.Doctor.AnyAsync(d => d.DoctorId == id);
+            return await _context.Doctors.AnyAsync(d => d.DoctorId == id);
         }
     }
 }

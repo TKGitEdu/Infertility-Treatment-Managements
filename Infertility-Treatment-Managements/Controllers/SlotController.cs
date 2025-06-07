@@ -25,7 +25,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<SlotDTO>>> GetSlot()
         {
-            var slots = await _context.Slot
+            var slots = await _context.Slots
                 .Include(s => s.Bookings)
                 .ToListAsync();
 
@@ -36,7 +36,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<SlotDTO>> GetSlot(int id)
         {
-            var slot = await _context.Slot
+            var slot = await _context.Slots
                 .Include(s => s.Bookings)
                 .FirstOrDefaultAsync(s => s.SlotId == id);
 
@@ -50,11 +50,11 @@ namespace Infertility_Treatment_Managements.Controllers
         public async Task<ActionResult<SlotDTO>> PostSlot(SlotCreateDTO slotCreateDTO)
         {
             var slot = slotCreateDTO.ToEntity();
-            _context.Slot.Add(slot);
+            _context.Slots.Add(slot);
             await _context.SaveChangesAsync();
 
             // Reload the slot with its relations for returning
-            var createdSlot = await _context.Slot
+            var createdSlot = await _context.Slots
                 .Include(s => s.Bookings)
                 .FirstOrDefaultAsync(s => s.SlotId == slot.SlotId);
 
@@ -67,7 +67,7 @@ namespace Infertility_Treatment_Managements.Controllers
         {
             if (id != slotUpdateDTO.SlotId) return BadRequest();
 
-            var slot = await _context.Slot.FindAsync(id);
+            var slot = await _context.Slots.FindAsync(id);
             if (slot == null) return NotFound();
 
             slotUpdateDTO.UpdateEntity(slot);
@@ -90,10 +90,10 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteSlot(int id)
         {
-            var slot = await _context.Slot.FindAsync(id);
+            var slot = await _context.Slots.FindAsync(id);
             if (slot == null) return NotFound();
 
-            _context.Slot.Remove(slot);
+            _context.Slots.Remove(slot);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -101,7 +101,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         private async Task<bool> SlotExistsAsync(int id)
         {
-            return await _context.Slot.AnyAsync(s => s.SlotId == id);
+            return await _context.Slots.AnyAsync(s => s.SlotId == id);
         }
     }
 }

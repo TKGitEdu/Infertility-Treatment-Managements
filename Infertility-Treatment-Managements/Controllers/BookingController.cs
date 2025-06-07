@@ -20,12 +20,11 @@ namespace Infertility_Treatment_Managements.Controllers
         {
             _context = context;
         }
-
         // GET: api/Booking
         [HttpGet]
         public async Task<ActionResult<IEnumerable<BookingDTO>>> GetBookings()
         {
-            var bookings = await _context.Booking
+            var bookings = await _context.Bookings
                 .Include(b => b.Patient)
                 .Include(b => b.Service)
                 .Include(b => b.Payment)
@@ -41,7 +40,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<BookingDTO>> GetBooking(int id)
         {
-            var booking = await _context.Booking
+            var booking = await _context.Bookings
                 .Include(b => b.Patient)
                 .Include(b => b.Service)
                 .Include(b => b.Payment)
@@ -62,7 +61,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet("Patient/{patientId}")]
         public async Task<ActionResult<IEnumerable<BookingDTO>>> GetBookingsByPatient(int patientId)
         {
-            var bookings = await _context.Booking
+            var bookings = await _context.Bookings
                 .Where(b => b.PatientId == patientId)
                 .Include(b => b.Service)
                 .Include(b => b.Payment)
@@ -78,7 +77,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet("Doctor/{doctorId}")]
         public async Task<ActionResult<IEnumerable<BookingDTO>>> GetBookingsByDoctor(int doctorId)
         {
-            var bookings = await _context.Booking
+            var bookings = await _context.Bookings
                 .Where(b => b.DoctorId == doctorId)
                 .Include(b => b.Patient)
                 .Include(b => b.Service)
@@ -97,11 +96,11 @@ namespace Infertility_Treatment_Managements.Controllers
             var booking = bookingCreateDTO.ToEntity();
             booking.CreateAt = DateTime.Now;
 
-            _context.Booking.Add(booking);
+            _context.Bookings.Add(booking);
             await _context.SaveChangesAsync();
 
             // Reload the booking with its relations for returning
-            var createdBooking = await _context.Booking
+            var createdBooking = await _context.Bookings
                 .Include(b => b.Patient)
                 .Include(b => b.Service)
                 .Include(b => b.Payment)
@@ -121,7 +120,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 return BadRequest();
             }
 
-            var booking = await _context.Booking.FindAsync(id);
+            var booking = await _context.Bookings.FindAsync(id);
             if (booking == null)
             {
                 return NotFound();
@@ -153,13 +152,13 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBooking(int id)
         {
-            var booking = await _context.Booking.FindAsync(id);
+            var booking = await _context.Bookings.FindAsync(id);
             if (booking == null)
             {
                 return NotFound();
             }
 
-            _context.Booking.Remove(booking);
+            _context.Bookings.Remove(booking);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -167,7 +166,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         private bool BookingExists(int id)
         {
-            return _context.Booking.Any(e => e.BookingId == id);
+            return _context.Bookings.Any(e => e.BookingId == id);
         }
     }
 }

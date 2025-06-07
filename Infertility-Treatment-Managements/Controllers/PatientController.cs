@@ -25,7 +25,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<PatientDTO>>> GetPatients()
         {
-            var patients = await _context.Patient
+            var patients = await _context.Patients
                 .Include(p => p.User)
                 .Include(p => p.Booking)
                 .Include(p => p.PatientDetails)
@@ -38,7 +38,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<PatientDTO>> GetPatient(int id)
         {
-            var patient = await _context.Patient
+            var patient = await _context.Patients
                 .Include(p => p.User)
                 .Include(p => p.Booking)
                 .Include(p => p.PatientDetails)
@@ -56,13 +56,13 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet("User/{userId}")]
         public async Task<ActionResult<IEnumerable<PatientDTO>>> GetPatientsByUser(int userId)
         {
-            var userExists = await _context.User.AnyAsync(u => u.UserId == userId);
+            var userExists = await _context.Users.AnyAsync(u => u.UserId == userId);
             if (!userExists)
             {
                 return NotFound("User not found");
             }
 
-            var patients = await _context.Patient
+            var patients = await _context.Patients
                 .Where(p => p.UserId == userId)
                 .Include(p => p.User)
                 .Include(p => p.Booking)
@@ -79,7 +79,7 @@ namespace Infertility_Treatment_Managements.Controllers
             // Validate UserId if provided
             if (patientCreateDTO.UserId.HasValue)
             {
-                var userExists = await _context.User.AnyAsync(u => u.UserId == patientCreateDTO.UserId);
+                var userExists = await _context.Users.AnyAsync(u => u.UserId == patientCreateDTO.UserId);
                 if (!userExists)
                 {
                     return BadRequest("Invalid UserId: User does not exist");
@@ -87,11 +87,11 @@ namespace Infertility_Treatment_Managements.Controllers
             }
 
             var patient = patientCreateDTO.ToEntity();
-            _context.Patient.Add(patient);
+            _context.Patients.Add(patient);
             await _context.SaveChangesAsync();
 
             // Reload with related data for return
-            var createdPatient = await _context.Patient
+            var createdPatient = await _context.Patients
                 .Include(p => p.User)
                 .FirstOrDefaultAsync(p => p.PatientId == patient.PatientId);
 
@@ -107,7 +107,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 return BadRequest("ID mismatch");
             }
 
-            var patient = await _context.Patient.FindAsync(id);
+            var patient = await _context.Patients.FindAsync(id);
             if (patient == null)
             {
                 return NotFound();
@@ -116,7 +116,7 @@ namespace Infertility_Treatment_Managements.Controllers
             // Validate UserId if provided
             if (patientUpdateDTO.UserId.HasValue)
             {
-                var userExists = await _context.User.AnyAsync(u => u.UserId == patientUpdateDTO.UserId);
+                var userExists = await _context.Users.AnyAsync(u => u.UserId == patientUpdateDTO.UserId);
                 if (!userExists)
                 {
                     return BadRequest("Invalid UserId: User does not exist");
@@ -149,27 +149,27 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePatient(int id)
         {
-            var patient = await _context.Patient.FindAsync(id);
+            var patient = await _context.Patients.FindAsync(id);
             if (patient == null)
             {
                 return NotFound();
             }
 
             // Check if this patient has associated bookings
-            var hasBooking = await _context.Booking.AnyAsync(b => b.PatientId == id);
+            var hasBooking = await _context.Bookings.AnyAsync(b => b.PatientId == id);
             if (hasBooking)
             {
                 return BadRequest("Cannot delete patient with associated bookings");
             }
 
             // Check if this patient has associated patient details
-            var hasPatientDetails = await _context.PatientDetail.AnyAsync(pd => pd.PatientId == id);
+            var hasPatientDetails = await _context.PatientDetails.AnyAsync(pd => pd.PatientId == id);
             if (hasPatientDetails)
             {
                 return BadRequest("Cannot delete patient with associated patient details");
             }
 
-            _context.Patient.Remove(patient);
+            _context.Patients.Remove(patient);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -177,7 +177,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         private async Task<bool> PatientExists(int id)
         {
-            return await _context.Patient.AnyAsync(p => p.PatientId == id);
+            return await _context.Patients.AnyAsync(p => p.PatientId == id);
         }
     }
 }

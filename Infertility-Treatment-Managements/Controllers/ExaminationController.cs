@@ -26,7 +26,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ExaminationDTO>>> GetExaminations()
         {
-            var examinations = await _context.Examination
+            var examinations = await _context.Examinations
                 .Include(e => e.Booking)
                     .ThenInclude(b => b.Patient)
                 .Include(e => e.Booking)
@@ -40,7 +40,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<ExaminationDTO>> GetExamination(int id)
         {
-            var examination = await _context.Examination
+            var examination = await _context.Examinations
                 .Include(e => e.Booking)
                     .ThenInclude(b => b.Patient)
                 .Include(e => e.Booking)
@@ -59,13 +59,13 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet("Booking/{bookingId}")]
         public async Task<ActionResult<ExaminationDTO>> GetExaminationByBooking(int bookingId)
         {
-            var bookingExists = await _context.Booking.AnyAsync(b => b.BookingId == bookingId);
+            var bookingExists = await _context.Bookings.AnyAsync(b => b.BookingId == bookingId);
             if (!bookingExists)
             {
                 return NotFound("Booking not found");
             }
 
-            var examination = await _context.Examination
+            var examination = await _context.Examinations
                 .Include(e => e.Booking)
                     .ThenInclude(b => b.Patient)
                 .Include(e => e.Booking)
@@ -84,7 +84,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet("Status/{status}")]
         public async Task<ActionResult<IEnumerable<ExaminationDTO>>> GetExaminationsByStatus(string status)
         {
-            var examinations = await _context.Examination
+            var examinations = await _context.Examinations
                 .Where(e => e.Status == status)
                 .Include(e => e.Booking)
                     .ThenInclude(b => b.Patient)
@@ -100,25 +100,25 @@ namespace Infertility_Treatment_Managements.Controllers
         public async Task<ActionResult<ExaminationDTO>> CreateExamination(ExaminationCreateDTO examinationCreateDTO)
         {
             // Validate booking exists
-            var booking = await _context.Booking.FindAsync(examinationCreateDTO.BookingId);
+            var booking = await _context.Bookings.FindAsync(examinationCreateDTO.BookingId);
             if (booking == null)
             {
                 return BadRequest("Invalid BookingId: Booking does not exist");
             }
 
             // Check if examination already exists for this booking
-            var examinationExists = await _context.Examination.AnyAsync(e => e.BookingId == examinationCreateDTO.BookingId);
+            var examinationExists = await _context.Examinations.AnyAsync(e => e.BookingId == examinationCreateDTO.BookingId);
             if (examinationExists)
             {
                 return BadRequest("An examination already exists for this booking");
             }
 
             var examination = examinationCreateDTO.ToEntity();
-            _context.Examination.Add(examination);
+            _context.Examinations.Add(examination);
             await _context.SaveChangesAsync();
 
             // Reload with related data for return
-            var createdExamination = await _context.Examination
+            var createdExamination = await _context.Examinations
                 .Include(e => e.Booking)
                     .ThenInclude(b => b.Patient)
                 .Include(e => e.Booking)
@@ -137,21 +137,21 @@ namespace Infertility_Treatment_Managements.Controllers
                 return BadRequest("ID mismatch");
             }
 
-            var examination = await _context.Examination.FindAsync(id);
+            var examination = await _context.Examinations.FindAsync(id);
             if (examination == null)
             {
                 return NotFound();
             }
 
             // Validate booking exists
-            var bookingExists = await _context.Booking.AnyAsync(b => b.BookingId == examinationUpdateDTO.BookingId);
+            var bookingExists = await _context.Bookings.AnyAsync(b => b.BookingId == examinationUpdateDTO.BookingId);
             if (!bookingExists)
             {
                 return BadRequest("Invalid BookingId: Booking does not exist");
             }
 
             // Check if another examination exists for this booking (excluding this one)
-            var duplicateExamination = await _context.Examination
+            var duplicateExamination = await _context.Examinations
                 .AnyAsync(e => e.ExaminationId != id && e.BookingId == examinationUpdateDTO.BookingId);
             if (duplicateExamination)
             {
@@ -184,7 +184,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpPatch("{id}/UpdateStatus")]
         public async Task<IActionResult> UpdateExaminationStatus(int id, [FromBody] string status)
         {
-            var examination = await _context.Examination.FindAsync(id);
+            var examination = await _context.Examinations.FindAsync(id);
             if (examination == null)
             {
                 return NotFound();
@@ -216,13 +216,13 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteExamination(int id)
         {
-            var examination = await _context.Examination.FindAsync(id);
+            var examination = await _context.Examinations.FindAsync(id);
             if (examination == null)
             {
                 return NotFound();
             }
 
-            _context.Examination.Remove(examination);
+            _context.Examinations.Remove(examination);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -230,7 +230,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         private async Task<bool> ExaminationExists(int id)
         {
-            return await _context.Examination.AnyAsync(e => e.ExaminationId == id);
+            return await _context.Examinations.AnyAsync(e => e.ExaminationId == id);
         }
     }
 }

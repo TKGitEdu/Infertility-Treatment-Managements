@@ -25,7 +25,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<PatientDetailDTO>>> GetPatientDetails()
         {
-            var patientDetails = await _context.PatientDetail
+            var patientDetails = await _context.PatientDetails
                 .Include(pd => pd.Patient)
                 .Include(pd => pd.TreatmentProcess)
                 .ToListAsync();
@@ -37,7 +37,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<PatientDetailDTO>> GetPatientDetail(int id)
         {
-            var patientDetail = await _context.PatientDetail
+            var patientDetail = await _context.PatientDetails
                 .Include(pd => pd.Patient)
                 .Include(pd => pd.TreatmentProcess)
                 .FirstOrDefaultAsync(pd => pd.PatientDetailId == id);
@@ -54,13 +54,13 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet("Patient/{patientId}")]
         public async Task<ActionResult<IEnumerable<PatientDetailDTO>>> GetPatientDetailsByPatient(int patientId)
         {
-            var patientExists = await _context.Patient.AnyAsync(p => p.PatientId == patientId);
+            var patientExists = await _context.Patients.AnyAsync(p => p.PatientId == patientId);
             if (!patientExists)
             {
                 return NotFound("Patient not found");
             }
 
-            var patientDetails = await _context.PatientDetail
+            var patientDetails = await _context.PatientDetails
                 .Where(pd => pd.PatientId == patientId)
                 .Include(pd => pd.Patient)
                 .Include(pd => pd.TreatmentProcess)
@@ -73,7 +73,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet("Status/{status}")]
         public async Task<ActionResult<IEnumerable<PatientDetailDTO>>> GetPatientDetailsByStatus(string status)
         {
-            var patientDetails = await _context.PatientDetail
+            var patientDetails = await _context.PatientDetails
                 .Where(pd => pd.TreatmentStatus == status)
                 .Include(pd => pd.Patient)
                 .Include(pd => pd.TreatmentProcess)
@@ -87,18 +87,18 @@ namespace Infertility_Treatment_Managements.Controllers
         public async Task<ActionResult<PatientDetailDTO>> CreatePatientDetail(PatientDetailCreateDTO patientDetailCreateDTO)
         {
             // Validate patient exists
-            var patientExists = await _context.Patient.AnyAsync(p => p.PatientId == patientDetailCreateDTO.PatientId);
+            var patientExists = await _context.Patients.AnyAsync(p => p.PatientId == patientDetailCreateDTO.PatientId);
             if (!patientExists)
             {
                 return BadRequest("Invalid PatientId: Patient does not exist");
             }
 
             var patientDetail = patientDetailCreateDTO.ToEntity();
-            _context.PatientDetail.Add(patientDetail);
+            _context.PatientDetails.Add(patientDetail);
             await _context.SaveChangesAsync();
 
             // Reload with related data for return
-            var createdPatientDetail = await _context.PatientDetail
+            var createdPatientDetail = await _context.PatientDetails
                 .Include(pd => pd.Patient)
                 .FirstOrDefaultAsync(pd => pd.PatientDetailId == patientDetail.PatientDetailId);
 
@@ -114,14 +114,14 @@ namespace Infertility_Treatment_Managements.Controllers
                 return BadRequest("ID mismatch");
             }
 
-            var patientDetail = await _context.PatientDetail.FindAsync(id);
+            var patientDetail = await _context.PatientDetails.FindAsync(id);
             if (patientDetail == null)
             {
                 return NotFound();
             }
 
             // Validate patient exists
-            var patientExists = await _context.Patient.AnyAsync(p => p.PatientId == patientDetailUpdateDTO.PatientId);
+            var patientExists = await _context.Patients.AnyAsync(p => p.PatientId == patientDetailUpdateDTO.PatientId);
             if (!patientExists)
             {
                 return BadRequest("Invalid PatientId: Patient does not exist");
@@ -153,7 +153,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpPatch("{id}/UpdateStatus")]
         public async Task<IActionResult> UpdatePatientDetailStatus(int id, [FromBody] string treatmentStatus)
         {
-            var patientDetail = await _context.PatientDetail.FindAsync(id);
+            var patientDetail = await _context.PatientDetails.FindAsync(id);
             if (patientDetail == null)
             {
                 return NotFound();
@@ -185,20 +185,20 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePatientDetail(int id)
         {
-            var patientDetail = await _context.PatientDetail.FindAsync(id);
+            var patientDetail = await _context.PatientDetails.FindAsync(id);
             if (patientDetail == null)
             {
                 return NotFound();
             }
 
             // Check if this patient detail has associated treatment processes
-            var hasTreatmentProcesses = await _context.TreatmentProcess.AnyAsync(tp => tp.PatientDetailId == id);
+            var hasTreatmentProcesses = await _context.TreatmentProcesses.AnyAsync(tp => tp.PatientDetailId == id);
             if (hasTreatmentProcesses)
             {
                 return BadRequest("Cannot delete patient detail with associated treatment processes");
             }
 
-            _context.PatientDetail.Remove(patientDetail);
+            _context.PatientDetails.Remove(patientDetail);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -206,7 +206,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         private async Task<bool> PatientDetailExists(int id)
         {
-            return await _context.PatientDetail.AnyAsync(pd => pd.PatientDetailId == id);
+            return await _context.PatientDetails.AnyAsync(pd => pd.PatientDetailId == id);
         }
     }
 }
