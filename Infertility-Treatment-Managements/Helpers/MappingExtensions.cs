@@ -1,10 +1,10 @@
-﻿using Infertility_Treatment_Management.DTOs;
+﻿using Infertility_Treatment_Managements.DTOs;
 using Repositories.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Infertility_Treatment_Management.Helpers
+namespace Infertility_Treatment_Managements.Helpers
 {
     public static class MappingExtensions
     {

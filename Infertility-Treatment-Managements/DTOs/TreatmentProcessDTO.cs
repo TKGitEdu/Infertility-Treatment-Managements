@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Infertility_Treatment_Management.DTOs
+namespace Infertility_Treatment_Managements.DTOs
 {
     // Main DTO for retrieving treatment process data
     public class TreatmentProcessDTO

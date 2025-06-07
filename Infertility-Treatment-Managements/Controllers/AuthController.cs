@@ -1,4 +1,4 @@
-﻿using Infertility_Treatment_Management.DTOs;
+﻿using Infertility_Treatment_Managements.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +8,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace Infertility_Treatment_Management.Controllers
+namespace Infertility_Treatment_Managements.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

@@ -2,13 +2,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Repositories.Models;
 using Microsoft.EntityFrameworkCore;
-using Infertility_Treatment_Management.DTOs;
+using Infertility_Treatment_Managements.DTOs;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System;
 using System.Linq;
 
-namespace Infertility_Treatment_Management.Controllers
+namespace Infertility_Treatment_Managements.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Infertility_Treatment_Management.DTOs
+namespace Infertility_Treatment_Managements.DTOs
 {
     public class BookingDTO
     {
