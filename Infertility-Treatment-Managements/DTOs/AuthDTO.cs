@@ -2,10 +2,6 @@
 
 namespace Infertility_Treatment_Managements.DTOs
 {
-    public class AuthDTO
-    {
-    }
-
     public class UserLoginDTO
     {
         public string Username { get; set; }
