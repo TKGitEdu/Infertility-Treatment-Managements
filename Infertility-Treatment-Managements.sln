@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36109.1 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infertility-Treatment-Managements", "Infertility-Treatment-Managements\Infertility-Treatment-Managements.csproj", "{1193B8D1-8CBE-40A8-ABFC-D1FCA0347B1B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1193B8D1-8CBE-40A8-ABFC-D1FCA0347B1B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1193B8D1-8CBE-40A8-ABFC-D1FCA0347B1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1193B8D1-8CBE-40A8-ABFC-D1FCA0347B1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1193B8D1-8CBE-40A8-ABFC-D1FCA0347B1B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1C5B8290-951D-4DA8-A947-E5ABF7248FA6}
+	EndGlobalSection
+EndGlobal

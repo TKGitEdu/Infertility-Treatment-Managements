@@ -1,0 +1,6 @@
+@Infertility_Treatment_Managements_HostAddress = http://localhost:5156
+
+GET {{Infertility_Treatment_Managements_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
