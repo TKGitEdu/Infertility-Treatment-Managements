@@ -6,7 +6,7 @@ namespace Infertility_Treatment_Managements.DTOs
     public class DoctorDTO
     {
         public int DoctorId { get; set; }
-        public int? UserId { get; set; }  // Add this line
+        public int? UserId { get; set; }
         public string DoctorName { get; set; }
         public string Specialization { get; set; }
         public string Phone { get; set; }
@@ -20,7 +20,7 @@ namespace Infertility_Treatment_Managements.DTOs
     public class DoctorBasicDTO
     {
         public int DoctorId { get; set; }
-        public int? UserId { get; set; }  // Add this line
+        public int? UserId { get; set; }
         public string DoctorName { get; set; }
         public string Specialization { get; set; }
         public string Phone { get; set; }
@@ -29,18 +29,23 @@ namespace Infertility_Treatment_Managements.DTOs
 
     public class DoctorCreateDTO
     {
-        public int? UserId { get; set; }  // Add this line
+        public int? UserId { get; set; }
         public string DoctorName { get; set; }
         public string Specialization { get; set; }
         public string Phone { get; set; }
         public string Email { get; set; }
-        // The UserId can be set automatically from the User entity since they share the same ID
+
+        // Additional fields for user creation when UserId is not provided
+        public string Username { get; set; }
+        public string Password { get; set; }
+        public string Address { get; set; }
+        public string Gender { get; set; }
     }
 
     public class DoctorUpdateDTO
     {
         public int DoctorId { get; set; }
-        public int? UserId { get; set; }  // Add this line
+        public int? UserId { get; set; }
         public string DoctorName { get; set; }
         public string Specialization { get; set; }
         public string Phone { get; set; }

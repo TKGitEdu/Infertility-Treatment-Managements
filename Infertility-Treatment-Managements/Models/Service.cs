@@ -8,14 +8,10 @@ namespace Repositories.Models;
 public partial class Service
 {
     public int ServiceId { get; set; }
-
     public string Name { get; set; }
-
     public string Description { get; set; }
-
     public decimal? Price { get; set; }
-
     public string Status { get; set; }
-
-    public virtual Booking Booking { get; set; }
+    
+    public virtual ICollection<Booking> BookingsFk { get; set; } = new List<Booking>();
 }

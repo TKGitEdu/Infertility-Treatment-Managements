@@ -36,6 +36,7 @@ namespace Infertility_Treatment_Managements.Controllers
         }
 
         // GET: api/Role/5
+        
         [HttpGet("{id}")]
         public async Task<ActionResult<Role>> GetRole(int id)
         {

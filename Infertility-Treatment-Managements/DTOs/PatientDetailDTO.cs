@@ -14,6 +14,9 @@ namespace Infertility_Treatment_Managements.DTOs
 
         // List of simplified treatment processes
         public ICollection<TreatmentProcessBasicDTO> TreatmentProcesses { get; set; } = new List<TreatmentProcessBasicDTO>();
+        
+        // List of simplified treatment plans
+        public ICollection<TreatmentPlanBasicDTO> TreatmentPlans { get; set; } = new List<TreatmentPlanBasicDTO>();
     }
 
     public class PatientDetailCreateDTO

@@ -23,21 +23,21 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // GET: api/Service
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ServiceDTO>>> GetServices()
+        public async Task<ActionResult<IEnumerable<DTOs.ServiceDTO>>> GetServices()
         {
             var services = await _context.Services
-                .Include(s => s.Booking)
+                .Include(s => s.BookingsFk)
                 .ToListAsync();
 
-            return services.Select(s => s.ToDTO()).ToList();
+            return Ok(services.Select(s => s.ToDTO()));
         }
 
-        // GET: api/Service/5
+        // Fix for the CS0029 error in the GetService method
         [HttpGet("{id}")]
-        public async Task<ActionResult<ServiceDTO>> GetService(int id)
+        public async Task<ActionResult<DTOs.ServiceDTO>> GetService(int id)
         {
             var service = await _context.Services
-                .Include(s => s.Booking)
+                .Include(s => s.BookingsFk)
                 .FirstOrDefaultAsync(s => s.ServiceId == id);
 
             if (service == null)
@@ -45,24 +45,24 @@ namespace Infertility_Treatment_Managements.Controllers
                 return NotFound();
             }
 
-            return service.ToDTO();
+            return Ok(service.ToDTO()); // Wrap the result in Ok() to match the expected ActionResult type
         }
 
         // GET: api/Service/Status/Active
         [HttpGet("Status/{status}")]
-        public async Task<ActionResult<IEnumerable<ServiceDTO>>> GetServicesByStatus(string status)
+        public async Task<ActionResult<IEnumerable<DTOs.ServiceDTO>>> GetServicesByStatus(string status)
         {
             var services = await _context.Services
                 .Where(s => s.Status == status)
-                .Include(s => s.Booking)
+                .Include(s => s.BookingsFk)
                 .ToListAsync();
 
-            return services.Select(s => s.ToDTO()).ToList();
+            return Ok(services.Select(s => s.ToDTO()));
         }
 
         // POST: api/Service
         [HttpPost]
-        public async Task<ActionResult<ServiceDTO>> CreateService(ServiceCreateDTO serviceCreateDTO)
+        public async Task<ActionResult<DTOs.ServiceDTO>> CreateService(ServiceCreateDTO serviceCreateDTO)
         {
             var service = serviceCreateDTO.ToEntity();
             _context.Services.Add(service);

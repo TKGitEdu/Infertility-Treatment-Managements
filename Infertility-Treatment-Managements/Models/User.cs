@@ -25,7 +25,7 @@ public partial class User
 
     public string Gender { get; set; }
 
-    public DateOnly? DateOfBirth { get; set; }
+    public DateTime? DateOfBirth { get; set; }
 
     public virtual Doctor Doctor { get; set; }
 

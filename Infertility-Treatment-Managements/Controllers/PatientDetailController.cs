@@ -27,7 +27,7 @@ namespace Infertility_Treatment_Managements.Controllers
         {
             var patientDetails = await _context.PatientDetails
                 .Include(pd => pd.Patient)
-                .Include(pd => pd.TreatmentProcess)
+                .Include(pd => pd.TreatmentProcessesFk)
                 .ToListAsync();
 
             return patientDetails.Select(pd => pd.ToDTO()).ToList();
@@ -39,7 +39,7 @@ namespace Infertility_Treatment_Managements.Controllers
         {
             var patientDetail = await _context.PatientDetails
                 .Include(pd => pd.Patient)
-                .Include(pd => pd.TreatmentProcess)
+                .Include(pd => pd.TreatmentProcessesFk)
                 .FirstOrDefaultAsync(pd => pd.PatientDetailId == id);
 
             if (patientDetail == null)
@@ -63,7 +63,7 @@ namespace Infertility_Treatment_Managements.Controllers
             var patientDetails = await _context.PatientDetails
                 .Where(pd => pd.PatientId == patientId)
                 .Include(pd => pd.Patient)
-                .Include(pd => pd.TreatmentProcess)
+                .Include(pd => pd.TreatmentProcessesFk)
                 .ToListAsync();
 
             return patientDetails.Select(pd => pd.ToDTO()).ToList();
@@ -76,7 +76,7 @@ namespace Infertility_Treatment_Managements.Controllers
             var patientDetails = await _context.PatientDetails
                 .Where(pd => pd.TreatmentStatus == status)
                 .Include(pd => pd.Patient)
-                .Include(pd => pd.TreatmentProcess)
+                .Include(pd => pd.TreatmentProcessesFk)
                 .ToListAsync();
 
             return patientDetails.Select(pd => pd.ToDTO()).ToList();

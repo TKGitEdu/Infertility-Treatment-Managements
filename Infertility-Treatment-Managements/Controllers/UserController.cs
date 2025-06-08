@@ -84,6 +84,7 @@ namespace Infertility_Treatment_Managements.Controllers
         }
 
         // POST: api/User
+        // Update the PostUser method to use the new properties
         [HttpPost]
         public async Task<ActionResult<UserDTO>> PostUser(UserCreateDTO userCreateDTO)
         {
@@ -125,7 +126,10 @@ namespace Infertility_Treatment_Managements.Controllers
                                 Email = user.Email,
                                 Phone = user.Phone,
                                 Address = user.Address,
-                                // Add any other necessary patient fields
+                                Gender = user.Gender,
+                                DateOfBirth = user.DateOfBirth,
+                                BloodType = userCreateDTO.BloodType,
+                                EmergencyPhoneNumber = userCreateDTO.EmergencyPhoneNumber
                             };
 
                             _context.Patients.Add(patient);
@@ -141,7 +145,7 @@ namespace Infertility_Treatment_Managements.Controllers
                                 DoctorName = user.FullName,
                                 Email = user.Email,
                                 Phone = user.Phone,
-                                Specialization = "General" // Default specialization
+                                Specialization = userCreateDTO.Specialization ?? "General" // Use provided specialization
                             };
 
                             _context.Doctors.Add(doctor);
@@ -277,7 +281,7 @@ namespace Infertility_Treatment_Managements.Controllers
                                 DoctorName = user.FullName,
                                 Email = user.Email,
                                 Phone = user.Phone,
-                                Specialization = "General" // Default specialization
+                                Specialization = userUpdateDTO.Specialization ?? "General" // Use provided specialization
                             };
 
                             _context.Doctors.Add(doctor);
@@ -295,8 +299,58 @@ namespace Infertility_Treatment_Managements.Controllers
                             existingDoctor.DoctorName = user.FullName;
                             existingDoctor.Email = user.Email;
                             existingDoctor.Phone = user.Phone;
+                            existingDoctor.Specialization = userUpdateDTO.Specialization ?? existingDoctor.Specialization;
 
                             _context.Entry(existingDoctor).State = EntityState.Modified;
+                            await _context.SaveChangesAsync();
+                        }
+                    }
+
+                    // Similarly for Patient updates
+                    if (isPatientNow && !wasPatient)
+                    {
+                        // User is becoming a Patient
+                        var existingPatient = await _context.Patients
+                            .FirstOrDefaultAsync(p => p.UserId == id);
+
+                        if (existingPatient == null)
+                        {
+                            // Create a new Patient record
+                            var patient = new Patient
+                            {
+                                UserId = user.UserId,
+                                Name = user.FullName,
+                                Email = user.Email,
+                                Phone = user.Phone,
+                                Address = user.Address,
+                                Gender = user.Gender,
+                                DateOfBirth = user.DateOfBirth,
+                                BloodType = userUpdateDTO.BloodType,
+                                EmergencyPhoneNumber = userUpdateDTO.EmergencyPhoneNumber
+                            };
+
+                            _context.Patients.Add(patient);
+                            await _context.SaveChangesAsync();
+                        }
+                    }
+                    else if (isPatientNow && wasPatient)
+                    {
+                        // User is still a Patient, update their Patient record
+                        var existingPatient = await _context.Patients
+                            .FirstOrDefaultAsync(p => p.UserId == id);
+
+                        if (existingPatient != null)
+                        {
+                            existingPatient.Name = user.FullName;
+                            existingPatient.Email = user.Email;
+                            existingPatient.Phone = user.Phone;
+                            existingPatient.Address = user.Address;
+                            existingPatient.Gender = user.Gender;
+                            existingPatient.DateOfBirth = user.DateOfBirth;
+                            existingPatient.BloodType = userUpdateDTO.BloodType ?? existingPatient.BloodType;
+                            existingPatient.EmergencyPhoneNumber = userUpdateDTO.EmergencyPhoneNumber ?? existingPatient.EmergencyPhoneNumber;
+
+                            _context.Entry(existingPatient).State = EntityState.Modified;
                             await _context.SaveChangesAsync();
                         }
                     }
@@ -327,64 +381,13 @@ namespace Infertility_Treatment_Managements.Controllers
                 try
                 {
                     // Check if user exists
-                    var user = await _context.Users
-                        .Include(u => u.Role)
-                        .FirstOrDefaultAsync(u => u.UserId == id);
+                    var user = await _context.Users.FindAsync(id);
 
                     if (user == null) return NotFound();
 
-                    string roleName = user.Role?.RoleName?.ToLower() ?? "";
-
-                    // Check if there's an associated patient record
-                    if (roleName == PATIENT_ROLE_NAME.ToLower())
-                    {
-                        var patient = await _context.Patients
-                            .FirstOrDefaultAsync(p => p.UserId == id);
-
-                        if (patient != null)
-                        {
-                            // Check if this patient has any related records that would block deletion
-                            bool hasPatientDetails = await _context.PatientDetails
-                                .AnyAsync(pd => pd.PatientId == patient.PatientId);
-
-                            bool hasBookings = await _context.Bookings
-                                .AnyAsync(b => b.PatientId == patient.PatientId);
-
-                            if (hasPatientDetails || hasBookings)
-                            {
-                                return BadRequest("Cannot delete user because the associated patient has related records.");
-                            }
-
-                            // Remove the patient record first
-                            _context.Patients.Remove(patient);
-                            await _context.SaveChangesAsync();
-                        }
-                    }
-
-                    // Check if there's an associated doctor record
-                    if (roleName == DOCTOR_ROLE_NAME.ToLower())
-                    {
-                        var doctor = await _context.Doctors
-                            .FirstOrDefaultAsync(d => d.UserId == id);
-
-                        if (doctor != null)
-                        {
-                            // Check if this doctor has any related records that would block deletion
-                            bool hasBookings = await _context.Bookings
-                                .AnyAsync(b => b.DoctorId == doctor.DoctorId);
-
-                            if (hasBookings)
-                            {
-                                return BadRequest("Cannot delete user because the associated doctor has bookings.");
-                            }
-
-                            // Remove the doctor record first
-                            _context.Doctors.Remove(doctor);
-                            await _context.SaveChangesAsync();
-                        }
-                    }
-
-                    // Remove the user
+                    // With cascade delete configured in the DbContext,
+                    // we can simply remove the user, and all related entities
+                    // (Doctor, Patient, PatientDetails, etc.) will be automatically deleted
                     _context.Users.Remove(user);
                     await _context.SaveChangesAsync();
 

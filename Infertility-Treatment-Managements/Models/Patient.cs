@@ -8,28 +8,17 @@ namespace Repositories.Models;
 public partial class Patient
 {
     public int PatientId { get; set; }
-
     public int? UserId { get; set; }
-
     public string Name { get; set; }
-
     public string Phone { get; set; }
-
     public string Email { get; set; }
-
-    public DateOnly? DateOfBirth { get; set; }
-
+    public DateTime? DateOfBirth { get; set; }
     public string Address { get; set; }
-
     public string Gender { get; set; }
-
     public string BloodType { get; set; }
-
     public string EmergencyPhoneNumber { get; set; }
 
-    public virtual Booking Booking { get; set; }
-
+    public virtual ICollection<Booking> BookingFk { get; set; } = new List<Booking>();
     public virtual ICollection<PatientDetail> PatientDetails { get; set; } = new List<PatientDetail>();
-
     public virtual User User { get; set; }
 }
