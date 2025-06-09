@@ -90,13 +90,32 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteSlot(int id)
         {
-            var slot = await _context.Slots.FindAsync(id);
-            if (slot == null) return NotFound();
+            try
+            {
+                var slot = await _context.Slots.FindAsync(id);
+                if (slot == null)
+                {
+                    return NotFound(new { message = $"Slot with ID {id} not found." });
+                }
 
-            _context.Slots.Remove(slot);
-            await _context.SaveChangesAsync();
+                if (await _context.Bookings.AnyAsync(b => b.SlotId == id))
+                {
+                    return BadRequest(new { message = "Cannot delete slot because it is referenced by existing bookings." });
+                }
 
-            return NoContent();
+                _context.Slots.Remove(slot);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (DbUpdateException ex)
+            {
+                return StatusCode(400, new { message = "Failed to delete slot due to database constraints.", error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An unexpected error occurred.", error = ex.Message });
+            }
         }
 
         private async Task<bool> SlotExistsAsync(int id)

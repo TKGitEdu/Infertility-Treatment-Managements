@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Infertility_Treatment_Managements.DTOs;
+using Infertility_Treatment_Managements.Helpers;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Repositories.Models;
-using Infertility_Treatment_Managements.DTOs;
-using Infertility_Treatment_Managements.Helpers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -185,23 +186,37 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePatientDetail(int id)
         {
-            var patientDetail = await _context.PatientDetails.FindAsync(id);
-            if (patientDetail == null)
+            try
             {
-                return NotFound();
-            }
+                var patientDetail = await _context.PatientDetails.FindAsync(id);
+                if (patientDetail == null)
+                {
+                    return NotFound(new { message = $"PatientDetail with ID {id} not found." });
+                }
 
-            // Check if this patient detail has associated treatment processes
-            var hasTreatmentProcesses = await _context.TreatmentProcesses.AnyAsync(tp => tp.PatientDetailId == id);
-            if (hasTreatmentProcesses)
+                if (await _context.TreatmentProcesses.AnyAsync(tp => tp.PatientDetailId == id))
+                {
+                    return BadRequest(new { message = "Cannot delete patient detail because it is referenced by existing treatment processes." });
+                }
+
+                if (await _context.TreatmentPlans.AnyAsync(tp => tp.PatientDetailId == id))
+                {
+                    return BadRequest(new { message = "Cannot delete patient detail because it is referenced by existing treatment plans." });
+                }
+
+                _context.PatientDetails.Remove(patientDetail);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (DbUpdateException ex)
             {
-                return BadRequest("Cannot delete patient detail with associated treatment processes");
+                return StatusCode(400, new { message = "Failed to delete patient detail due to database constraints.", error = ex.Message });
             }
-
-            _context.PatientDetails.Remove(patientDetail);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An unexpected error occurred.", error = ex.Message });
+            }
         }
 
         private async Task<bool> PatientDetailExists(int id)
