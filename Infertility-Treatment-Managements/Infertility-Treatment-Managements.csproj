@@ -8,29 +8,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Azure.Identity" Version="1.14.0" />
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Scripting.Common" Version="4.14.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-		<Compile Remove="Views\**" />
-		<Content Remove="Views\**" />
-		<EmbeddedResource Remove="Views\**" />
-		<None Remove="Views\**" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.5" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.5">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.4" />
-		<!-- Temporarily comment out this line -->
-		<!-- <PackageReference Include="UmbracoCms.Core" Version="8.18.15" /> -->
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.5" />
   </ItemGroup>
-	<PropertyGroup>
-		<AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
-		
-	</PropertyGroup>
 
 </Project>
