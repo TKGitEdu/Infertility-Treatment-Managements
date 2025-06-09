@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Infertility_Treatment_Managements.DTOs;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Repositories.Models;
-using Infertility_Treatment_Managements.DTOs;
-using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Infertility_Treatment_Managements.Controllers
 {
@@ -36,7 +37,7 @@ namespace Infertility_Treatment_Managements.Controllers
         }
 
         // GET: api/Role/5
-        
+
         [HttpGet("{id}")]
         public async Task<ActionResult<Role>> GetRole(int id)
         {
@@ -89,11 +90,33 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRole(int id)
         {
-            var role = await _context.Roles.FindAsync(id);
-            if (role == null) return NotFound();
-            _context.Roles.Remove(role);
-            await _context.SaveChangesAsync();
-            return NoContent();
+            try
+            {
+                var role = await _context.Roles.FindAsync(id);
+                if (role == null)
+                {
+                    return NotFound(new { message = $"Role with ID {id} not found." });
+                }
+
+                if (await _context.Users.AnyAsync(u => u.RoleId == id))
+                {
+                    return BadRequest(new { message = "Cannot delete role because it is referenced by existing users." });
+                }
+
+                _context.Roles.Remove(role);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (DbUpdateException ex)
+            {
+                return StatusCode(400, new { message = "Failed to delete role due to database constraints.", error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                // Xử lý các lỗi khác
+                return StatusCode(500, new { message = "An unexpected error occurred.", error = ex.Message });
+            }
         }
 
         private async Task<bool> RoleExistsAsync(int id)
