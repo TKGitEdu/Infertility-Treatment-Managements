@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System;
 using System.Linq;
+using BCrypt.Net;
 
 namespace Infertility_Treatment_Management.Controllers
 {
@@ -92,6 +93,9 @@ namespace Infertility_Treatment_Management.Controllers
             {
                 try
                 {
+                    // Hash the password
+                    string hashedPassword = BCrypt.BCrypt.HashPassword(userCreateDTO.Password);
+
                     // Create a new User entity from the DTO
                     var user = new User
                     {
@@ -99,7 +103,7 @@ namespace Infertility_Treatment_Management.Controllers
                         Email = userCreateDTO.Email,
                         Phone = userCreateDTO.Phone,
                         Username = userCreateDTO.Username,
-                        Password = userCreateDTO.Password,
+                        Password = hashedPassword, // Use the hashed password
                         RoleId = userCreateDTO.RoleId,
                         Address = userCreateDTO.Address,
                         Gender = userCreateDTO.Gender,
