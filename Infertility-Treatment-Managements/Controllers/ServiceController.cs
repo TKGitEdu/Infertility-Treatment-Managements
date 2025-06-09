@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Infertility_Treatment_Managements.DTOs;
+using Infertility_Treatment_Managements.Helpers;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Repositories.Models;
-using Infertility_Treatment_Managements.DTOs;
-using Infertility_Treatment_Managements.Helpers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -144,23 +145,32 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteService(int id)
         {
-            var service = await _context.Services.FindAsync(id);
-            if (service == null)
+            try
             {
-                return NotFound();
-            }
+                var service = await _context.Services.FindAsync(id);
+                if (service == null)
+                {
+                    return NotFound(new { message = $"Service with ID {id} not found." });
+                }
 
-            // Check if this service is associated with any bookings
-            var hasBooking = await _context.Bookings.AnyAsync(b => b.ServiceId == id);
-            if (hasBooking)
+                if (await _context.Bookings.AnyAsync(b => b.ServiceId == id))
+                {
+                    return BadRequest(new { message = "Cannot delete service because it is referenced by existing bookings." });
+                }
+
+                _context.Services.Remove(service);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (DbUpdateException ex)
             {
-                return BadRequest("Cannot delete service that is associated with bookings");
+                return StatusCode(400, new { message = "Failed to delete service due to database constraints.", error = ex.Message });
             }
-
-            _context.Services.Remove(service);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An unexpected error occurred.", error = ex.Message });
+            }
         }
 
         private async Task<bool> ServiceExists(int id)

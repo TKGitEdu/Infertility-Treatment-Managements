@@ -131,16 +131,27 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTreatmentProcess(int id)
         {
-            var treatmentProcess = await _dbContext.TreatmentProcesses.FindAsync(id);
-            if (treatmentProcess == null)
+            try
             {
-                return NotFound();
+                var treatmentProcess = await _dbContext.TreatmentProcesses.FindAsync(id);
+                if (treatmentProcess == null)
+                {
+                    return NotFound(new { message = $"TreatmentProcess with ID {id} not found." });
+                }
+
+                _dbContext.TreatmentProcesses.Remove(treatmentProcess);
+                await _dbContext.SaveChangesAsync();
+
+                return NoContent();
             }
-
-            _dbContext.TreatmentProcesses.Remove(treatmentProcess);
-            await _dbContext.SaveChangesAsync();
-
-            return NoContent();
+            catch (DbUpdateException ex)
+            {
+                return StatusCode(400, new { message = "Failed to delete treatment process due to database constraints.", error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An unexpected error occurred.", error = ex.Message });
+            }
         }
 
         private async Task<bool> TreatmentProcessExists(int id)

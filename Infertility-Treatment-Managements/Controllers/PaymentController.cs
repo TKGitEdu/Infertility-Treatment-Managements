@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Infertility_Treatment_Managements.DTOs;
+using Infertility_Treatment_Managements.Helpers;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Repositories.Models;
-using Infertility_Treatment_Managements.DTOs;
-using Infertility_Treatment_Managements.Helpers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -206,23 +207,27 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePayment(int id)
         {
-            var payment = await _context.Payments.FindAsync(id);
-            if (payment == null)
+            try
             {
-                return NotFound();
-            }
+                var payment = await _context.Payments.FindAsync(id);
+                if (payment == null)
+                {
+                    return NotFound(new { message = $"Payment with ID {id} not found." });
+                }
 
-            // Check if this payment is associated with a booking
-            var hasBooking = await _context.Bookings.AnyAsync(b => b.PaymentId == id);
-            if (hasBooking)
+                _context.Payments.Remove(payment);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (DbUpdateException ex)
             {
-                return BadRequest("Cannot delete payment that is associated with a booking");
+                return StatusCode(400, new { message = "Failed to delete payment due to database constraints.", error = ex.Message });
             }
-
-            _context.Payments.Remove(payment);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An unexpected error occurred.", error = ex.Message });
+            }
         }
 
         private async Task<bool> PaymentExists(int id)
