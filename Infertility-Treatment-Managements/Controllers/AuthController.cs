@@ -1,5 +1,4 @@
 ﻿using Infertility_Treatment_Managements.DTOs;
-using Infertility_Treatment_Managements.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -24,9 +23,96 @@ namespace Infertility_Treatment_Managements.Controllers
             _configuration = configuration;
         }
 
-        // POST: api/Auth/register
+        [HttpPost("login")]
+        public async Task<ActionResult<UserDTO>> Login(UserLoginDTO loginDto)
+        {
+            // Validate credentials
+            var user = await _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Username == loginDto.Username);
+
+            if (user == null || string.IsNullOrEmpty(user.Password))
+            {
+                // It's important not to reveal whether the username exists or not for security reasons.
+                return Unauthorized("Invalid username or password");
+            }
+
+            bool passwordsMatch = false;
+            bool needsPasswordUpdate = false;
+
+            // Check if the stored password looks like a BCrypt hash
+            // BCrypt hashes typically start with $2a$, $2b$, or $2y$, and are 60 characters long.
+            bool isPotentiallyHashed = user.Password.Length == 60 &&
+                                       (user.Password.StartsWith("$2a$") ||
+                                        user.Password.StartsWith("$2b$") ||
+                                        user.Password.StartsWith("$2y$"));
+
+            if (isPotentiallyHashed)
+            {
+                try
+                {
+                    passwordsMatch = BCrypt.Net.BCrypt.Verify(loginDto.Password, user.Password);
+                }
+                catch (BCrypt.Net.SaltParseException) // Or other BCrypt-specific exceptions if appropriate
+                {
+                    // This might indicate it's not a valid hash or a different kind of stored string.
+                    // For this logic, we'll assume if Verify throws, it's not a match or not a valid hash we can work with.
+                    passwordsMatch = false;
+                }
+            }
+            else
+            {
+                // Assume plain-text password
+                if (user.Password == loginDto.Password)
+                {
+                    passwordsMatch = true;
+                    needsPasswordUpdate = true; // Mark for hashing and update
+                }
+            }
+
+            if (!passwordsMatch)
+            {
+                return Unauthorized("Invalid username or password");
+            }
+
+            // If plain-text password matched, hash it and update the user record
+            if (needsPasswordUpdate)
+            {
+                user.Password = BCrypt.Net.BCrypt.HashPassword(loginDto.Password);
+                _context.Entry(user).State = EntityState.Modified;
+                await _context.SaveChangesAsync();
+            }
+
+            // Generate token
+            var token = GenerateJwtToken(user);
+
+            // Return token and user info using the existing DTO in the project
+            var userDto = new UserDTO
+            {
+                UserId = user.UserId,
+                Username = user.Username,
+                FullName = user.FullName,
+                Email = user.Email,
+                Phone = user.Phone,
+                RoleId = user.RoleId,
+                Address = user.Address,
+                Gender = user.Gender,
+                DateOfBirth = user.DateOfBirth,
+                Role = user.Role != null ? new RoleDTO
+                {
+                    RoleId = user.Role.RoleId,
+                    RoleName = user.Role.RoleName
+                } : null
+            };
+
+            // Add token to response
+            Response.Headers.Add("Authorization", $"Bearer {token}");
+
+            return userDto;
+        }
+
         [HttpPost("register")]
-        public async Task<ActionResult<AuthResponseDTO>> Register(UserCreateDTO userCreateDto)
+        public async Task<ActionResult<UserDTO>> Register(UserCreateDTO userCreateDto)
         {
             // Check if username already exists
             if (await _context.Users.AnyAsync(u => u.Username == userCreateDto.Username))
@@ -40,14 +126,22 @@ namespace Infertility_Treatment_Managements.Controllers
                 return BadRequest("Email already exists");
             }
 
-            // Convert DTO to entity using the existing mapper
-            var user = userCreateDto.ToEntity();
+            // Hash the password before storing
+            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(userCreateDto.Password);
 
-            // Set default role ID for customers if not specified
-            if (!user.RoleId.HasValue)
+            // Create new user
+            var user = new User
             {
-                user.RoleId = 2; // Default to customer role
-            }
+                FullName = userCreateDto.FullName,
+                Email = userCreateDto.Email,
+                Phone = userCreateDto.Phone,
+                Username = userCreateDto.Username,
+                Password = hashedPassword,
+                RoleId = userCreateDto.RoleId ?? 2, // Default to customer role if not specified
+                Address = userCreateDto.Address,
+                Gender = userCreateDto.Gender,
+                DateOfBirth = userCreateDto.DateOfBirth
+            };
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
@@ -58,46 +152,31 @@ namespace Infertility_Treatment_Managements.Controllers
             // Generate token
             var token = GenerateJwtToken(user);
 
-            // Return token and user info
-            return new AuthResponseDTO
+            // Return user DTO
+            var userDto = new UserDTO
             {
-                Token = token,
                 UserId = user.UserId,
                 Username = user.Username,
                 FullName = user.FullName,
-                Role = user.Role?.RoleName
+                Email = user.Email,
+                Phone = user.Phone,
+                RoleId = user.RoleId,
+                Address = user.Address,
+                Gender = user.Gender,
+                DateOfBirth = user.DateOfBirth,
+                Role = user.Role != null ? new RoleDTO
+                {
+                    RoleId = user.Role.RoleId,
+                    RoleName = user.Role.RoleName
+                } : null
             };
+
+            // Add token to response
+            Response.Headers.Add("Authorization", $"Bearer {token}");
+
+            return CreatedAtAction(nameof(Login), userDto);
         }
 
-        // POST: api/Auth/login
-        [HttpPost("login")]
-        public async Task<ActionResult<AuthResponseDTO>> Login(UserLoginDTO loginDto)
-        {
-            // Validate credentials
-            var user = await _context.Users
-                .Include(u => u.Role)
-                .FirstOrDefaultAsync(u => u.Username == loginDto.Username && u.Password == loginDto.Password);
-
-            if (user == null)
-            {
-                return Unauthorized("Invalid username or password");
-            }
-
-            // Generate token
-            var token = GenerateJwtToken(user);
-
-            // Return token and user info
-            return new AuthResponseDTO
-            {
-                Token = token,
-                UserId = user.UserId,
-                Username = user.Username,
-                FullName = user.FullName,
-                Role = user.Role?.RoleName
-            };
-        }
-
-        // GET: api/Auth/validate
         [HttpGet("validate")]
         [Authorize]
         public async Task<ActionResult<UserDTO>> ValidateToken()
@@ -122,8 +201,41 @@ namespace Infertility_Treatment_Managements.Controllers
                 return Unauthorized("User not found");
             }
 
-            // Convert entity to DTO using the existing mapper
-            return user.ToDTO();
+            // Return user as DTO
+            return new UserDTO
+            {
+                UserId = user.UserId,
+                Username = user.Username,
+                FullName = user.FullName,
+                Email = user.Email,
+                Phone = user.Phone,
+                RoleId = user.RoleId,
+                Address = user.Address,
+                Gender = user.Gender,
+                DateOfBirth = user.DateOfBirth,
+                Role = user.Role != null ? new RoleDTO
+                {
+                    RoleId = user.Role.RoleId,
+                    RoleName = user.Role.RoleName
+                } : null,
+                Doctor = user.Doctor != null ? new DoctorBasicDTO
+                {
+                    DoctorId = user.Doctor.DoctorId,
+                    DoctorName = user.Doctor.DoctorName,
+                    Specialization = user.Doctor.Specialization,
+                    Email = user.Doctor.Email,
+                    Phone = user.Doctor.Phone
+                } : null,
+                Patients = user.Patients?.Select(p => new PatientBasicDTO
+                {
+                    PatientId = p.PatientId,
+                    Name = p.Name,
+                    Email = p.Email,
+                    Phone = p.Phone,
+                    Gender = p.Gender,
+                    DateOfBirth = p.DateOfBirth.HasValue ? DateOnly.FromDateTime(p.DateOfBirth.Value) : null
+                }).ToList() ?? new List<PatientBasicDTO>()
+            };
         }
 
         private string GenerateJwtToken(User user)
@@ -144,11 +256,15 @@ namespace Infertility_Treatment_Managements.Controllers
                 claims.Add(new Claim(ClaimTypes.Role, user.Role.RoleName));
             }
 
+            // Lấy thời gian tồn tại token từ cấu hình
+            var expirationMinutes = Convert.ToDouble(jwtSettings["AccessTokenExpirationMinutes"] ?? "60");
+
+            // Tạo token với thời gian tồn tại từ cấu hình
             var token = new JwtSecurityToken(
                 issuer: jwtSettings["Issuer"],
                 audience: jwtSettings["Audience"],
                 claims: claims,
-                expires: DateTime.Now.AddHours(3),
+                expires: DateTime.Now.AddMinutes(expirationMinutes),
                 signingCredentials: new SigningCredentials(
                     new SymmetricSecurityKey(secretKey),
                     SecurityAlgorithms.HmacSha256)

@@ -1,12 +1,12 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Infertility_Treatment_Managements.DTOs;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Repositories.Models;
 using Microsoft.EntityFrameworkCore;
-using Infertility_Treatment_Managements.DTOs;
-using System.Threading.Tasks;
-using System.Collections.Generic;
+using Repositories.Models;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Infertility_Treatment_Managements.Controllers
 {
@@ -16,7 +16,7 @@ namespace Infertility_Treatment_Managements.Controllers
     {
         private readonly InfertilityTreatmentManagementContext _context;
         private const string PATIENT_ROLE_NAME = "Patient";
-        private const string DOCTOR_ROLE_NAME = "Doctor"; // Add constant for Doctor role
+        private const string DOCTOR_ROLE_NAME = "Doctor";
 
         public UserController(InfertilityTreatmentManagementContext context)
         {
@@ -25,7 +25,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // GET: api/User
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<UserDTO>>> GetUser()
+        public async Task<ActionResult<IEnumerable<UserDTO>>> GetUsers()
         {
             var users = await _context.Users
                 .Include(u => u.Role)
@@ -84,7 +84,6 @@ namespace Infertility_Treatment_Managements.Controllers
         }
 
         // POST: api/User
-        // Update the PostUser method to use the new properties
         [HttpPost]
         public async Task<ActionResult<UserDTO>> PostUser(UserCreateDTO userCreateDTO)
         {
@@ -93,6 +92,9 @@ namespace Infertility_Treatment_Managements.Controllers
             {
                 try
                 {
+                    // Hash the password
+                    string hashedPassword = BCrypt.Net.BCrypt.HashPassword(userCreateDTO.Password);
+
                     // Create a new User entity from the DTO
                     var user = new User
                     {
@@ -100,7 +102,7 @@ namespace Infertility_Treatment_Managements.Controllers
                         Email = userCreateDTO.Email,
                         Phone = userCreateDTO.Phone,
                         Username = userCreateDTO.Username,
-                        Password = userCreateDTO.Password,
+                        Password = hashedPassword, // Use the hashed password
                         RoleId = userCreateDTO.RoleId,
                         Address = userCreateDTO.Address,
                         Gender = userCreateDTO.Gender,
@@ -127,9 +129,7 @@ namespace Infertility_Treatment_Managements.Controllers
                                 Phone = user.Phone,
                                 Address = user.Address,
                                 Gender = user.Gender,
-                                DateOfBirth = user.DateOfBirth,
-                                BloodType = userCreateDTO.BloodType,
-                                EmergencyPhoneNumber = userCreateDTO.EmergencyPhoneNumber
+                                DateOfBirth = user.DateOfBirth
                             };
 
                             _context.Patients.Add(patient);
@@ -145,7 +145,7 @@ namespace Infertility_Treatment_Managements.Controllers
                                 DoctorName = user.FullName,
                                 Email = user.Email,
                                 Phone = user.Phone,
-                                Specialization = userCreateDTO.Specialization ?? "General" // Use provided specialization
+                                Specialization = userCreateDTO.Specialization ?? "General" // Default specialization
                             };
 
                             _context.Doctors.Add(doctor);
@@ -240,88 +240,6 @@ namespace Infertility_Treatment_Managements.Controllers
                                 Name = user.FullName,
                                 Email = user.Email,
                                 Phone = user.Phone,
-                                Address = user.Address
-                            };
-
-                            _context.Patients.Add(patient);
-                            await _context.SaveChangesAsync();
-                        }
-                    }
-                    else if (isPatientNow && wasPatient)
-                    {
-                        // User is still a Patient, update their Patient record
-                        var existingPatient = await _context.Patients
-                            .FirstOrDefaultAsync(p => p.UserId == id);
-
-                        if (existingPatient != null)
-                        {
-                            existingPatient.Name = user.FullName;
-                            existingPatient.Email = user.Email;
-                            existingPatient.Phone = user.Phone;
-                            existingPatient.Address = user.Address;
-
-                            _context.Entry(existingPatient).State = EntityState.Modified;
-                            await _context.SaveChangesAsync();
-                        }
-                    }
-
-                    // Handle Doctor role changes
-                    if (isDoctorNow && !wasDoctor)
-                    {
-                        // User is becoming a Doctor
-                        var existingDoctor = await _context.Doctors
-                            .FirstOrDefaultAsync(d => d.UserId == id);
-
-                        if (existingDoctor == null)
-                        {
-                            // Create a new Doctor record
-                            var doctor = new Doctor
-                            {
-                                UserId = user.UserId,
-                                DoctorName = user.FullName,
-                                Email = user.Email,
-                                Phone = user.Phone,
-                                Specialization = userUpdateDTO.Specialization ?? "General" // Use provided specialization
-                            };
-
-                            _context.Doctors.Add(doctor);
-                            await _context.SaveChangesAsync();
-                        }
-                    }
-                    else if (isDoctorNow && wasDoctor)
-                    {
-                        // User is still a Doctor, update their Doctor record
-                        var existingDoctor = await _context.Doctors
-                            .FirstOrDefaultAsync(d => d.UserId == id);
-
-                        if (existingDoctor != null)
-                        {
-                            existingDoctor.DoctorName = user.FullName;
-                            existingDoctor.Email = user.Email;
-                            existingDoctor.Phone = user.Phone;
-                            existingDoctor.Specialization = userUpdateDTO.Specialization ?? existingDoctor.Specialization;
-
-                            _context.Entry(existingDoctor).State = EntityState.Modified;
-                            await _context.SaveChangesAsync();
-                        }
-                    }
-
-                    // Similarly for Patient updates
-                    if (isPatientNow && !wasPatient)
-                    {
-                        // User is becoming a Patient
-                        var existingPatient = await _context.Patients
-                            .FirstOrDefaultAsync(p => p.UserId == id);
-
-                        if (existingPatient == null)
-                        {
-                            // Create a new Patient record
-                            var patient = new Patient
-                            {
-                                UserId = user.UserId,
-                                Name = user.FullName,
-                                Email = user.Email,
-                                Phone = user.Phone,
                                 Address = user.Address,
                                 Gender = user.Gender,
                                 DateOfBirth = user.DateOfBirth,
@@ -347,10 +265,57 @@ namespace Infertility_Treatment_Managements.Controllers
                             existingPatient.Address = user.Address;
                             existingPatient.Gender = user.Gender;
                             existingPatient.DateOfBirth = user.DateOfBirth;
-                            existingPatient.BloodType = userUpdateDTO.BloodType ?? existingPatient.BloodType;
-                            existingPatient.EmergencyPhoneNumber = userUpdateDTO.EmergencyPhoneNumber ?? existingPatient.EmergencyPhoneNumber;
+
+                            if (!string.IsNullOrEmpty(userUpdateDTO.BloodType))
+                                existingPatient.BloodType = userUpdateDTO.BloodType;
+
+                            if (!string.IsNullOrEmpty(userUpdateDTO.EmergencyPhoneNumber))
+                                existingPatient.EmergencyPhoneNumber = userUpdateDTO.EmergencyPhoneNumber;
 
                             _context.Entry(existingPatient).State = EntityState.Modified;
+                            await _context.SaveChangesAsync();
+                        }
+                    }
+
+                    // Handle Doctor role changes
+                    if (isDoctorNow && !wasDoctor)
+                    {
+                        // User is becoming a Doctor
+                        var existingDoctor = await _context.Doctors
+                            .FirstOrDefaultAsync(d => d.UserId == id);
+
+                        if (existingDoctor == null)
+                        {
+                            // Create a new Doctor record
+                            var doctor = new Doctor
+                            {
+                                UserId = user.UserId,
+                                DoctorName = user.FullName,
+                                Email = user.Email,
+                                Phone = user.Phone,
+                                Specialization = userUpdateDTO.Specialization ?? "General" // Default specialization
+                            };
+
+                            _context.Doctors.Add(doctor);
+                            await _context.SaveChangesAsync();
+                        }
+                    }
+                    else if (isDoctorNow && wasDoctor)
+                    {
+                        // User is still a Doctor, update their Doctor record
+                        var existingDoctor = await _context.Doctors
+                            .FirstOrDefaultAsync(d => d.UserId == id);
+
+                        if (existingDoctor != null)
+                        {
+                            existingDoctor.DoctorName = user.FullName;
+                            existingDoctor.Email = user.Email;
+                            existingDoctor.Phone = user.Phone;
+
+                            if (!string.IsNullOrEmpty(userUpdateDTO.Specialization))
+                                existingDoctor.Specialization = userUpdateDTO.Specialization;
+
+                            _context.Entry(existingDoctor).State = EntityState.Modified;
                             await _context.SaveChangesAsync();
                         }
                     }
@@ -381,13 +346,64 @@ namespace Infertility_Treatment_Managements.Controllers
                 try
                 {
                     // Check if user exists
-                    var user = await _context.Users.FindAsync(id);
+                    var user = await _context.Users
+                        .Include(u => u.Role)
+                        .FirstOrDefaultAsync(u => u.UserId == id);
 
                     if (user == null) return NotFound();
 
-                    // With cascade delete configured in the DbContext,
-                    // we can simply remove the user, and all related entities
-                    // (Doctor, Patient, PatientDetails, etc.) will be automatically deleted
+                    string roleName = user.Role?.RoleName?.ToLower() ?? "";
+
+                    // Check if there's an associated patient record
+                    if (roleName == PATIENT_ROLE_NAME.ToLower())
+                    {
+                        var patient = await _context.Patients
+                            .FirstOrDefaultAsync(p => p.UserId == id);
+
+                        if (patient != null)
+                        {
+                            // Check if this patient has any related records that would block deletion
+                            bool hasPatientDetails = await _context.PatientDetails
+                                .AnyAsync(pd => pd.PatientId == patient.PatientId);
+
+                            bool hasBookings = await _context.Bookings
+                                .AnyAsync(b => b.PatientId == patient.PatientId);
+
+                            if (hasPatientDetails || hasBookings)
+                            {
+                                return BadRequest("Cannot delete user because the associated patient has related records.");
+                            }
+
+                            // Remove the patient record first
+                            _context.Patients.Remove(patient);
+                            await _context.SaveChangesAsync();
+                        }
+                    }
+
+                    // Check if there's an associated doctor record
+                    if (roleName == DOCTOR_ROLE_NAME.ToLower())
+                    {
+                        var doctor = await _context.Doctors
+                            .FirstOrDefaultAsync(d => d.UserId == id);
+
+                        if (doctor != null)
+                        {
+                            // Check if this doctor has any related records that would block deletion
+                            bool hasBookings = await _context.Bookings
+                                .AnyAsync(b => b.DoctorId == doctor.DoctorId);
+
+                            if (hasBookings)
+                            {
+                                return BadRequest("Cannot delete user because the associated doctor has bookings.");
+                            }
+
+                            // Remove the doctor record first
+                            _context.Doctors.Remove(doctor);
+                            await _context.SaveChangesAsync();
+                        }
+                    }
+
+                    // Remove the user
                     _context.Users.Remove(user);
                     await _context.SaveChangesAsync();
 
@@ -400,6 +416,58 @@ namespace Infertility_Treatment_Managements.Controllers
                     return StatusCode(500, $"An error occurred: {ex.Message}");
                 }
             }
+        }
+
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword(UserPasswordUpdateDTO passwordUpdateDTO)
+        {
+            var user = await _context.Users.FindAsync(passwordUpdateDTO.UserId);
+            if (user == null)
+            {
+                return NotFound("User not found");
+            }
+
+            // Verify current password
+            bool currentPasswordValid = false;
+            bool isPotentiallyHashed = user.Password.Length == 60 &&
+                                   (user.Password.StartsWith("$2a$") ||
+                                    user.Password.StartsWith("$2b$") ||
+                                    user.Password.StartsWith("$2y$"));
+
+            if (isPotentiallyHashed)
+            {
+                try
+                {
+                    currentPasswordValid = BCrypt.Net.BCrypt.Verify(passwordUpdateDTO.CurrentPassword, user.Password);
+                }
+                catch
+                {
+                    currentPasswordValid = false;
+                }
+            }
+            else
+            {
+                // Plain text comparison as fallback
+                currentPasswordValid = (user.Password == passwordUpdateDTO.CurrentPassword);
+            }
+
+            if (!currentPasswordValid)
+            {
+                return BadRequest("Current password is incorrect");
+            }
+
+            // Verify that new password and confirm password match
+            if (passwordUpdateDTO.NewPassword != passwordUpdateDTO.ConfirmPassword)
+            {
+                return BadRequest("New password and confirmation do not match");
+            }
+
+            // Update password with hashed version
+            user.Password = BCrypt.Net.BCrypt.HashPassword(passwordUpdateDTO.NewPassword);
+            _context.Entry(user).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+
+            return Ok("Password changed successfully");
         }
 
         private async Task<bool> UserExistsAsync(int id)
