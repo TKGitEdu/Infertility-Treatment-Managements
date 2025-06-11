@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace Infertility_Treatment_Managements.DTOs
 {
@@ -78,6 +79,29 @@ namespace Infertility_Treatment_Managements.DTOs
         public int UserId { get; set; }
         public string CurrentPassword { get; set; }
         public string NewPassword { get; set; }
+        public string ConfirmPassword { get; set; }
+    }
+
+    // Yêu cầu quên mật khẩu - chỉ cần email
+    public class UserForgotPasswordDTO
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; }
+    }
+
+    // Đặt lại mật khẩu - cần token và mật khẩu mới
+    public class UserResetPasswordDTO
+    {
+        [Required]
+        public string Token { get; set; }
+
+        [Required]
+        [MinLength(6)]
+        public string NewPassword { get; set; }
+
+        [Required]
+        [Compare("NewPassword")]
         public string ConfirmPassword { get; set; }
     }
 }

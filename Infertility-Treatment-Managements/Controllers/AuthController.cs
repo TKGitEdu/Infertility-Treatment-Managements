@@ -1,9 +1,10 @@
 ﻿using Infertility_Treatment_Managements.DTOs;
+using Infertility_Treatment_Managements.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Repositories.Models;
+using Infertility_Treatment_Managements.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -16,11 +17,16 @@ namespace Infertility_Treatment_Managements.Controllers
     {
         private readonly InfertilityTreatmentManagementContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IEmailService _emailService;
 
-        public AuthController(InfertilityTreatmentManagementContext context, IConfiguration configuration)
+        public AuthController(
+            InfertilityTreatmentManagementContext context, 
+            IConfiguration configuration,
+            IEmailService emailService)
         {
             _context = context;
             _configuration = configuration;
+            _emailService = emailService;
         }
 
         [HttpPost("login")]
@@ -236,6 +242,89 @@ namespace Infertility_Treatment_Managements.Controllers
                     DateOfBirth = p.DateOfBirth.HasValue ? DateOnly.FromDateTime(p.DateOfBirth.Value) : null
                 }).ToList() ?? new List<PatientBasicDTO>()
             };
+        }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] UserForgotPasswordDTO forgotPasswordDTO)
+        {
+            // Tìm user với email được cung cấp
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == forgotPasswordDTO.Email);
+            
+            if (user == null)
+            {
+                // Không nên tiết lộ rằng email không tồn tại, vì lý do bảo mật
+                return Ok("Nếu email tồn tại trong hệ thống, một email hướng dẫn đặt lại mật khẩu sẽ được gửi.");
+            }
+            
+            // Tạo token reset password (có thể dùng GUID)
+            string resetToken = Guid.NewGuid().ToString();
+            
+            // Lưu token và thời gian hết hạn
+            user.ResetPasswordToken = resetToken;
+            user.ResetPasswordExpiry = DateTime.UtcNow.AddHours(1); // Token có hiệu lực 1 giờ
+            
+            await _context.SaveChangesAsync();
+            
+            // Lấy base URL từ request
+            string baseUrl = $"{Request.Scheme}://{Request.Host}";
+            
+            // Đối với frontend SPA, URL reset password sẽ trỏ đến route của frontend
+            // Ví dụ: http://localhost:3000/reset-password?token=abc123
+            string resetLink = $"{baseUrl}/reset-password?token={resetToken}";
+            
+            // Tạo nội dung email
+            string emailBody = $@"
+                <h2>Yêu cầu đặt lại mật khẩu</h2>
+                <p>Xin chào {user.FullName},</p>
+                <p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn.</p>
+                <p>Vui lòng nhấp vào liên kết dưới đây để đặt lại mật khẩu:</p>
+                <p><a href='{resetLink}'>Đặt lại mật khẩu</a></p>
+                <p>Liên kết này sẽ hết hạn sau 1 giờ.</p>
+                <p>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>
+                <p>Trân trọng,<br>Phòng khám điều trị vô sinh</p>
+            ";
+            
+            try
+            {
+                // Inject EmailService và gửi email
+                await _emailService.SendEmailAsync(user.Email, "Đặt lại mật khẩu", emailBody);
+                
+                return Ok("Nếu email tồn tại trong hệ thống, một email hướng dẫn đặt lại mật khẩu sẽ được gửi.");
+            }
+            catch (Exception ex)
+            {
+                // Log lỗi
+                return StatusCode(500, $"Lỗi khi gửi email: {ex.Message}");
+            }
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] UserResetPasswordDTO resetPasswordDTO)
+        {
+            // Tìm user với token và kiểm tra thời hạn
+            var user = await _context.Users.FirstOrDefaultAsync(u => 
+                u.ResetPasswordToken == resetPasswordDTO.Token && 
+                u.ResetPasswordExpiry > DateTime.UtcNow);
+            
+            if (user == null)
+            {
+                return BadRequest("Token không hợp lệ hoặc đã hết hạn");
+            }
+            
+            // Kiểm tra mật khẩu mới và xác nhận mật khẩu
+            if (resetPasswordDTO.NewPassword != resetPasswordDTO.ConfirmPassword)
+            {
+                return BadRequest("Mật khẩu mới và xác nhận mật khẩu không khớp");
+            }
+            
+            // Cập nhật mật khẩu và xóa token
+            user.Password = BCrypt.Net.BCrypt.HashPassword(resetPasswordDTO.NewPassword);
+            user.ResetPasswordToken = null;
+            user.ResetPasswordExpiry = null;
+            
+            await _context.SaveChangesAsync();
+            
+            return Ok("Mật khẩu đã được đặt lại thành công");
         }
 
         private string GenerateJwtToken(User user)

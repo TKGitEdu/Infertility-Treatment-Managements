@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Repositories.Models;
+using Infertility_Treatment_Managements.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;

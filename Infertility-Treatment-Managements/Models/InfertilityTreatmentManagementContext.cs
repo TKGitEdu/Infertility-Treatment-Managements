@@ -5,9 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Infertility_Treatment_Managements.Models;
 using Microsoft.EntityFrameworkCore;
-using Repositories.Models;
 
-namespace Repositories.Models
+namespace Infertility_Treatment_Managements.Models
 {
     public class InfertilityTreatmentManagementContext : DbContext
     {

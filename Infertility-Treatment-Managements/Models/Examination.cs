@@ -3,7 +3,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Repositories.Models;
+namespace Infertility_Treatment_Managements.Models;
 
 public partial class Examination
 {
