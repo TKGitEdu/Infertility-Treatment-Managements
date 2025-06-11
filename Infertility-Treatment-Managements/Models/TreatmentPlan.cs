@@ -1,4 +1,4 @@
-﻿using Repositories.Models;
+﻿using Infertility_Treatment_Managements.Models;
 
 namespace Infertility_Treatment_Managements.Models
 {

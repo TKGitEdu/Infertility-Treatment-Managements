@@ -1,6 +1,6 @@
 ﻿using Infertility_Treatment_Managements.DTOs;
 using Infertility_Treatment_Managements.Models;
-using Repositories.Models;
+using Infertility_Treatment_Managements.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;

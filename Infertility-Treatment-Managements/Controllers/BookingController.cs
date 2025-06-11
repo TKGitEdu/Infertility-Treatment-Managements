@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Repositories.Models;
+using Infertility_Treatment_Managements.Models;
 using Infertility_Treatment_Managements.DTOs;
 using Infertility_Treatment_Managements.Helpers;
 using System;

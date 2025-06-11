@@ -8,7 +8,7 @@ namespace Infertility_Treatment_Managements.DTOs
         public int DoctorId { get; set; }
         public int? UserId { get; set; }
         public string DoctorName { get; set; }
-        public string Specialization { get; set; }
+        public string? Specialization { get; set; }  // Thêm ? để chỉ rõ là nullable
         public string Phone { get; set; }
         public string Email { get; set; }
 
@@ -22,7 +22,7 @@ namespace Infertility_Treatment_Managements.DTOs
         public int DoctorId { get; set; }
         public int? UserId { get; set; }
         public string DoctorName { get; set; }
-        public string Specialization { get; set; }
+        public string? Specialization { get; set; }  // Thêm ? để chỉ rõ là nullable
         public string Phone { get; set; }
         public string Email { get; set; }
     }
@@ -31,7 +31,7 @@ namespace Infertility_Treatment_Managements.DTOs
     {
         public int? UserId { get; set; }
         public string DoctorName { get; set; }
-        public string Specialization { get; set; }
+        public string? Specialization { get; set; }  // Thêm ? để chỉ rõ là nullable
         public string Phone { get; set; }
         public string Email { get; set; }
 
@@ -47,7 +47,7 @@ namespace Infertility_Treatment_Managements.DTOs
         public int DoctorId { get; set; }
         public int? UserId { get; set; }
         public string DoctorName { get; set; }
-        public string Specialization { get; set; }
+        public string? Specialization { get; set; }  // Thêm ? để chỉ rõ là nullable
         public string Phone { get; set; }
         public string Email { get; set; }
     }
