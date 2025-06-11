@@ -33,7 +33,8 @@ builder.Services.AddCors(options =>
         builder => builder
             .AllowAnyOrigin()
             .AllowAnyMethod()
-            .AllowAnyHeader());
+            .AllowAnyHeader()
+            .WithExposedHeaders("Authorization")); // Thêm dòng này
 });
 
 // Add JWT configuration
