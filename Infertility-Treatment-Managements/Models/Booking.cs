@@ -19,7 +19,7 @@ public partial class Booking
 
     public int? SlotId { get; set; }
 
-    public DateTime? DateBooking { get; set; }
+    public DateTime DateBooking { get; set; }
 
     public string Description { get; set; }
 
