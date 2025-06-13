@@ -7,7 +7,7 @@ namespace Infertility_Treatment_Managements.Models;
 
 public partial class Service
 {
-    public int ServiceId { get; set; }
+    public string ServiceId { get; set; }
     public string Name { get; set; }
     public string Description { get; set; }
     public decimal? Price { get; set; }

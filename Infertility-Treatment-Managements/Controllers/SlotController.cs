@@ -34,7 +34,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // GET: api/Slot/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<SlotDTO>> GetSlot(int id)
+        public async Task<ActionResult<SlotDTO>> GetSlot(string id)
         {
             var slot = await _context.Slots
                 .Include(s => s.Bookings)
@@ -63,7 +63,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // PUT: api/Slot/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutSlot(int id, SlotUpdateDTO slotUpdateDTO)
+        public async Task<IActionResult> PutSlot(string id, SlotUpdateDTO slotUpdateDTO)
         {
             if (id != slotUpdateDTO.SlotId) return BadRequest();
 
@@ -88,7 +88,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // DELETE: api/Slot/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteSlot(int id)
+        public async Task<IActionResult> DeleteSlot(string id)
         {
             try
             {
@@ -118,7 +118,7 @@ namespace Infertility_Treatment_Managements.Controllers
             }
         }
 
-        private async Task<bool> SlotExistsAsync(int id)
+        private async Task<bool> SlotExistsAsync(string id)
         {
             return await _context.Slots.AnyAsync(s => s.SlotId == id);
         }

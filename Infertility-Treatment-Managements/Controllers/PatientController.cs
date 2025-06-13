@@ -38,7 +38,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // GET: api/Patient/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<PatientDTO>> GetPatient(int id)
+        public async Task<ActionResult<PatientDTO>> GetPatient(string id)
         {
             var patient = await _context.Patients
                 .Include(p => p.User)
@@ -56,7 +56,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // GET: api/Patient/User/5
         [HttpGet("User/{userId}")]
-        public async Task<ActionResult<IEnumerable<PatientDTO>>> GetPatientsByUser(int userId)
+        public async Task<ActionResult<IEnumerable<PatientDTO>>> GetPatientsByUser(string userId)
         {
             var userExists = await _context.Users.AnyAsync(u => u.UserId == userId);
             if (!userExists)
@@ -76,7 +76,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // GET: api/Patient/GetRoleId (renamed to match DoctorController naming)
         [HttpGet("GetRoleId")]
-        public async Task<ActionResult<int?>> GetPatientRoleId()
+        public async Task<ActionResult<string>> GetPatientRoleId()
         {
             var patientRole = await _context.Roles
                 .FirstOrDefaultAsync(r => r.RoleName == PATIENT_ROLE_NAME);
@@ -109,10 +109,10 @@ namespace Infertility_Treatment_Managements.Controllers
                 // 2. Handle user creation or validation
                 User user;
 
-                if (patientCreateDTO.UserId.HasValue)
+                if (!string.IsNullOrEmpty(patientCreateDTO.UserId))
                 {
                     // Using existing user
-                    user = await _context.Users.FindAsync(patientCreateDTO.UserId.Value);
+                    user = await _context.Users.FindAsync(patientCreateDTO.UserId);
                     if (user == null)
                     {
                         return BadRequest("Invalid UserId: User does not exist");
@@ -214,7 +214,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 var result = createdPatient.ToDTO();
 
                 // If we created a new user, include the generated credentials in the response
-                if (!patientCreateDTO.UserId.HasValue)
+                if (string.IsNullOrEmpty(patientCreateDTO.UserId))
                 {
                     // Add user credentials to the response
                     return Ok(new
@@ -253,7 +253,7 @@ namespace Infertility_Treatment_Managements.Controllers
             try
             {
                 // Validate UserId if being changed
-                if (patientUpdateDTO.UserId.HasValue && patientUpdateDTO.UserId != patient.UserId)
+                if (!string.IsNullOrEmpty(patientUpdateDTO.UserId) && patientUpdateDTO.UserId != patient.UserId)
                 {
                     var userExists = await _context.Users.AnyAsync(u => u.UserId == patientUpdateDTO.UserId);
                     if (!userExists)
@@ -279,7 +279,7 @@ namespace Infertility_Treatment_Managements.Controllers
                     }
 
                     // Update new user's role
-                    var newUser = await _context.Users.FindAsync(patientUpdateDTO.UserId.Value);
+                    var newUser = await _context.Users.FindAsync(patientUpdateDTO.UserId);
                     if (newUser.RoleId != patientRole.RoleId)
                     {
                         newUser.RoleId = patientRole.RoleId;
@@ -294,9 +294,9 @@ namespace Infertility_Treatment_Managements.Controllers
                 await _context.SaveChangesAsync();
 
                 // Also update the associated user's basic information if available
-                if (patient.UserId.HasValue)
+                if (!string.IsNullOrEmpty(patient.UserId))
                 {
-                    var user = await _context.Users.FindAsync(patient.UserId.Value);
+                    var user = await _context.Users.FindAsync(patient.UserId);
                     if (user != null)
                     {
                         // Update user's matching fields
@@ -362,7 +362,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // DELETE: api/Patient/Delete/{userId} (renamed to match DoctorController naming)
         [HttpDelete("Delete/{userId}")]
-        public async Task<IActionResult> DeletePatientByUserId(int userId)
+        public async Task<IActionResult> DeletePatientByUserId(string userId)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
 
@@ -423,8 +423,8 @@ namespace Infertility_Treatment_Managements.Controllers
         public async Task<ActionResult<PatientDTO>> CreatePatientLegacy(PatientCreateDTO patientCreateDTO)
         {
             // Find Patient role ID if we're creating a user too
-            int? patientRoleId = null;
-            if (!patientCreateDTO.UserId.HasValue)
+            string patientRoleId = null;
+            if (string.IsNullOrEmpty(patientCreateDTO.UserId))
             {
                 var roles = await _context.Roles.ToListAsync();
                 foreach (var role in roles)
@@ -436,14 +436,14 @@ namespace Infertility_Treatment_Managements.Controllers
                     }
                 }
 
-                if (!patientRoleId.HasValue)
+                if (string.IsNullOrEmpty(patientRoleId))
                 {
                     return BadRequest($"Patient role not found. Please create a '{PATIENT_ROLE_NAME}' role first.");
                 }
             }
 
             // Validate UserId if provided
-            if (patientCreateDTO.UserId.HasValue)
+            if (!string.IsNullOrEmpty(patientCreateDTO.UserId))
             {
                 var userExists = await _context.Users.AnyAsync(u => u.UserId == patientCreateDTO.UserId);
                 if (!userExists)
@@ -474,7 +474,7 @@ namespace Infertility_Treatment_Managements.Controllers
         // PUT: api/Patient/5
         [HttpPut("{id}")]
         [Obsolete("Use PUT /api/Patient/Update instead. This endpoint will be removed in a future version.")]
-        public async Task<IActionResult> UpdatePatientLegacy(int id, PatientUpdateDTO patientUpdateDTO)
+        public async Task<IActionResult> UpdatePatientLegacy(string id, PatientUpdateDTO patientUpdateDTO)
         {
             if (id != patientUpdateDTO.PatientId)
             {
@@ -487,7 +487,7 @@ namespace Infertility_Treatment_Managements.Controllers
         // DELETE: api/Patient/5
         [HttpDelete("{id}")]
         [Obsolete("Use DELETE /api/Patient/Delete/{userId} instead. This endpoint will be removed in a future version.")]
-        public async Task<IActionResult> DeletePatientLegacy(int id)
+        public async Task<IActionResult> DeletePatientLegacy(string id)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
 
@@ -514,16 +514,16 @@ namespace Infertility_Treatment_Managements.Controllers
                 }
 
                 // Get the associated user ID
-                int? userId = patient.UserId;
+                string userId = patient.UserId;
 
                 // Remove the patient
                 _context.Patients.Remove(patient);
                 await _context.SaveChangesAsync();
 
                 // If there's an associated user, delete them too
-                if (userId.HasValue)
+                if (!string.IsNullOrEmpty(userId))
                 {
-                    var user = await _context.Users.FindAsync(userId.Value);
+                    var user = await _context.Users.FindAsync(userId);
                     if (user != null)
                     {
                         _context.Users.Remove(user);
@@ -541,7 +541,7 @@ namespace Infertility_Treatment_Managements.Controllers
             }
         }
 
-        private async Task<bool> PatientExists(int id)
+        private async Task<bool> PatientExists(string id)
         {
             return await _context.Patients.AnyAsync(p => p.PatientId == id);
         }

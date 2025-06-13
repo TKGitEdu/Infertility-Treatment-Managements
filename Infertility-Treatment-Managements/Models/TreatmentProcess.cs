@@ -8,10 +8,10 @@ namespace Infertility_Treatment_Managements.Models;
 
 public partial class TreatmentProcess
 {
-    public int TreatmentProcessId { get; set; }
+    public string TreatmentProcessId { get; set; }
     public string Method { get; set; }
-    public int? PatientDetailId { get; set; }
-    public int? TreatmentPlanId { get; set; }
+    public string? PatientDetailId { get; set; }
+    public string? TreatmentPlanId { get; set; }
     public DateTime? ScheduledDate { get; set; }
     public DateTime? ActualDate { get; set; }
     public string Result { get; set; }

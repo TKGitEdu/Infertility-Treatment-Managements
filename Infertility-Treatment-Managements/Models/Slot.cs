@@ -7,7 +7,7 @@ namespace Infertility_Treatment_Managements.Models;
 
 public partial class Slot
 {
-    public int SlotId { get; set; }
+    public string SlotId { get; set; }
 
     public string SlotName { get; set; }
 

@@ -2,7 +2,6 @@
 using Infertility_Treatment_Managements.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Infertility_Treatment_Managements.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -41,7 +40,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // GET: api/TreatmentPlan/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<TreatmentPlanBasicDTO>> GetTreatmentPlan(int id)
+        public async Task<ActionResult<TreatmentPlanBasicDTO>> GetTreatmentPlan(string id)
         {
             var treatmentPlan = await _context.TreatmentPlans
                 .Select(tp => new TreatmentPlanBasicDTO
@@ -114,7 +113,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // PUT: api/TreatmentPlan/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateTreatmentPlan(int id, TreatmentPlanUpdateDTO updateDTO)
+        public async Task<IActionResult> UpdateTreatmentPlan(string id, TreatmentPlanUpdateDTO updateDTO)
         {
             if (id != updateDTO.TreatmentPlanId)
             {
@@ -170,7 +169,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // DELETE: api/TreatmentPlan/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteTreatmentPlan(int id)
+        public async Task<IActionResult> DeleteTreatmentPlan(string id)
         {
             var treatmentPlan = await _context.TreatmentPlans.FindAsync(id);
             if (treatmentPlan == null)

@@ -15,7 +15,7 @@ namespace Infertility_Treatment_Managements.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly InfertilityTreatmentManagementContext _context;
+        private readonly InfertilityTreatmentManagementContext _Context;
         private readonly IConfiguration _configuration;
         private readonly IEmailService _emailService;
 
@@ -24,7 +24,7 @@ namespace Infertility_Treatment_Managements.Controllers
             IConfiguration configuration,
             IEmailService emailService)
         {
-            _context = context;
+            _Context = context;
             _configuration = configuration;
             _emailService = emailService;
         }
@@ -40,7 +40,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 }
 
                 // Truy vấn user với chỉ những trường cần thiết
-                var user = await _context.Users
+                var user = await _Context.Users
                     .AsNoTracking()
                     .Where(u => u.Username == loginDto.Username)
                     .Select(u => new {
@@ -70,10 +70,10 @@ namespace Infertility_Treatment_Managements.Controllers
 
                 // Lấy role
                 string roleName = null;
-                if (user.RoleId.HasValue)
+                if (!string.IsNullOrEmpty(user.RoleId) && !user.RoleId.Equals("null", StringComparison.OrdinalIgnoreCase))
                 {
-                    var role = await _context.Roles
-                        .Where(r => r.RoleId == user.RoleId.Value)
+                    var role = await _Context.Roles
+                        .Where(r => r.RoleId == user.RoleId.Trim())
                         .Select(r => new { r.RoleName })
                         .FirstOrDefaultAsync();
 
@@ -113,7 +113,7 @@ namespace Infertility_Treatment_Managements.Controllers
         }
 
         // Hàm tạo token đơn giản
-        private string CreateJwtToken(int userId, string username, string roleName)
+        private string CreateJwtToken(string userId, string username, string roleName)
         {
             var jwtSettings = _configuration.GetSection("JwtSettings");
             var secretKey = Encoding.UTF8.GetBytes(jwtSettings["SecretKey"] ?? "defaultsecretkey12345678901234567890");
@@ -142,20 +142,20 @@ namespace Infertility_Treatment_Managements.Controllers
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-
+        //đăng kí chỉ dành cho patient
         [HttpPost("register")]
         public async Task<ActionResult<UserDTO>> Register(UserCreateDTO userCreateDto)
         {
             try
             {
                 // Check if username already exists
-                if (await _context.Users.AnyAsync(u => u.Username == userCreateDto.Username))
+                if (await _Context.Users.AnyAsync(u => u.Username == userCreateDto.Username))
                 {
                     return BadRequest("Username already exists");
                 }
 
                 // Check if email already exists
-                if (await _context.Users.AnyAsync(u => u.Email == userCreateDto.Email))
+                if (await _Context.Users.AnyAsync(u => u.Email == userCreateDto.Email))
                 {
                     return BadRequest("Email already exists");
                 }
@@ -163,37 +163,50 @@ namespace Infertility_Treatment_Managements.Controllers
                 // Store password directly without hashing
                 string password = userCreateDto.Password;
 
+                String roldIdPatient = null;
+                var roles = await _Context.Roles.ToListAsync();
+                if(roles != null && roles.Count > 0)
+                {
+                    // Find the Patient role
+                    var patientRole = roles.FirstOrDefault(r => r.RoleName?.ToLower() == "patient");
+                    if (patientRole != null)
+                    {
+                        roldIdPatient = patientRole.RoleId.ToString();
+                    }
+                }
+
                 // Create new user
                 var user = new User
                 {
+                    UserId = Guid.NewGuid().ToString(),
                     FullName = userCreateDto.FullName ?? "",
                     Email = userCreateDto.Email ?? "",
                     Phone = userCreateDto.Phone ?? "",
                     Username = userCreateDto.Username ?? "",
                     Password = password, // Plain text password
-                    RoleId = userCreateDto.RoleId ?? 2, // Default to Patient role if not specified
+                    RoleId = roldIdPatient, // Default to Patient role if not specified
                     Address = userCreateDto.Address ?? "",
                     Gender = userCreateDto.Gender ?? "",
                     DateOfBirth = userCreateDto.DateOfBirth
                 };
 
                 // Use the execution strategy provided by the DbContext
-                var strategy = _context.Database.CreateExecutionStrategy();
+                var strategy = _Context.Database.CreateExecutionStrategy();
 
                 await strategy.ExecuteAsync(async () =>
                 {
                     // Begin transaction
-                    using (var transaction = await _context.Database.BeginTransactionAsync())
+                    using (var transaction = await _Context.Database.BeginTransactionAsync())
                     {
                         try
                         {
-                            _context.Users.Add(user);
-                            await _context.SaveChangesAsync();
+                            _Context.Users.Add(user);
+                            await _Context.SaveChangesAsync();
 
                             // Check user's role
-                            if (user.RoleId.HasValue)
+                            if (!string.IsNullOrEmpty(user.RoleId) && !user.RoleId.Equals("null", StringComparison.OrdinalIgnoreCase))
                             {
-                                var Role = await _context.Roles.FindAsync(user.RoleId.Value);
+                                var Role = await _Context.Roles.FindAsync(user.RoleId);
 
                                 // If the user is a Doctor (RoleId = 1)
                                 if (Role?.RoleName?.ToLower() == "doctor")
@@ -208,8 +221,8 @@ namespace Infertility_Treatment_Managements.Controllers
                                         Specialization = userCreateDto.Specialization ?? "General" // Mặc định
                                     };
 
-                                    _context.Doctors.Add(doctor);
-                                    await _context.SaveChangesAsync();
+                                    _Context.Doctors.Add(doctor);
+                                    await _Context.SaveChangesAsync();
                                 }
                                 // If the user is a Patient (RoleId = 2)
                                 else if (Role?.RoleName?.ToLower() == "patient")
@@ -228,8 +241,8 @@ namespace Infertility_Treatment_Managements.Controllers
                                         EmergencyPhoneNumber = userCreateDto.EmergencyPhoneNumber
                                     };
 
-                                    _context.Patients.Add(patient);
-                                    await _context.SaveChangesAsync();
+                                    _Context.Patients.Add(patient);
+                                    await _Context.SaveChangesAsync();
                                 }
                             }
 
@@ -247,9 +260,9 @@ namespace Infertility_Treatment_Managements.Controllers
 
                 // Load role safely
                 Role role = null;
-                if (user.RoleId.HasValue)
+                if (!string.IsNullOrEmpty(user.RoleId) && !user.RoleId.Equals("null", StringComparison.OrdinalIgnoreCase))
                 {
-                    role = await _context.Roles.FindAsync(user.RoleId.Value);
+                    role = await _Context.Roles.FindAsync(user.RoleId);
                 }
 
                 // Generate token
@@ -303,7 +316,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 }
 
                 // Tìm user với projection để tránh lỗi null
-                var user = await _context.Users
+                var user = await _Context.Users
                     .AsNoTracking()
                     .Where(u => u.UserId.ToString() == userId)
                     .Select(u => new {
@@ -329,13 +342,13 @@ namespace Infertility_Treatment_Managements.Controllers
 
                 // Lấy role nếu có
                 string roleName = null;
-                int? roleId = null;
+                string? roleId = null;
 
-                if (user.RoleId.HasValue)
+                if (!string.IsNullOrEmpty(user.RoleId) && !user.RoleId.Equals("null", StringComparison.OrdinalIgnoreCase))
                 {
-                    var role = await _context.Roles
+                    var role = await _Context.Roles
                         .AsNoTracking()
-                        .Where(r => r.RoleId == user.RoleId.Value)
+                        .Where(r => r.RoleId == user.RoleId)
                         .Select(r => new { r.RoleId, r.RoleName })
                         .FirstOrDefaultAsync();
 
@@ -362,11 +375,11 @@ namespace Infertility_Treatment_Managements.Controllers
                 };
 
                 // Thêm role nếu có
-                if (roleId.HasValue && !string.IsNullOrEmpty(roleName))
+                if (roleId.Length > 0 && !string.IsNullOrEmpty(roleName))
                 {
                     userDto.Role = new RoleDTO
                     {
-                        RoleId = roleId.Value,
+                        RoleId = roleId,
                         RoleName = roleName
                     };
                 }
@@ -398,7 +411,7 @@ namespace Infertility_Treatment_Managements.Controllers
             try
             {
                 // Tìm user với email được cung cấp
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == forgotPasswordDTO.Email);
+                var user = await _Context.Users.FirstOrDefaultAsync(u => u.Email == forgotPasswordDTO.Email);
 
                 if (user == null)
                 {
@@ -416,7 +429,7 @@ namespace Infertility_Treatment_Managements.Controllers
                     user.ResetPasswordToken = resetToken;
                     user.ResetPasswordExpiry = DateTime.UtcNow.AddHours(1); // Token có hiệu lực 1 giờ
 
-                    await _context.SaveChangesAsync();
+                    await _Context.SaveChangesAsync();
                 }
                 catch (Exception ex)
                 {
@@ -468,7 +481,7 @@ namespace Infertility_Treatment_Managements.Controllers
         public async Task<IActionResult> ResetPassword([FromBody] UserResetPasswordDTO resetPasswordDTO)
         {
             // Tìm user với token và kiểm tra thời hạn
-            var user = await _context.Users.FirstOrDefaultAsync(u =>
+            var user = await _Context.Users.FirstOrDefaultAsync(u =>
                 u.ResetPasswordToken == resetPasswordDTO.Token &&
                 u.ResetPasswordExpiry > DateTime.UtcNow);
 
@@ -488,7 +501,7 @@ namespace Infertility_Treatment_Managements.Controllers
             user.ResetPasswordToken = null;
             user.ResetPasswordExpiry = null;
 
-            await _context.SaveChangesAsync();
+            await _Context.SaveChangesAsync();
 
             return Ok("Mật khẩu đã được đặt lại thành công");
         }
@@ -499,51 +512,96 @@ namespace Infertility_Treatment_Managements.Controllers
         {
             try
             {
-                // Tìm tất cả người dùng với RoleId = 2 (Patient)
-                var patientUsers = await _context.Users
-                    .Where(u => u.RoleId == 2)
+                // Tìm Patient role trong database
+                var patientRole = await _Context.Roles
+                    .FirstOrDefaultAsync(r => r.RoleName.ToLower() == "patient");
+
+                if (patientRole == null)
+                {
+                    return BadRequest("Patient role not found in the system");
+                }
+
+                // Lấy ID của Patient role
+                string patientRoleId = patientRole.RoleId;
+
+                // Tìm tất cả người dùng có role là Patient
+                var patientUsers = await _Context.Users
+                    .Where(u => u.RoleId == patientRoleId)
                     .ToListAsync();
 
                 int created = 0;
+                int existing = 0;
+                int failed = 0;
 
-                foreach (var user in patientUsers)
+                // Tạo transaction để đảm bảo tính nhất quán
+                using var transaction = await _Context.Database.BeginTransactionAsync();
+
+                try
                 {
-                    // Kiểm tra xem đã có bản ghi patient chưa
-                    var existingPatient = await _context.Patients
-                        .FirstOrDefaultAsync(p => p.UserId == user.UserId);
-
-                    if (existingPatient == null)
+                    foreach (var user in patientUsers)
                     {
-                        // Tạo bản ghi patient mới
-                        var patient = new Patient
+                        // Kiểm tra xem đã có bản ghi patient chưa
+                        var existingPatient = await _Context.Patients
+                            .FirstOrDefaultAsync(p => p.UserId == user.UserId);
+
+                        if (existingPatient == null)
                         {
-                            UserId = user.UserId,
-                            Name = user.FullName ?? "",
-                            Email = user.Email ?? "",
-                            Phone = user.Phone ?? "",
-                            Address = user.Address ?? "",
-                            Gender = user.Gender ?? "",
-                            DateOfBirth = user.DateOfBirth
-                            // Các trường BloodType và EmergencyPhoneNumber sẽ là null
-                        };
+                            // Tạo bản ghi patient mới
+                            var patient = new Patient
+                            {
+                                UserId = user.UserId,
+                                Name = user.FullName ?? "",
+                                Email = user.Email ?? "",
+                                Phone = user.Phone ?? "",
+                                Address = user.Address ?? "",
+                                Gender = user.Gender ?? "",
+                                DateOfBirth = user.DateOfBirth
+                            };
 
-                        _context.Patients.Add(patient);
-                        created++;
+                            _Context.Patients.Add(patient);
+                            created++;
+                        }
+                        else
+                        {
+                            existing++;
+                        }
                     }
-                }
 
-                if (created > 0)
+                    // Lưu các thay đổi vào database
+                    await _Context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    // Trả về thông tin chi tiết về kết quả
+                    return Ok(new
+                    {
+                        Message = $"Fixed {created} patient records",
+                        Created = created,
+                        AlreadyExisting = existing,
+                        Failed = failed,
+                        TotalUsers = patientUsers.Count
+                    });
+                }
+                catch (Exception ex)
                 {
-                    await _context.SaveChangesAsync();
+                    // Rollback transaction nếu có lỗi
+                    await transaction.RollbackAsync();
+                    return StatusCode(500, new
+                    {
+                        Message = $"An error occurred while creating patient records",
+                        Error = ex.Message
+                    });
                 }
-
-                return Ok($"Fixed {created} patient records");
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"An error occurred: {ex.Message}");
+                return StatusCode(500, new
+                {
+                    Message = "An error occurred while processing request",
+                    Error = ex.Message
+                });
             }
         }
+
 
         [HttpPost("fix-doctor-records")]
         [Authorize(Roles = "Admin")] // Chỉ admin mới có thể chạy
@@ -551,48 +609,101 @@ namespace Infertility_Treatment_Managements.Controllers
         {
             try
             {
-                // Tìm tất cả người dùng với RoleId = 1 (Doctor)
-                var doctorUsers = await _context.Users
-                    .Where(u => u.RoleId == 1)
+                // Tìm Doctor role trong database
+                var doctorRole = await _Context.Roles
+                    .FirstOrDefaultAsync(r => r.RoleName.ToLower() == "doctor");
+
+                if (doctorRole == null)
+                {
+                    return BadRequest("Doctor role not found in the system");
+                }
+
+                // Lấy ID của Doctor role
+                string doctorRoleId = doctorRole.RoleId;
+
+                // Tìm tất cả người dùng có role là Doctor
+                var doctorUsers = await _Context.Users
+                    .Where(u => u.RoleId == doctorRoleId)
                     .ToListAsync();
 
                 int created = 0;
+                int existing = 0;
+                int failed = 0;
 
-                foreach (var user in doctorUsers)
+                // Tạo transaction để đảm bảo tính nhất quán
+                using var transaction = await _Context.Database.BeginTransactionAsync();
+
+                try
                 {
-                    // Kiểm tra xem đã có bản ghi doctor chưa
-                    var existingDoctor = await _context.Doctors
-                        .FirstOrDefaultAsync(d => d.UserId == user.UserId);
-
-                    if (existingDoctor == null)
+                    foreach (var user in doctorUsers)
                     {
-                        // Tạo bản ghi doctor mới
-                        var doctor = new Doctor
+                        // Kiểm tra xem đã có bản ghi doctor chưa
+                        var existingDoctor = await _Context.Doctors
+                            .FirstOrDefaultAsync(d => d.UserId == user.UserId);
+
+                        if (existingDoctor == null)
                         {
-                            UserId = user.UserId,
-                            DoctorName = user.FullName ?? "",
-                            Email = user.Email ?? "",
-                            Phone = user.Phone ?? "",
-                            Specialization = "General" // Mặc định
-                        };
+                            try
+                            {
+                                // Tạo bản ghi doctor mới
+                                var doctor = new Doctor
+                                {
+                                    UserId = user.UserId,
+                                    DoctorName = user.FullName ?? "",
+                                    Email = user.Email ?? "",
+                                    Phone = user.Phone ?? "",
+                                    Specialization = "General" // Mặc định
+                                };
 
-                        _context.Doctors.Add(doctor);
-                        created++;
+                                _Context.Doctors.Add(doctor);
+                                await _Context.SaveChangesAsync();
+                                created++;
+                            }
+                            catch (Exception)
+                            {
+                                failed++;
+                            }
+                        }
+                        else
+                        {
+                            existing++;
+                        }
                     }
-                }
 
-                if (created > 0)
+                    await transaction.CommitAsync();
+
+                    // Trả về thông tin chi tiết về kết quả
+                    return Ok(new
+                    {
+                        Message = $"Fixed {created} doctor records",
+                        Created = created,
+                        AlreadyExisting = existing,
+                        Failed = failed,
+                        TotalUsers = doctorUsers.Count
+                    });
+                }
+                catch (Exception ex)
                 {
-                    await _context.SaveChangesAsync();
+                    // Rollback transaction nếu có lỗi
+                    await transaction.RollbackAsync();
+                    return StatusCode(500, new
+                    {
+                        Message = $"An error occurred while creating doctor records",
+                        Error = ex.Message
+                    });
                 }
-
-                return Ok($"Fixed {created} doctor records");
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"An error occurred: {ex.Message}");
+                return StatusCode(500, new
+                {
+                    Message = "An error occurred while processing request",
+                    Error = ex.Message
+                });
             }
         }
+
+
         private string GenerateJwtToken(User user, Role role = null)
         {
             try

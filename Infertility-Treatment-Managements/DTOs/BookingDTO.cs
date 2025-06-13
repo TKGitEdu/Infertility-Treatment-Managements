@@ -4,12 +4,12 @@ namespace Infertility_Treatment_Managements.DTOs
 {
     public class BookingDTO
     {
-        public int BookingId { get; set; }
-        public int? PatientId { get; set; }
-        public int? ServiceId { get; set; }
-        public int? PaymentId { get; set; }
-        public int? DoctorId { get; set; }
-        public int? SlotId { get; set; }
+        public string BookingId { get; set; }
+        public string? PatientId { get; set; }
+        public string? ServiceId { get; set; }
+        public string? PaymentId { get; set; }
+        public string? DoctorId { get; set; }
+        public string? SlotId { get; set; }
         public DateTime? DateBooking { get; set; }
         public string Description { get; set; }
         public string Note { get; set; }
@@ -35,7 +35,7 @@ namespace Infertility_Treatment_Managements.DTOs
     }
     public class BookingBasicDTO
     {
-        public int BookingId { get; set; }
+        public string BookingId { get; set; }
         public DateTime? DateBooking { get; set; }
         public string Description { get; set; }
         public string Note { get; set; }
@@ -43,11 +43,11 @@ namespace Infertility_Treatment_Managements.DTOs
 
     public class BookingCreateDTO
     {
-        public int PatientId { get; set; }
-        public int ServiceId { get; set; }
-        public int? PaymentId { get; set; }
-        public int DoctorId { get; set; }
-        public int SlotId { get; set; }
+        public string PatientId { get; set; }
+        public string ServiceId { get; set; }
+        public string? PaymentId { get; set; }
+        public string DoctorId { get; set; }
+        public string SlotId { get; set; }
         public DateTime DateBooking { get; set; }
         public string Description { get; set; }
         public string Note { get; set; }
@@ -55,12 +55,12 @@ namespace Infertility_Treatment_Managements.DTOs
 
     public class BookingUpdateDTO
     {
-        public int BookingId { get; set; }
-        public int PatientId { get; set; }
-        public int ServiceId { get; set; }
-        public int? PaymentId { get; set; }
-        public int DoctorId { get; set; }
-        public int SlotId { get; set; }
+        public string BookingId { get; set; }
+        public string PatientId { get; set; }
+        public string ServiceId { get; set; }
+        public string? PaymentId { get; set; }
+        public string DoctorId { get; set; }
+        public string SlotId { get; set; }
         public DateTime DateBooking { get; set; }
         public string Description { get; set; }
         public string Note { get; set; }

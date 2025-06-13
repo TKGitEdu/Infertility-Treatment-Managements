@@ -34,7 +34,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // GET: api/TreatmentProcess/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<TreatmentProcessDTO>> GetTreatmentProcess(int id)
+        public async Task<ActionResult<TreatmentProcessDTO>> GetTreatmentProcess(string id)
         {
             var treatmentProcess = await _dbContext.TreatmentProcesses
                 .Include(tp => tp.PatientDetail)
@@ -85,7 +85,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // PUT: api/TreatmentProcess/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateTreatmentProcess(int id, TreatmentProcessUpdateDTO updateDTO)
+        public async Task<IActionResult> UpdateTreatmentProcess(string id, TreatmentProcessUpdateDTO updateDTO)
         {
             if (id != updateDTO.TreatmentProcessId)
             {
@@ -129,7 +129,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // DELETE: api/TreatmentProcess/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteTreatmentProcess(int id)
+        public async Task<IActionResult> DeleteTreatmentProcess(string id)
         {
             try
             {
@@ -154,7 +154,7 @@ namespace Infertility_Treatment_Managements.Controllers
             }
         }
 
-        private async Task<bool> TreatmentProcessExists(int id)
+        private async Task<bool> TreatmentProcessExists(string id)
         {
             return await _dbContext.TreatmentProcesses.AnyAsync(tp => tp.TreatmentProcessId == id);
         }

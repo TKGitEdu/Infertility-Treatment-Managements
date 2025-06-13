@@ -4,10 +4,10 @@ namespace Infertility_Treatment_Managements.Models
 {
     public partial class TreatmentPlan
     {
-        public int TreatmentPlanId { get; set; }
-        public int? DoctorId { get; set; }
+        public string TreatmentPlanId { get; set; }
+        public string? DoctorId { get; set; }
         public string Method { get; set; }
-        public int? PatientDetailId { get; set; }
+        public string? PatientDetailId { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public string Status { get; set; }

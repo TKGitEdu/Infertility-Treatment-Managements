@@ -5,8 +5,8 @@ namespace Infertility_Treatment_Managements.DTOs
 {
     public class PatientDTO
     {
-        public int PatientId { get; set; }
-        public int? UserId { get; set; }
+        public string PatientId { get; set; }
+        public string? UserId { get; set; }
         public string Name { get; set; }
         public string Phone { get; set; }
         public string Email { get; set; }
@@ -24,7 +24,7 @@ namespace Infertility_Treatment_Managements.DTOs
 
     public class PatientBasicDTO
     {
-        public int PatientId { get; set; }
+        public string PatientId { get; set; }
         public string Name { get; set; }
         public string Phone { get; set; }
         public string Email { get; set; }
@@ -34,7 +34,7 @@ namespace Infertility_Treatment_Managements.DTOs
 
     public class PatientCreateDTO
     {
-        public int? UserId { get; set; }
+        public string? UserId { get; set; }
         public string Name { get; set; }
         public string Phone { get; set; }
         public string Email { get; set; }
@@ -47,8 +47,8 @@ namespace Infertility_Treatment_Managements.DTOs
 
     public class PatientUpdateDTO
     {
-        public int PatientId { get; set; }
-        public int? UserId { get; set; }
+        public string PatientId { get; set; }
+        public string? UserId { get; set; }
         public string Name { get; set; }
         public string Phone { get; set; }
         public string Email { get; set; }

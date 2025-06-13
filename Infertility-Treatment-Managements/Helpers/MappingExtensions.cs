@@ -340,11 +340,11 @@ namespace Infertility_Treatment_Managements.Helpers
         public static void UpdateEntity(this BookingUpdateDTO dto, Booking entity)
         {
             entity.PatientId = dto.PatientId;
-            // Make sure these are included in your DTO or handle accordingly
-            if (dto.ServiceId != 0) entity.ServiceId = dto.ServiceId;
-            if (dto.PaymentId.HasValue) entity.PaymentId = dto.PaymentId;
-            if (dto.DoctorId != 0) entity.DoctorId = dto.DoctorId;
-            if (dto.SlotId != 0) entity.SlotId = dto.SlotId;
+            // Update these checks to work with string IDs
+            if (!string.IsNullOrEmpty(dto.ServiceId)) entity.ServiceId = dto.ServiceId;
+            if (!string.IsNullOrEmpty(dto.PaymentId)) entity.PaymentId = dto.PaymentId;
+            if (!string.IsNullOrEmpty(dto.DoctorId)) entity.DoctorId = dto.DoctorId;
+            if (!string.IsNullOrEmpty(dto.SlotId)) entity.SlotId = dto.SlotId;
             entity.DateBooking = dto.DateBooking;
             if (!string.IsNullOrEmpty(dto.Description)) entity.Description = dto.Description;
             if (!string.IsNullOrEmpty(dto.Note)) entity.Note = dto.Note;
@@ -676,7 +676,7 @@ namespace Infertility_Treatment_Managements.Helpers
 
     public class ServiceDTO
     {
-        public int ServiceId { get; set; }
+        public string ServiceId { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public decimal Price { get; set; }

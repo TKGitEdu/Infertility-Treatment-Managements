@@ -5,7 +5,7 @@ namespace Infertility_Treatment_Managements.DTOs
 {
     public class ServiceDTO
     {
-        public int ServiceId { get; set; }
+        public string ServiceId { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public decimal? Price { get; set; }
@@ -17,7 +17,7 @@ namespace Infertility_Treatment_Managements.DTOs
 
     public class ServiceBasicDTO
     {
-        public int ServiceId { get; set; }
+        public string ServiceId { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public decimal? Price { get; set; }
@@ -34,7 +34,7 @@ namespace Infertility_Treatment_Managements.DTOs
 
     public class ServiceUpdateDTO
     {
-        public int ServiceId { get; set; }
+        public string ServiceId { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public decimal? Price { get; set; }

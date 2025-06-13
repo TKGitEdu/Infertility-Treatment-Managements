@@ -5,8 +5,8 @@ namespace Infertility_Treatment_Managements.DTOs
 {
     public class ExaminationDTO
     {
-        public int ExaminationId { get; set; }
-        public int? BookingId { get; set; }
+        public string ExaminationId { get; set; }
+        public string? BookingId { get; set; }
         public DateTime? ExaminationDate { get; set; }
         public string ExaminationDescription { get; set; }
         public string Result { get; set; }
@@ -20,7 +20,7 @@ namespace Infertility_Treatment_Managements.DTOs
 
     public class ExaminationBasicDTO
     {
-        public int ExaminationId { get; set; }
+        public string ExaminationId { get; set; }
         public DateTime? ExaminationDate { get; set; }
         public string ExaminationDescription { get; set; }
         public string Result { get; set; }
@@ -29,7 +29,7 @@ namespace Infertility_Treatment_Managements.DTOs
 
     public class ExaminationCreateDTO
     {
-        public int BookingId { get; set; }
+        public string BookingId { get; set; }
         public DateTime ExaminationDate { get; set; }
         public string ExaminationDescription { get; set; }
         public string Result { get; set; }
@@ -39,8 +39,8 @@ namespace Infertility_Treatment_Managements.DTOs
 
     public class ExaminationUpdateDTO
     {
-        public int ExaminationId { get; set; }
-        public int BookingId { get; set; }
+        public string ExaminationId { get; set; }
+        public string BookingId { get; set; }
         public DateTime ExaminationDate { get; set; }
         public string ExaminationDescription { get; set; }
         public string Result { get; set; }

@@ -38,7 +38,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // GET: api/Booking/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<BookingDTO>> GetBooking(int id)
+        public async Task<ActionResult<BookingDTO>> GetBooking(string id)
         {
             var booking = await _context.Bookings
                 .Include(b => b.Patient)
@@ -59,7 +59,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // GET: api/Booking/Patient/5
         [HttpGet("Patient/{patientId}")]
-        public async Task<ActionResult<IEnumerable<BookingDTO>>> GetBookingsByPatient(int patientId)
+        public async Task<ActionResult<IEnumerable<BookingDTO>>> GetBookingsByPatient(string patientId)
         {
             var bookings = await _context.Bookings
                 .Where(b => b.PatientId == patientId)
@@ -75,7 +75,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // GET: api/Booking/Doctor/5
         [HttpGet("Doctor/{doctorId}")]
-        public async Task<ActionResult<IEnumerable<BookingDTO>>> GetBookingsByDoctor(int doctorId)
+        public async Task<ActionResult<IEnumerable<BookingDTO>>> GetBookingsByDoctor(string doctorId)
         {
             var bookings = await _context.Bookings
                 .Where(b => b.DoctorId == doctorId)
@@ -95,6 +95,9 @@ namespace Infertility_Treatment_Managements.Controllers
         {
             var booking = bookingCreateDTO.ToEntity();
             booking.CreateAt = DateTime.Now;
+            
+            // Generate a unique ID (GUID-based)
+            booking.BookingId = Guid.NewGuid().ToString();
 
             _context.Bookings.Add(booking);
             await _context.SaveChangesAsync();
@@ -113,7 +116,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // PUT: api/Booking/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateBooking(int id, BookingUpdateDTO bookingUpdateDTO)
+        public async Task<IActionResult> UpdateBooking(string id, BookingUpdateDTO bookingUpdateDTO)
         {
             if (id != bookingUpdateDTO.BookingId)
             {
@@ -150,7 +153,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // DELETE: api/Booking/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteBooking(int id)
+        public async Task<IActionResult> DeleteBooking(string id)
         {
             var booking = await _context.Bookings.FindAsync(id);
             if (booking == null)
@@ -164,7 +167,7 @@ namespace Infertility_Treatment_Managements.Controllers
             return NoContent();
         }
 
-        private bool BookingExists(int id)
+        private bool BookingExists(string id)
         {
             return _context.Bookings.Any(e => e.BookingId == id);
         }

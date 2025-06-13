@@ -35,7 +35,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // Fix for the CS0029 error in the GetService method
         [HttpGet("{id}")]
-        public async Task<ActionResult<DTOs.ServiceDTO>> GetService(int id)
+        public async Task<ActionResult<DTOs.ServiceDTO>> GetService(string id)
         {
             var service = await _context.Services
                 .Include(s => s.BookingsFk)
@@ -74,7 +74,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // PUT: api/Service/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateService(int id, ServiceUpdateDTO serviceUpdateDTO)
+        public async Task<IActionResult> UpdateService(string id, ServiceUpdateDTO serviceUpdateDTO)
         {
             if (id != serviceUpdateDTO.ServiceId)
             {
@@ -111,7 +111,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // PATCH: api/Service/5/UpdateStatus
         [HttpPatch("{id}/UpdateStatus")]
-        public async Task<IActionResult> UpdateServiceStatus(int id, [FromBody] string status)
+        public async Task<IActionResult> UpdateServiceStatus(string id, [FromBody] string status)
         {
             var service = await _context.Services.FindAsync(id);
             if (service == null)
@@ -143,7 +143,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // DELETE: api/Service/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteService(int id)
+        public async Task<IActionResult> DeleteService(string id)
         {
             try
             {
@@ -173,7 +173,7 @@ namespace Infertility_Treatment_Managements.Controllers
             }
         }
 
-        private async Task<bool> ServiceExists(int id)
+        private async Task<bool> ServiceExists(string id)
         {
             return await _context.Services.AnyAsync(s => s.ServiceId == id);
         }

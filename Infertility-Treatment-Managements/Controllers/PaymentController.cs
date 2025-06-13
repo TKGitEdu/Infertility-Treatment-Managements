@@ -35,7 +35,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // GET: api/Payment/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<PaymentDTO>> GetPayment(int id)
+        public async Task<ActionResult<PaymentDTO>> GetPayment(string id)
         {
             var payment = await _context.Payments
                 .Include(p => p.Booking)
@@ -51,7 +51,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // GET: api/Payment/Booking/5
         [HttpGet("Booking/{bookingId}")]
-        public async Task<ActionResult<PaymentDTO>> GetPaymentByBooking(int bookingId)
+        public async Task<ActionResult<PaymentDTO>> GetPaymentByBooking(string bookingId)
         {
             var bookingExists = await _context.Bookings.AnyAsync(b => b.BookingId == bookingId);
             if (!bookingExists)
@@ -88,7 +88,7 @@ namespace Infertility_Treatment_Managements.Controllers
         public async Task<ActionResult<PaymentDTO>> CreatePayment(PaymentCreateDTO paymentCreateDTO)
         {
             // Validate booking exists if provided
-            if (paymentCreateDTO.BookingId.HasValue)
+            if (!string.IsNullOrEmpty(paymentCreateDTO.BookingId))
             {
                 var bookingExists = await _context.Bookings.AnyAsync(b => b.BookingId == paymentCreateDTO.BookingId);
                 if (!bookingExists)
@@ -118,7 +118,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // PUT: api/Payment/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdatePayment(int id, PaymentUpdateDTO paymentUpdateDTO)
+        public async Task<IActionResult> UpdatePayment(string id, PaymentUpdateDTO paymentUpdateDTO)
         {
             if (id != paymentUpdateDTO.PaymentId)
             {
@@ -132,7 +132,7 @@ namespace Infertility_Treatment_Managements.Controllers
             }
 
             // Validate booking exists if provided
-            if (paymentUpdateDTO.BookingId.HasValue)
+            if (!string.IsNullOrEmpty(paymentUpdateDTO.BookingId))
             {
                 var bookingExists = await _context.Bookings.AnyAsync(b => b.BookingId == paymentUpdateDTO.BookingId);
                 if (!bookingExists)
@@ -173,7 +173,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // PATCH: api/Payment/5/UpdateStatus
         [HttpPatch("{id}/UpdateStatus")]
-        public async Task<IActionResult> UpdatePaymentStatus(int id, [FromBody] string status)
+        public async Task<IActionResult> UpdatePaymentStatus(string id, [FromBody] string status)
         {
             var payment = await _context.Payments.FindAsync(id);
             if (payment == null)
@@ -205,7 +205,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // DELETE: api/Payment/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeletePayment(int id)
+        public async Task<IActionResult> DeletePayment(string id)
         {
             try
             {
@@ -230,7 +230,7 @@ namespace Infertility_Treatment_Managements.Controllers
             }
         }
 
-        private async Task<bool> PaymentExists(int id)
+        private async Task<bool> PaymentExists(string id)
         {
             return await _context.Payments.AnyAsync(p => p.PaymentId == id);
         }
