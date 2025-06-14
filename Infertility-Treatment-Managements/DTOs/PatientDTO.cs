@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace Infertility_Treatment_Managements.DTOs
 {
@@ -43,6 +44,10 @@ namespace Infertility_Treatment_Managements.DTOs
         public string Gender { get; set; }
         public string BloodType { get; set; }
         public string EmergencyPhoneNumber { get; set; }
+
+        // Additional fields for user creation when UserId is not provided
+        public string Username { get; set; }
+        public string Password { get; set; }
     }
 
     public class PatientUpdateDTO

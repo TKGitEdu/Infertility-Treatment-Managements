@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Infertility_Treatment_Managements.Controllers
 {
@@ -68,6 +69,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // POST: api/Doctor/Create
         [HttpPost("Create")]
+        [AllowAnonymous]
         public async Task<ActionResult<DoctorDTO>> CreateDoctor(DoctorCreateDTO doctorCreateDTO)
         {
             try
