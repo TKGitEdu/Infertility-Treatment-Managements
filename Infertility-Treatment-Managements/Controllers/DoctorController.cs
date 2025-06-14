@@ -91,8 +91,9 @@ namespace Infertility_Treatment_Managements.Controllers
                         User user;
                         int maxRetries = 3; // Số lần thử lại tối đa
                         int retryCount = 0;
+                        string generatedPassword = null; // Lưu password nếu tạo mới
 
-                        if (doctorCreateDTO.UserId.Length>0)
+                        if (!string.IsNullOrEmpty(doctorCreateDTO.UserId))
                         {
                             // Using existing user
                             user = await _context.Users.FindAsync(doctorCreateDTO.UserId);
@@ -161,9 +162,13 @@ namespace Infertility_Treatment_Managements.Controllers
                                 password = $"Doctor@{namePrefix}{random.Next(1000, 9999)}";
                             }
 
-                            // Create a new user
+                            // Lưu password được tạo để trả về trong headers
+                            generatedPassword = password;
+
+                            // Create a new user with generated UserId
                             user = new User
                             {
+                                UserId = Guid.NewGuid().ToString(), // Thêm dòng này - tạo UserId mới
                                 FullName = doctorCreateDTO.DoctorName,
                                 Email = doctorCreateDTO.Email,
                                 Phone = doctorCreateDTO.Phone,
@@ -179,7 +184,7 @@ namespace Infertility_Treatment_Managements.Controllers
                             await _context.SaveChangesAsync();
 
                             // Đảm bảo user đã được lưu và có UserId
-                            if (user.UserId == "")
+                            if (string.IsNullOrEmpty(user.UserId))
                             {
                                 throw new Exception("Failed to create user: UserId not generated");
                             }
@@ -195,13 +200,14 @@ namespace Infertility_Treatment_Managements.Controllers
                             {
                                 // Tải lại user từ database để đảm bảo có UserId chính xác
                                 user = await _context.Users.FindAsync(user.UserId);
-                                if (user == null || user.UserId == "")
+                                if (user == null || string.IsNullOrEmpty(user.UserId))
                                 {
                                     throw new Exception($"User not found or invalid after creation. UserId: {user?.UserId}");
                                 }
 
                                 doctor = new Doctor
                                 {
+                                    DoctorId = Guid.NewGuid().ToString(), // Thêm dòng này - tạo DoctorId mới
                                     UserId = user.UserId,
                                     DoctorName = doctorCreateDTO.DoctorName ?? user.FullName,
                                     Email = doctorCreateDTO.Email ?? user.Email,
@@ -211,7 +217,6 @@ namespace Infertility_Treatment_Managements.Controllers
 
                                 _context.Doctors.Add(doctor);
                                 await _context.SaveChangesAsync();
-
 
                                 // Kiểm tra xem có thể lấy lại doctor từ database không
                                 var createdDoctor = await _context.Doctors.FindAsync(doctor.DoctorId);
@@ -248,28 +253,13 @@ namespace Infertility_Treatment_Managements.Controllers
                         // 4. Load the complete doctor with related entities
                         var completeDoctor = await _context.Doctors
                             .Include(d => d.User)
+                            .Include(d => d.Bookings)
                             .FirstOrDefaultAsync(d => d.DoctorId == doctor.DoctorId);
 
                         await transaction.CommitAsync();
 
-                        // Return the created doctor
-                        var result = completeDoctor.ToDTO();
-
-                        // Định nghĩa kết quả trả về
-                        var response = string.IsNullOrEmpty(doctorCreateDTO.UserId)
-                            ? new
-                            {
-                                Doctor = result,
-                                UserCredentials = new
-                                {
-                                    Username = user.Username,
-                                    Password = user.Password,
-                                    UserId = user.UserId
-                                }
-                            }
-                            : (object)result;
-
-                        return response;
+                        // Luôn trả về DoctorDTO (phù hợp với schema của frontend)
+                        return completeDoctor.ToDTO();
                     }
                     catch (Exception ex)
                     {
@@ -278,15 +268,18 @@ namespace Infertility_Treatment_Managements.Controllers
                     }
                 });
 
-                // Xử lý kết quả để trả về ActionResult phù hợp
-                if (result is DoctorDTO doctorDTO)
+                // Tạo response và thêm thông tin đăng nhập vào header nếu có
+                var response = new OkObjectResult(result);
+
+                // Nếu đã tạo tài khoản mới và có credentials, thêm vào headers
+                // Nếu đã tạo tài khoản mới và có credentials, thêm vào headers
+                if (result.User != null && !string.IsNullOrEmpty(result.User.Username))
                 {
-                    return Ok(doctorDTO);
+                    Response.Headers.Add("X-Username", System.Text.RegularExpressions.Regex.Replace(result.User.Username, @"[^\u0000-\u007F]", ""));
+                    Response.Headers.Add("X-UserId", result.User.UserId);
                 }
-                else
-                {
-                    return Ok(result);
-                }
+
+                return response;
             }
             catch (Exception ex)
             {
@@ -301,7 +294,6 @@ namespace Infertility_Treatment_Managements.Controllers
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
-
         // PUT: api/Doctor/Update
         [HttpPut("Update")]
         public async Task<IActionResult> UpdateDoctor(DoctorUpdateDTO doctorUpdateDTO)

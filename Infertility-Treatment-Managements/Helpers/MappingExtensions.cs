@@ -116,20 +116,32 @@ namespace Infertility_Treatment_Managements.Helpers
         #endregion
 
         #region Doctor Mapping
-        public static DoctorDTO ToDTO(this Doctor entity)
+        public static DoctorDTO ToDTO(this Doctor doctor)
         {
-            if (entity == null) return null!;
-
             return new DoctorDTO
             {
-                DoctorId = entity.DoctorId,
-                UserId = entity.UserId,
-                DoctorName = entity.DoctorName,
-                Specialization = entity.Specialization,
-                Phone = entity.Phone,
-                Email = entity.Email,
-                User = entity.User?.ToBasicDTO(),
-                Bookings = entity.Bookings?.Select(b => b.ToBasicDTO()).ToList() ?? new List<BookingBasicDTO>()
+                DoctorId = doctor.DoctorId,
+                UserId = doctor.UserId,
+                DoctorName = doctor.DoctorName,
+                Specialization = doctor.Specialization,
+                Phone = doctor.Phone,
+                Email = doctor.Email,
+                User = doctor.User != null ? new UserBasicDTO
+                {
+                    UserId = doctor.User.UserId,
+                    FullName = doctor.User.FullName,
+                    Email = doctor.User.Email,
+                    Phone = doctor.User.Phone,
+                    Username = doctor.User.Username,
+                    Gender = doctor.User.Gender
+                } : null,
+                Bookings = doctor.Bookings?.Select(b => new BookingBasicDTO
+                {
+                    BookingId = b.BookingId,
+                    DateBooking = b.DateBooking,
+                    Description = b.Description,
+                    Note = b.Note
+                }).ToList() ?? new List<BookingBasicDTO>()
             };
         }
 
