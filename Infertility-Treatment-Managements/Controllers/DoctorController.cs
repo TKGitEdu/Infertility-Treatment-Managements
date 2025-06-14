@@ -37,25 +37,27 @@ namespace Infertility_Treatment_Managements.Controllers
             return doctors.Select(d => d.ToDTO()).ToList();
         }
 
-        // GET: api/Doctor/ByUser/{userId}
-        [HttpGet("ByUser/{userId}")]
-        public async Task<ActionResult<DoctorDTO>> GetDoctorByUser(string userId)
+        // GET: api/Doctor/{id}
+        [HttpGet("{id}")]
+        public async Task<ActionResult<DoctorDTO>> GetDoctorById(string id)
         {
             var doctor = await _context.Doctors
                 .Include(d => d.User)
                 .Include(d => d.Bookings)
-                .FirstOrDefaultAsync(d => d.UserId == userId);
+                .FirstOrDefaultAsync(d => d.DoctorId == id);
 
             if (doctor == null)
             {
-                return NotFound("No doctor record found for this user");
+                return NotFound($"Doctor with ID {id} not found");
             }
 
             return doctor.ToDTO();
         }
 
+
         // GET: api/Doctor/BySpecialization/{specialization}
         [HttpGet("BySpecialization/{specialization}")]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<DoctorDTO>>> GetDoctorsBySpecialization(string specialization)
         {
             var doctors = await _context.Doctors
@@ -296,159 +298,221 @@ namespace Infertility_Treatment_Managements.Controllers
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
+
+
         // PUT: api/Doctor/Update
         [HttpPut("Update")]
-        public async Task<IActionResult> UpdateDoctor(DoctorUpdateDTO doctorUpdateDTO)
+        public async Task<ActionResult<DoctorDTO>> UpdateDoctor(DoctorUpdateDTO doctorUpdateDTO)
         {
-            var doctor = await _context.Doctors.FindAsync(doctorUpdateDTO.DoctorId);
-            if (doctor == null)
+            if (string.IsNullOrEmpty(doctorUpdateDTO.DoctorId))
             {
-                return NotFound($"Doctor with ID {doctorUpdateDTO.DoctorId} not found");
+                return BadRequest("DoctorId is required for update");
             }
-
-            using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-                // Validate UserId if being changed
-                if (!string.IsNullOrEmpty(doctorUpdateDTO.UserId) && doctorUpdateDTO.UserId != doctor.UserId)
+                // Tìm bác sĩ theo DoctorId
+                var doctor = await _context.Doctors
+                    .Include(d => d.User)
+                    .FirstOrDefaultAsync(d => d.DoctorId == doctorUpdateDTO.DoctorId);
+
+                if (doctor == null)
                 {
-                    var userExists = await _context.Users.AnyAsync(u => u.UserId == doctorUpdateDTO.UserId);
-                    if (!userExists)
-                    {
-                        return BadRequest("Invalid UserId: User does not exist");
-                    }
-
-                    // Check if another doctor already has this UserId
-                    var existingDoctor = await _context.Doctors
-                        .FirstOrDefaultAsync(d => d.UserId == doctorUpdateDTO.UserId && d.DoctorId != doctorUpdateDTO.DoctorId);
-                    if (existingDoctor != null)
-                    {
-                        return BadRequest("Another doctor is already associated with this user");
-                    }
-
-                    // Get doctor role
-                    var doctorRole = await _context.Roles
-                        .FirstOrDefaultAsync(r => r.RoleName == DOCTOR_ROLE_NAME);
-
-                    if (doctorRole == null)
-                    {
-                        return BadRequest($"Doctor role not found. Please create a '{DOCTOR_ROLE_NAME}' role first.");
-                    }
-
-                    // Update new user's role
-                    var newUser = await _context.Users.FindAsync(doctorUpdateDTO.UserId);
-                    if (newUser.RoleId != doctorRole.RoleId)
-                    {
-                        newUser.RoleId = doctorRole.RoleId;
-                        _context.Entry(newUser).State = EntityState.Modified;
-                        await _context.SaveChangesAsync();
-                    }
+                    return NotFound($"Doctor with ID {doctorUpdateDTO.DoctorId} not found");
                 }
 
-                // Update doctor entity
-                doctorUpdateDTO.UpdateEntity(doctor);
-                _context.Entry(doctor).State = EntityState.Modified;
-                await _context.SaveChangesAsync();
-
-                // Also update the associated user's basic information if available
-                if (!string.IsNullOrEmpty(doctor.UserId))
+                // Lấy UserId từ DTO hoặc từ doctor hiện tại
+                string userId = doctorUpdateDTO.UserId ?? doctor.UserId;
+                if (string.IsNullOrEmpty(userId))
                 {
-                    var user = await _context.Users.FindAsync(doctor.UserId);
-                    if (user != null)
-                    {
-                        // Update user's matching fields
-                        bool userModified = false;
+                    return BadRequest("UserId is required for update");
+                }
 
-                        if (!string.IsNullOrEmpty(doctorUpdateDTO.DoctorName) && user.FullName != doctorUpdateDTO.DoctorName)
+                // Thực hiện cập nhật trong transaction
+                await _context.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+                {
+                    using var transaction = await _context.Database.BeginTransactionAsync();
+                    try
+                    {
+                        // 1. Cập nhật thông tin User
+                        var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
+                        if (user == null)
                         {
+                            throw new Exception($"User with ID {userId} not found");
+                        }
+
+                        // Cập nhật các trường của User nếu có giá trị
+                        if (!string.IsNullOrEmpty(doctorUpdateDTO.DoctorName))
                             user.FullName = doctorUpdateDTO.DoctorName;
-                            userModified = true;
-                        }
 
-                        if (!string.IsNullOrEmpty(doctorUpdateDTO.Email) && user.Email != doctorUpdateDTO.Email)
-                        {
+                        if (!string.IsNullOrEmpty(doctorUpdateDTO.Email))
                             user.Email = doctorUpdateDTO.Email;
-                            userModified = true;
-                        }
 
-                        if (!string.IsNullOrEmpty(doctorUpdateDTO.Phone) && user.Phone != doctorUpdateDTO.Phone)
-                        {
+                        if (!string.IsNullOrEmpty(doctorUpdateDTO.Phone))
                             user.Phone = doctorUpdateDTO.Phone;
-                            userModified = true;
-                        }
 
-                        if (userModified)
+                        if (!string.IsNullOrEmpty(doctorUpdateDTO.Address))
+                            user.Address = doctorUpdateDTO.Address;
+
+                        if (!string.IsNullOrEmpty(doctorUpdateDTO.Gender))
+                            user.Gender = doctorUpdateDTO.Gender;
+
+                        if (doctorUpdateDTO.DateOfBirth.HasValue)
+                            user.DateOfBirth = doctorUpdateDTO.DateOfBirth.Value;
+
+                        // Đảm bảo có role Doctor
+                        var doctorRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == DOCTOR_ROLE_NAME);
+                        if (doctorRole != null && user.RoleId != doctorRole.RoleId)
                         {
-                            _context.Entry(user).State = EntityState.Modified;
-                            await _context.SaveChangesAsync();
+                            user.RoleId = doctorRole.RoleId;
                         }
-                    }
-                }
 
-                await transaction.CommitAsync();
-                return NoContent();
+                        _context.Entry(user).State = EntityState.Modified;
+                        await _context.SaveChangesAsync();
+
+                        // 2. Cập nhật thông tin Doctor
+                        // Nếu UserId khác với hiện tại, kiểm tra và cập nhật
+                        if (userId != doctor.UserId)
+                        {
+                            var existingDoctor = await _context.Doctors
+                                .FirstOrDefaultAsync(d => d.UserId == userId && d.DoctorId != doctorUpdateDTO.DoctorId);
+
+                            if (existingDoctor != null)
+                            {
+                                throw new Exception($"Another doctor is already associated with this user");
+                            }
+
+                            doctor.UserId = userId;
+                        }
+
+                        // Cập nhật các trường khác của Doctor nếu có giá trị
+                        if (!string.IsNullOrEmpty(doctorUpdateDTO.DoctorName))
+                            doctor.DoctorName = doctorUpdateDTO.DoctorName;
+
+                        if (!string.IsNullOrEmpty(doctorUpdateDTO.Email))
+                            doctor.Email = doctorUpdateDTO.Email;
+
+                        if (!string.IsNullOrEmpty(doctorUpdateDTO.Phone))
+                            doctor.Phone = doctorUpdateDTO.Phone;
+
+                        if (!string.IsNullOrEmpty(doctorUpdateDTO.Specialization))
+                            doctor.Specialization = doctorUpdateDTO.Specialization;
+
+                        _context.Entry(doctor).State = EntityState.Modified;
+                        await _context.SaveChangesAsync();
+
+                        await transaction.CommitAsync();
+                    }
+                    catch (Exception)
+                    {
+                        await transaction.RollbackAsync();
+                        throw;
+                    }
+                });
+
+                // Lấy thông tin bác sĩ đã cập nhật để trả về
+                var updatedDoctor = await _context.Doctors
+                    .Include(d => d.User)
+                    .Include(d => d.Bookings)
+                    .FirstOrDefaultAsync(d => d.DoctorId == doctorUpdateDTO.DoctorId);
+
+                // Trả về DoctorDTO (đã được chuyển đổi thông qua extension method ToDTO)
+                return Ok(updatedDoctor.ToDTO());
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
-                return StatusCode(500, $"An error occurred: {ex.Message}");
+                return StatusCode(500, $"Failed to update doctor: {ex.Message}");
             }
         }
-
 
 
         // DELETE: api/Doctor/Delete/{userId}
         [HttpDelete("Delete/{userId}")]
         public async Task<IActionResult> DeleteDoctorByUserId(string userId)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
-
             try
             {
-                var doctor = await _context.Doctors
-                    .FirstOrDefaultAsync(d => d.UserId == userId);
+                // First find the doctor by userId outside the execution strategy
+                var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId);
 
                 if (doctor == null)
                 {
                     return NotFound($"No doctor found with UserId {userId}");
                 }
 
-                // Check if this doctor has associated bookings
+                // Check dependencies outside the execution strategy
                 var hasBookings = await _context.Bookings.AnyAsync(b => b.DoctorId == doctor.DoctorId);
                 if (hasBookings)
                 {
                     return BadRequest("Cannot delete doctor with associated bookings");
                 }
 
-                // Check if doctor has treatment plans
                 var hasTreatmentPlans = await _context.TreatmentPlans.AnyAsync(tp => tp.DoctorId == doctor.DoctorId);
                 if (hasTreatmentPlans)
                 {
                     return BadRequest("Cannot delete doctor with associated treatment plans");
                 }
 
-                // Remove only the doctor record, not the user
-                _context.Doctors.Remove(doctor);
-                await _context.SaveChangesAsync();
-
-                // Set user role to default if needed
-                var user = await _context.Users.FindAsync(userId);
-                if (user != null)
+                var hasExaminations = await _context.Examinations.AnyAsync(e => e.DoctorId == doctor.DoctorId);
+                if (hasExaminations)
                 {
-                    // You may want to reset the user's role to a default role
-                    // This is optional and depends on your application logic
-                    // user.RoleId = defaultRoleId;
-                    // _context.Entry(user).State = EntityState.Modified;
-                    // await _context.SaveChangesAsync();
+                    return BadRequest("Cannot delete doctor with associated examinations");
                 }
 
-                await transaction.CommitAsync();
+                var hasTreatmentProcesses = await _context.TreatmentProcesses.AnyAsync(tp => tp.DoctorId == doctor.DoctorId);
+                if (hasTreatmentProcesses)
+                {
+                    return BadRequest("Cannot delete doctor with associated treatment processes");
+                }
+
+                // Store the doctorId for later use
+                string doctorId = doctor.DoctorId;
+
+                // Now use execution strategy only for the database operations that need to be retried
+                await _context.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+                {
+                    using var transaction = await _context.Database.BeginTransactionAsync();
+                    try
+                    {
+                        // Find the user
+                        var user = await _context.Users.FindAsync(userId);
+                        if (user != null)
+                        {
+                            // Delete the user - this will automatically set doctor.UserId to null due to OnDelete(DeleteBehavior.SetNull)
+                            _context.Users.Remove(user);
+                            await _context.SaveChangesAsync();
+                        }
+
+                        // Now find the doctor with null UserId (which should be our doctor after user deletion)
+                        var doctorToDelete = await _context.Doctors.FindAsync(doctorId);
+                        if (doctorToDelete != null)
+                        {
+                            // Doctor should have null UserId now due to the foreign key constraint
+                            _context.Doctors.Remove(doctorToDelete);
+                            await _context.SaveChangesAsync();
+                        }
+
+                        await transaction.CommitAsync();
+                    }
+                    catch (Exception)
+                    {
+                        await transaction.RollbackAsync();
+                        throw;
+                    }
+                });
+
                 return NoContent();
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
+                // Log error details
+                Console.WriteLine($"DeleteDoctorByUserId failed: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                }
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
@@ -522,6 +586,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
+
     }
 
     // Additional DTOs for the controller

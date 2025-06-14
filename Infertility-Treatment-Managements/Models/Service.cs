@@ -12,6 +12,7 @@ public partial class Service
     public string Description { get; set; }
     public decimal? Price { get; set; }
     public string Status { get; set; }
+    public string Category { get; set; } // Thêm trường Category
     
     public virtual ICollection<Booking> BookingsFk { get; set; } = new List<Booking>();
 }

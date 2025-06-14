@@ -375,6 +375,7 @@ namespace Infertility_Treatment_Managements.Helpers
                 Description = entity.Description ?? string.Empty,
                 Price = entity.Price ?? 0,
                 Status = entity.Status ?? string.Empty,
+                Category = entity.Category ?? string.Empty, // Thêm mapping cho Category
                 Bookings = entity.BookingsFk?.Select(b => b.ToBasicDTO()).ToList() ?? new List<BookingBasicDTO>()
             };
         }
@@ -389,7 +390,8 @@ namespace Infertility_Treatment_Managements.Helpers
                 Name = entity.Name ?? string.Empty,
                 Description = entity.Description ?? string.Empty,
                 Price = entity.Price,
-                Status = entity.Status ?? string.Empty
+                Status = entity.Status ?? string.Empty,
+                Category = entity.Category ?? string.Empty // Thêm mapping cho Category
             };
         }
 
@@ -400,7 +402,8 @@ namespace Infertility_Treatment_Managements.Helpers
                 Name = dto.Name,
                 Description = dto.Description,
                 Price = dto.Price,
-                Status = dto.Status
+                Status = dto.Status,
+                Category = dto.Category // Thêm mapping cho Category
             };
         }
 
@@ -410,6 +413,7 @@ namespace Infertility_Treatment_Managements.Helpers
             entity.Description = dto.Description;
             entity.Price = dto.Price;
             entity.Status = dto.Status;
+            entity.Category = dto.Category; // Thêm mapping cho Category
         }
         #endregion
 
@@ -693,6 +697,7 @@ namespace Infertility_Treatment_Managements.Helpers
         public string Description { get; set; } = string.Empty;
         public decimal Price { get; set; }
         public string Status { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty; // Thêm thuộc tính Category
         public ICollection<BookingBasicDTO> Bookings { get; set; } = new List<BookingBasicDTO>();
     }
 }

@@ -10,6 +10,7 @@ public partial class TreatmentProcess
 {
     public string TreatmentProcessId { get; set; }
     public string Method { get; set; }
+    public string? DoctorId { get; set; }
     public string? PatientDetailId { get; set; }
     public string? TreatmentPlanId { get; set; }
     public DateTime? ScheduledDate { get; set; }

@@ -12,7 +12,9 @@ namespace Infertility_Treatment_Managements.DTOs
         public string? Specialization { get; set; }  // Thêm ? để chỉ rõ là nullable
         public string Phone { get; set; }
         public string Email { get; set; }
-
+        public string Address { get; set; }
+        public string Gender { get; set; }
+        public DateTime? DateOfBirth { get; set; }
         // Related entities
         public UserBasicDTO User { get; set; }
         public ICollection<BookingBasicDTO> Bookings { get; set; } = new List<BookingBasicDTO>();
@@ -45,12 +47,16 @@ namespace Infertility_Treatment_Managements.DTOs
 
     public class DoctorUpdateDTO
     {
+        [Required]
         public string DoctorId { get; set; }
         public string? UserId { get; set; }
-        public string DoctorName { get; set; }
-        public string? Specialization { get; set; }  // Thêm ? để chỉ rõ là nullable
-        public string Phone { get; set; }
-        public string Email { get; set; }
+        public string? DoctorName { get; set; }
+        public string? Specialization { get; set; }
+        public string? Phone { get; set; }
+        public string? Email { get; set; }
+        public string? Address { get; set; }
+        public string? Gender { get; set; }
+        public DateTime? DateOfBirth { get; set; }
     }
 
     public class DoctorRegistrationDTO

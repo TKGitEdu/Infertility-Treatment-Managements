@@ -177,5 +177,19 @@ namespace Infertility_Treatment_Managements.Controllers
         {
             return await _context.Services.AnyAsync(s => s.ServiceId == id);
         }
+
+        // Thêm vào ServiceController
+        [HttpGet("Category/{category}")]
+        [AllowAnonymous]
+        public async Task<ActionResult<IEnumerable<DTOs.ServiceDTO>>> GetServicesByCategory(string category)
+        {
+            var services = await _context.Services
+                .Where(s => s.Category == category && s.Status == "Active")
+                .Include(s => s.BookingsFk)
+                .ToListAsync();
+
+            return Ok(services.Select(s => s.ToDTO()));
+        }
+
     }
 }
