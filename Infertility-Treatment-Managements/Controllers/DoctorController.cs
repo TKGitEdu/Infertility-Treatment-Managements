@@ -71,7 +71,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // POST: api/Doctor/Create
         [HttpPost("Create")]
-        [AllowAnonymous]
+        //[AllowAnonymous]
         public async Task<ActionResult<DoctorDTO>> CreateDoctor(DoctorCreateDTO doctorCreateDTO)
         {
             try
