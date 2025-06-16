@@ -37,9 +37,8 @@ namespace Infertility_Treatment_Managements.Controllers
         }
 
         // GET: api/Role/5
-
         [HttpGet("{id}")]
-        public async Task<ActionResult<Role>> GetRole(int id)
+        public async Task<ActionResult<Role>> GetRole(string id)
         {
             var role = await _context.Roles.FirstOrDefaultAsync(r => r.RoleId == id);
             if (role == null) return NotFound();
@@ -63,7 +62,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // PUT: api/Role/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutRole(int id, RoleUpdateDTO roleUpdateDTO)
+        public async Task<IActionResult> PutRole(string id, RoleUpdateDTO roleUpdateDTO)
         {
             if (id != roleUpdateDTO.RoleId) return BadRequest();
 
@@ -88,7 +87,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // DELETE: api/Role/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteRole(int id)
+        public async Task<IActionResult> DeleteRole(string id)
         {
             try
             {
@@ -119,7 +118,7 @@ namespace Infertility_Treatment_Managements.Controllers
             }
         }
 
-        private async Task<bool> RoleExistsAsync(int id)
+        private async Task<bool> RoleExistsAsync(string id)
         {
             return await _context.Roles.AnyAsync(r => r.RoleId == id);
         }

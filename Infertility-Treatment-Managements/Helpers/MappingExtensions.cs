@@ -116,20 +116,32 @@ namespace Infertility_Treatment_Managements.Helpers
         #endregion
 
         #region Doctor Mapping
-        public static DoctorDTO ToDTO(this Doctor entity)
+        public static DoctorDTO ToDTO(this Doctor doctor)
         {
-            if (entity == null) return null!;
-
             return new DoctorDTO
             {
-                DoctorId = entity.DoctorId,
-                UserId = entity.UserId,
-                DoctorName = entity.DoctorName,
-                Specialization = entity.Specialization,
-                Phone = entity.Phone,
-                Email = entity.Email,
-                User = entity.User?.ToBasicDTO(),
-                Bookings = entity.Bookings?.Select(b => b.ToBasicDTO()).ToList() ?? new List<BookingBasicDTO>()
+                DoctorId = doctor.DoctorId,
+                UserId = doctor.UserId,
+                DoctorName = doctor.DoctorName,
+                Specialization = doctor.Specialization,
+                Phone = doctor.Phone,
+                Email = doctor.Email,
+                User = doctor.User != null ? new UserBasicDTO
+                {
+                    UserId = doctor.User.UserId,
+                    FullName = doctor.User.FullName,
+                    Email = doctor.User.Email,
+                    Phone = doctor.User.Phone,
+                    Username = doctor.User.Username,
+                    Gender = doctor.User.Gender
+                } : null,
+                Bookings = doctor.Bookings?.Select(b => new BookingBasicDTO
+                {
+                    BookingId = b.BookingId,
+                    DateBooking = b.DateBooking,
+                    Description = b.Description,
+                    Note = b.Note
+                }).ToList() ?? new List<BookingBasicDTO>()
             };
         }
 
@@ -340,11 +352,11 @@ namespace Infertility_Treatment_Managements.Helpers
         public static void UpdateEntity(this BookingUpdateDTO dto, Booking entity)
         {
             entity.PatientId = dto.PatientId;
-            // Make sure these are included in your DTO or handle accordingly
-            if (dto.ServiceId != 0) entity.ServiceId = dto.ServiceId;
-            if (dto.PaymentId.HasValue) entity.PaymentId = dto.PaymentId;
-            if (dto.DoctorId != 0) entity.DoctorId = dto.DoctorId;
-            if (dto.SlotId != 0) entity.SlotId = dto.SlotId;
+            // Update these checks to work with string IDs
+            if (!string.IsNullOrEmpty(dto.ServiceId)) entity.ServiceId = dto.ServiceId;
+            if (!string.IsNullOrEmpty(dto.PaymentId)) entity.PaymentId = dto.PaymentId;
+            if (!string.IsNullOrEmpty(dto.DoctorId)) entity.DoctorId = dto.DoctorId;
+            if (!string.IsNullOrEmpty(dto.SlotId)) entity.SlotId = dto.SlotId;
             entity.DateBooking = dto.DateBooking;
             if (!string.IsNullOrEmpty(dto.Description)) entity.Description = dto.Description;
             if (!string.IsNullOrEmpty(dto.Note)) entity.Note = dto.Note;
@@ -363,6 +375,7 @@ namespace Infertility_Treatment_Managements.Helpers
                 Description = entity.Description ?? string.Empty,
                 Price = entity.Price ?? 0,
                 Status = entity.Status ?? string.Empty,
+                Category = entity.Category ?? string.Empty, // Thêm mapping cho Category
                 Bookings = entity.BookingsFk?.Select(b => b.ToBasicDTO()).ToList() ?? new List<BookingBasicDTO>()
             };
         }
@@ -377,7 +390,8 @@ namespace Infertility_Treatment_Managements.Helpers
                 Name = entity.Name ?? string.Empty,
                 Description = entity.Description ?? string.Empty,
                 Price = entity.Price,
-                Status = entity.Status ?? string.Empty
+                Status = entity.Status ?? string.Empty,
+                Category = entity.Category ?? string.Empty // Thêm mapping cho Category
             };
         }
 
@@ -388,7 +402,8 @@ namespace Infertility_Treatment_Managements.Helpers
                 Name = dto.Name,
                 Description = dto.Description,
                 Price = dto.Price,
-                Status = dto.Status
+                Status = dto.Status,
+                Category = dto.Category // Thêm mapping cho Category
             };
         }
 
@@ -398,6 +413,7 @@ namespace Infertility_Treatment_Managements.Helpers
             entity.Description = dto.Description;
             entity.Price = dto.Price;
             entity.Status = dto.Status;
+            entity.Category = dto.Category; // Thêm mapping cho Category
         }
         #endregion
 
@@ -676,11 +692,12 @@ namespace Infertility_Treatment_Managements.Helpers
 
     public class ServiceDTO
     {
-        public int ServiceId { get; set; }
+        public string ServiceId { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public decimal Price { get; set; }
         public string Status { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty; // Thêm thuộc tính Category
         public ICollection<BookingBasicDTO> Bookings { get; set; } = new List<BookingBasicDTO>();
     }
 }

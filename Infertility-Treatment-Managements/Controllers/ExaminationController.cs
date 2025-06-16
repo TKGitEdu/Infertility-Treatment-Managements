@@ -38,7 +38,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // GET: api/Examination/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<ExaminationDTO>> GetExamination(int id)
+        public async Task<ActionResult<ExaminationDTO>> GetExamination(string id)
         {
             var examination = await _context.Examinations
                 .Include(e => e.Booking)
@@ -57,7 +57,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // GET: api/Examination/Booking/5
         [HttpGet("Booking/{bookingId}")]
-        public async Task<ActionResult<ExaminationDTO>> GetExaminationByBooking(int bookingId)
+        public async Task<ActionResult<ExaminationDTO>> GetExaminationByBooking(string bookingId)
         {
             var bookingExists = await _context.Bookings.AnyAsync(b => b.BookingId == bookingId);
             if (!bookingExists)
@@ -130,7 +130,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // PUT: api/Examination/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateExamination(int id, ExaminationUpdateDTO examinationUpdateDTO)
+        public async Task<IActionResult> UpdateExamination(string id, ExaminationUpdateDTO examinationUpdateDTO)
         {
             if (id != examinationUpdateDTO.ExaminationId)
             {
@@ -182,7 +182,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // PATCH: api/Examination/5/UpdateStatus
         [HttpPatch("{id}/UpdateStatus")]
-        public async Task<IActionResult> UpdateExaminationStatus(int id, [FromBody] string status)
+        public async Task<IActionResult> UpdateExaminationStatus(string id, [FromBody] string status)
         {
             var examination = await _context.Examinations.FindAsync(id);
             if (examination == null)
@@ -214,7 +214,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // DELETE: api/Examination/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteExamination(int id)
+        public async Task<IActionResult> DeleteExamination(string id)
         {
             var examination = await _context.Examinations.FindAsync(id);
             if (examination == null)
@@ -228,7 +228,7 @@ namespace Infertility_Treatment_Managements.Controllers
             return NoContent();
         }
 
-        private async Task<bool> ExaminationExists(int id)
+        private async Task<bool> ExaminationExists(string id)
         {
             return await _context.Examinations.AnyAsync(e => e.ExaminationId == id);
         }

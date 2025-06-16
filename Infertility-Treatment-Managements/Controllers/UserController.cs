@@ -54,7 +54,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // GET: api/User/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<UserDTO>> GetUser(int id)
+        public async Task<ActionResult<UserDTO>> GetUser(string id)
         {
             var user = await _context.Users
                 .Include(u => u.Role)
@@ -113,9 +113,9 @@ namespace Infertility_Treatment_Managements.Controllers
                     await _context.SaveChangesAsync();
 
                     // Check user's role
-                    if (userCreateDTO.RoleId.HasValue)
+                    if (!string.IsNullOrEmpty(userCreateDTO.RoleId))
                     {
-                        var role = await _context.Roles.FindAsync(userCreateDTO.RoleId.Value);
+                        var role = await _context.Roles.FindAsync(userCreateDTO.RoleId);
 
                         // If the user has the Patient role, create a Patient record
                         if (role != null && role.RoleName.ToLower() == PATIENT_ROLE_NAME.ToLower())
@@ -181,7 +181,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // PUT: api/User/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(int id, UserUpdateDTO userUpdateDTO)
+        public async Task<IActionResult> PutUser(string id, UserUpdateDTO userUpdateDTO)
         {
             if (id != userUpdateDTO.UserId) return BadRequest();
 
@@ -215,9 +215,9 @@ namespace Infertility_Treatment_Managements.Controllers
 
                     // Check user's new role
                     string newRoleName = "";
-                    if (userUpdateDTO.RoleId.HasValue)
+                    if (!string.IsNullOrEmpty(userUpdateDTO.RoleId))
                     {
-                        var newRole = await _context.Roles.FindAsync(userUpdateDTO.RoleId.Value);
+                        var newRole = await _context.Roles.FindAsync(userUpdateDTO.RoleId);
                         newRoleName = newRole?.RoleName?.ToLower() ?? "";
                     }
 
@@ -339,7 +339,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // DELETE: api/User/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(int id)
+        public async Task<IActionResult> DeleteUser(string id)
         {
             using (var transaction = await _context.Database.BeginTransactionAsync())
             {
@@ -470,7 +470,7 @@ namespace Infertility_Treatment_Managements.Controllers
             return Ok("Password changed successfully");
         }
 
-        private async Task<bool> UserExistsAsync(int id)
+        private async Task<bool> UserExistsAsync(string id)
         {
             return await _context.Users.AnyAsync(u => u.UserId == id);
         }

@@ -7,9 +7,10 @@ namespace Infertility_Treatment_Managements.Models;
 
 public partial class Examination
 {
-    public int ExaminationId { get; set; }
-
-    public int? BookingId { get; set; }
+    public string ExaminationId { get; set; }
+    public string? DoctorId { get; set; }
+    public string? PatientId { get; set; }
+    public string? BookingId { get; set; }
 
     public DateTime? ExaminationDate { get; set; }
 

@@ -5,10 +5,10 @@ namespace Infertility_Treatment_Managements.DTOs
 {
     public class TreatmentPlanDTO
     {
-        public int TreatmentPlanId { get; set; }
-        public int? DoctorId { get; set; }
+        public string TreatmentPlanId { get; set; }
+        public string? DoctorId { get; set; }
         public string Method { get; set; }
-        public int? PatientDetailId { get; set; }
+        public string? PatientDetailId { get; set; }
         public DateOnly? StartDate { get; set; }
         public DateOnly? EndDate { get; set; }
         public string Status { get; set; }
@@ -22,7 +22,7 @@ namespace Infertility_Treatment_Managements.DTOs
 
     public class TreatmentPlanBasicDTO
     {
-        public int TreatmentPlanId { get; set; }
+        public string TreatmentPlanId { get; set; }
         public string Method { get; set; }
         public DateOnly? StartDate { get; set; }
         public DateOnly? EndDate { get; set; }
@@ -32,9 +32,9 @@ namespace Infertility_Treatment_Managements.DTOs
 
     public class TreatmentPlanCreateDTO
     {
-        public int DoctorId { get; set; }
+        public string DoctorId { get; set; }
         public string Method { get; set; }
-        public int PatientDetailId { get; set; }
+        public string PatientDetailId { get; set; }
         public DateOnly? StartDate { get; set; }
         public DateOnly? EndDate { get; set; }
         public string Status { get; set; }
@@ -43,10 +43,10 @@ namespace Infertility_Treatment_Managements.DTOs
 
     public class TreatmentPlanUpdateDTO
     {
-        public int TreatmentPlanId { get; set; }
-        public int DoctorId { get; set; }
+        public string TreatmentPlanId { get; set; }
+        public string DoctorId { get; set; }
         public string Method { get; set; }
-        public int PatientDetailId { get; set; }
+        public string PatientDetailId { get; set; }
         public DateOnly? StartDate { get; set; }
         public DateOnly? EndDate { get; set; }
         public string Status { get; set; }

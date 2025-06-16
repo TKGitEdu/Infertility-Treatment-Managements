@@ -36,7 +36,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // GET: api/PatientDetail/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<PatientDetailDTO>> GetPatientDetail(int id)
+        public async Task<ActionResult<PatientDetailDTO>> GetPatientDetail(string id)
         {
             var patientDetail = await _context.PatientDetails
                 .Include(pd => pd.Patient)
@@ -53,7 +53,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // GET: api/PatientDetail/Patient/5
         [HttpGet("Patient/{patientId}")]
-        public async Task<ActionResult<IEnumerable<PatientDetailDTO>>> GetPatientDetailsByPatient(int patientId)
+        public async Task<ActionResult<IEnumerable<PatientDetailDTO>>> GetPatientDetailsByPatient(string patientId)
         {
             var patientExists = await _context.Patients.AnyAsync(p => p.PatientId == patientId);
             if (!patientExists)
@@ -108,7 +108,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // PUT: api/PatientDetail/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdatePatientDetail(int id, PatientDetailUpdateDTO patientDetailUpdateDTO)
+        public async Task<IActionResult> UpdatePatientDetail(string id, PatientDetailUpdateDTO patientDetailUpdateDTO)
         {
             if (id != patientDetailUpdateDTO.PatientDetailId)
             {
@@ -152,7 +152,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // PATCH: api/PatientDetail/5/UpdateStatus
         [HttpPatch("{id}/UpdateStatus")]
-        public async Task<IActionResult> UpdatePatientDetailStatus(int id, [FromBody] string treatmentStatus)
+        public async Task<IActionResult> UpdatePatientDetailStatus(string id, [FromBody] string treatmentStatus)
         {
             var patientDetail = await _context.PatientDetails.FindAsync(id);
             if (patientDetail == null)
@@ -184,7 +184,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
         // DELETE: api/PatientDetail/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeletePatientDetail(int id)
+        public async Task<IActionResult> DeletePatientDetail(string id)
         {
             try
             {
@@ -219,7 +219,7 @@ namespace Infertility_Treatment_Managements.Controllers
             }
         }
 
-        private async Task<bool> PatientDetailExists(int id)
+        private async Task<bool> PatientDetailExists(string id)
         {
             return await _context.PatientDetails.AnyAsync(pd => pd.PatientDetailId == id);
         }

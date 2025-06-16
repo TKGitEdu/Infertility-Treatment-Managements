@@ -8,9 +8,9 @@ namespace Infertility_Treatment_Managements.Models;
 
 public partial class Doctor
 {
-    public int DoctorId { get; set; }
+    public string DoctorId { get; set; }
     
-    public int? UserId { get; set; }
+    public string? UserId { get; set; }
 
     public string DoctorName { get; set; }
 

@@ -8,9 +8,9 @@ namespace Infertility_Treatment_Managements.Models;
 
 public partial class PatientDetail
 {
-    public int PatientDetailId { get; set; }
+    public string PatientDetailId { get; set; }
 
-    public int? PatientId { get; set; }
+    public string? PatientId { get; set; }
 
     public string TreatmentStatus { get; set; }
 
