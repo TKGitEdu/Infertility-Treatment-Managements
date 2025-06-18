@@ -113,11 +113,10 @@ namespace Infertility_Treatment_Managements.Controllers
                         }
 
                         // 2. Handle user creation or validation
-                        User user;
-                        int maxRetries = 3; // Số lần thử lại tối đa
+                        User user;                        int maxRetries = 3; // Số lần thử lại tối đa
                         int retryCount = 0;
-                        string generatedUsername = null;
-                        string generatedPassword = null;
+                        string? generatedUsername = null;
+                        string? generatedPassword = null;
 
                         if (!string.IsNullOrEmpty(patientCreateDTO.UserId))
                         {
@@ -290,16 +289,15 @@ namespace Infertility_Treatment_Managements.Controllers
 
                         // Return user credentials along with patient data if we created a new user
                         if (!string.IsNullOrEmpty(generatedUsername))
-                        {
-                            // Add user credentials to response headers
-                            Response.Headers.Add("X-Username", System.Text.RegularExpressions.Regex.Replace(generatedUsername, @"[^\u0000-\u007F]", ""));
-                            Response.Headers.Add("X-UserId", user.UserId);
+                        {                            // Add user credentials to response headers
+                            Response.Headers.Append("X-Username", System.Text.RegularExpressions.Regex.Replace(generatedUsername, @"[^\u0000-\u007F]", ""));
+                            Response.Headers.Append("X-UserId", user.UserId);
 
                             // For development environments, include password in headers
 #if DEBUG
                             if (!string.IsNullOrEmpty(generatedPassword))
                             {
-                                Response.Headers.Add("X-Password", generatedPassword);
+                                Response.Headers.Append("X-Password", generatedPassword);
                             }
 #endif
                         }
@@ -515,9 +513,8 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpPost]
         [Obsolete("Use POST /api/Patient/Create instead. This endpoint will be removed in a future version.")]
         public async Task<ActionResult<PatientDTO>> CreatePatientLegacy(PatientCreateDTO patientCreateDTO)
-        {
-            // Find Patient role ID if we're creating a user too
-            string patientRoleId = null;
+        {            // Find Patient role ID if we're creating a user too
+            string? patientRoleId = null;
             if (string.IsNullOrEmpty(patientCreateDTO.UserId))
             {
                 var roles = await _context.Roles.ToListAsync();
