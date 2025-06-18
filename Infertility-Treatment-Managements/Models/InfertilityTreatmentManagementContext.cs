@@ -27,6 +27,11 @@ namespace Infertility_Treatment_Managements.Models
         public virtual DbSet<TreatmentPlan> TreatmentPlans { get; set; }
         public virtual DbSet<TreatmentProcess> TreatmentProcesses { get; set; }
         public virtual DbSet<User> Users { get; set; }
+        public virtual DbSet<BlogPost> BlogPosts { get; set; }
+        public virtual DbSet<ContentPage> ContentPages { get; set; }
+        public virtual DbSet<Reminder> Reminders { get; set; }
+        public virtual DbSet<Rating> Ratings { get; set; }
+        public virtual DbSet<Feedback> Feedbacks { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -161,7 +166,184 @@ namespace Infertility_Treatment_Managements.Models
                 entity.Property(u => u.Address).HasMaxLength(200);
                 entity.Property(u => u.Gender).HasMaxLength(10);
             });
+            // BlogPost configuration
+            modelBuilder.Entity<BlogPost>(entity =>
+            {
+                entity.ToTable("BlogPosts");
+                entity.Property(bp => bp.BlogPostId).HasColumnName("BlogPostID").HasMaxLength(50);
+                entity.Property(bp => bp.AuthorId).HasColumnName("AuthorID").HasMaxLength(50);
+                entity.Property(bp => bp.Title).HasMaxLength(200);
+                entity.Property(bp => bp.Content).HasColumnType("nvarchar(max)");
+                entity.Property(bp => bp.Summary).HasMaxLength(500);
+                entity.Property(bp => bp.ImageUrl).HasMaxLength(255);
+                entity.Property(bp => bp.Category).HasMaxLength(100);
+                entity.Property(bp => bp.Status).HasMaxLength(50);
+                entity.Property(bp => bp.Tags).HasMaxLength(500);
+            });
 
+            // ContentPage configuration
+            modelBuilder.Entity<ContentPage>(entity =>
+            {
+                entity.ToTable("ContentPages");
+                entity.Property(cp => cp.ContentPageId).HasColumnName("ContentPageID").HasMaxLength(50);
+                entity.Property(cp => cp.CreatedById).HasColumnName("CreatedByID").HasMaxLength(50);
+                entity.Property(cp => cp.LastModifiedById).HasColumnName("LastModifiedByID").HasMaxLength(50);
+                entity.Property(cp => cp.Title).HasMaxLength(200);
+                entity.Property(cp => cp.Content).HasColumnType("nvarchar(max)");
+                entity.Property(cp => cp.Slug).HasMaxLength(200);
+                entity.Property(cp => cp.MetaDescription).HasMaxLength(500);
+                entity.Property(cp => cp.MetaKeywords).HasMaxLength(500);
+                entity.Property(cp => cp.PageType).HasMaxLength(50);
+                entity.Property(cp => cp.Status).HasMaxLength(50);
+            });
+
+            // Reminder configuration
+            modelBuilder.Entity<Reminder>(entity =>
+            {
+                entity.ToTable("Reminders");
+                entity.Property(r => r.ReminderId).HasColumnName("ReminderID").HasMaxLength(50);
+                entity.Property(r => r.PatientId).HasColumnName("PatientID").HasMaxLength(50);
+                entity.Property(r => r.DoctorId).HasColumnName("DoctorID").HasMaxLength(50);
+                entity.Property(r => r.BookingId).HasColumnName("BookingID").HasMaxLength(50);
+                entity.Property(r => r.TreatmentProcessId).HasColumnName("TreatmentProcessID").HasMaxLength(50);
+                entity.Property(r => r.Title).HasMaxLength(200);
+                entity.Property(r => r.Description).HasMaxLength(500);
+                entity.Property(r => r.ReminderType).HasMaxLength(50);
+                entity.Property(r => r.Status).HasMaxLength(50);
+                entity.Property(r => r.RepeatPattern).HasMaxLength(50);
+            });
+
+            // Rating configuration
+            modelBuilder.Entity<Rating>(entity =>
+            {
+                entity.ToTable("Ratings");
+                entity.Property(r => r.RatingId).HasColumnName("RatingID").HasMaxLength(50);
+                entity.Property(r => r.PatientId).HasColumnName("PatientID").HasMaxLength(50);
+                entity.Property(r => r.DoctorId).HasColumnName("DoctorID").HasMaxLength(50);
+                entity.Property(r => r.ServiceId).HasColumnName("ServiceID").HasMaxLength(50);
+                entity.Property(r => r.BookingId).HasColumnName("BookingID").HasMaxLength(50);
+                entity.Property(r => r.Comment).HasMaxLength(500);
+                entity.Property(r => r.RatingType).HasMaxLength(50);
+                entity.Property(r => r.Status).HasMaxLength(50);
+            });
+
+            // Feedback configuration
+            modelBuilder.Entity<Feedback>(entity =>
+            {
+                entity.ToTable("Feedbacks");
+                entity.Property(f => f.FeedbackId).HasColumnName("FeedbackID").HasMaxLength(50);
+                entity.Property(f => f.PatientId).HasColumnName("PatientID").HasMaxLength(50);
+                entity.Property(f => f.UserId).HasColumnName("UserID").HasMaxLength(50);
+                entity.Property(f => f.BlogPostId).HasColumnName("BlogPostID").HasMaxLength(50);
+                entity.Property(f => f.ServiceId).HasColumnName("ServiceID").HasMaxLength(50);
+                entity.Property(f => f.RespondedById).HasColumnName("RespondedByID").HasMaxLength(50);
+                entity.Property(f => f.Title).HasMaxLength(200);
+                entity.Property(f => f.Content).HasMaxLength(1000);
+                entity.Property(f => f.FeedbackType).HasMaxLength(50);
+                entity.Property(f => f.Status).HasMaxLength(50);
+                entity.Property(f => f.AdminResponse).HasMaxLength(1000);
+            });
+
+            // Configure relationships for BlogPost
+            modelBuilder.Entity<BlogPost>()
+                .HasOne(bp => bp.Author)
+                .WithMany()
+                .HasForeignKey(bp => bp.AuthorId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Configure relationships for ContentPage
+            modelBuilder.Entity<ContentPage>()
+                .HasOne(cp => cp.CreatedBy)
+                .WithMany()
+                .HasForeignKey(cp => cp.CreatedById)
+                .OnDelete(DeleteBehavior.NoAction);  // Change from SetNull to NoAction
+
+            modelBuilder.Entity<ContentPage>()
+                .HasOne(cp => cp.LastModifiedBy)
+                .WithMany()
+                .HasForeignKey(cp => cp.LastModifiedById)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Configure relationships for Reminder
+            modelBuilder.Entity<Reminder>()
+                .HasOne(r => r.Patient)
+                .WithMany()
+                .HasForeignKey(r => r.PatientId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Reminder>()
+                .HasOne(r => r.Doctor)
+                .WithMany()
+                .HasForeignKey(r => r.DoctorId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Reminder>()
+                .HasOne(r => r.Booking)
+                .WithMany()
+                .HasForeignKey(r => r.BookingId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Reminder>()
+                .HasOne(r => r.TreatmentProcess)
+                .WithMany()
+                .HasForeignKey(r => r.TreatmentProcessId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Configure relationships for Rating
+            modelBuilder.Entity<Rating>()
+                .HasOne(r => r.Patient)
+                .WithMany()
+                .HasForeignKey(r => r.PatientId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Rating>()
+                .HasOne(r => r.Doctor)
+                .WithMany()
+                .HasForeignKey(r => r.DoctorId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Rating>()
+                .HasOne(r => r.Service)
+                .WithMany()
+                .HasForeignKey(r => r.ServiceId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Rating>()
+                .HasOne(r => r.Booking)
+                .WithMany()
+                .HasForeignKey(r => r.BookingId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Configure relationships for Feedback
+            modelBuilder.Entity<Feedback>()
+                .HasOne(f => f.Patient)
+                .WithMany()
+                .HasForeignKey(f => f.PatientId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Feedback>()
+                .HasOne(f => f.User)
+                .WithMany()
+                .HasForeignKey(f => f.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Feedback>()
+                .HasOne(f => f.RespondedBy)
+                .WithMany()
+                .HasForeignKey(f => f.RespondedById)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Feedback>()
+                .HasOne(f => f.BlogPost)
+                .WithMany(bp => bp.Feedbacks)
+                .HasForeignKey(f => f.BlogPostId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Feedback>()
+                .HasOne(f => f.Service)
+                .WithMany()
+                .HasForeignKey(f => f.ServiceId)
+                .OnDelete(DeleteBehavior.NoAction);
             // Relationships
 
             // Configure Doctor-User one-to-one relationship

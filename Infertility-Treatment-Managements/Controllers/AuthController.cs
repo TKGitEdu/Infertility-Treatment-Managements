@@ -230,6 +230,7 @@ namespace Infertility_Treatment_Managements.Controllers
                                     // Create a patient record
                                     var patient = new Patient
                                     {
+                                        PatientId = "PAT_" + Guid.NewGuid().ToString().Substring(0, 8),  // Generate unique PatientId
                                         UserId = user.UserId,
                                         Name = user.FullName ?? "",
                                         Email = user.Email ?? "",
