@@ -97,6 +97,15 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.ListenAnyIP(5156); // HTTP port
+    serverOptions.ListenAnyIP(7147, listenOptions => // HTTPS port
+    {
+        listenOptions.UseHttps();
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
