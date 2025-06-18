@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Infertility_Treatment_Management.DTOs
+namespace Infertility_Treatment_Managements.DTOs
 {
     public class PatientDetailDTO
     {
-        public int PatientDetailId { get; set; }
-        public int? PatientId { get; set; }
+        public string PatientDetailId { get; set; }
+        public string? PatientId { get; set; }
         public string TreatmentStatus { get; set; }
 
         // Basic patient information
@@ -14,25 +14,28 @@ namespace Infertility_Treatment_Management.DTOs
 
         // List of simplified treatment processes
         public ICollection<TreatmentProcessBasicDTO> TreatmentProcesses { get; set; } = new List<TreatmentProcessBasicDTO>();
+        
+        // List of simplified treatment plans
+        public ICollection<TreatmentPlanBasicDTO> TreatmentPlans { get; set; } = new List<TreatmentPlanBasicDTO>();
     }
 
     public class PatientDetailCreateDTO
     {
-        public int PatientId { get; set; }
+        public string PatientId { get; set; }
         public string TreatmentStatus { get; set; }
     }
 
     public class PatientDetailUpdateDTO
     {
-        public int PatientDetailId { get; set; }
-        public int PatientId { get; set; }
+        public string PatientDetailId { get; set; }
+        public string PatientId { get; set; }
         public string TreatmentStatus { get; set; }
     }
 
     // Simplified TreatmentProcess DTO for PatientDetail response
     public class TreatmentProcessBasicDTO
     {
-        public int TreatmentProcessId { get; set; }
+        public string TreatmentProcessId { get; set; }
         public string Method { get; set; }
         public DateOnly? ScheduledDate { get; set; }
         public DateOnly? ActualDate { get; set; }

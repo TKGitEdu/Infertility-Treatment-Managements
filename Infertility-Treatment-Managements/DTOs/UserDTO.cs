@@ -1,19 +1,21 @@
-﻿using System;
+﻿using Microsoft.VisualBasic;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
-namespace Infertility_Treatment_Management.DTOs
+namespace Infertility_Treatment_Managements.DTOs
 {
     public class UserDTO
     {
-        public int UserId { get; set; }
+        public string UserId { get; set; }
         public string FullName { get; set; }
         public string Email { get; set; }
         public string Phone { get; set; }
         public string Username { get; set; }
-        public int? RoleId { get; set; }
+        public string? RoleId { get; set; }
         public string Address { get; set; }
         public string Gender { get; set; }
-        public DateOnly? DateOfBirth { get; set; }
+        public DateTime? DateOfBirth { get; set; }
 
         // Related entities
         public RoleDTO Role { get; set; }
@@ -23,7 +25,7 @@ namespace Infertility_Treatment_Management.DTOs
 
     public class UserBasicDTO
     {
-        public int UserId { get; set; }
+        public string UserId { get; set; }
         public string FullName { get; set; }
         public string Email { get; set; }
         public string Phone { get; set; }
@@ -33,50 +35,73 @@ namespace Infertility_Treatment_Management.DTOs
 
     public class UserCreateDTO
     {
+        // Base user information
         public string FullName { get; set; }
         public string Email { get; set; }
         public string Phone { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }
-        public int? RoleId { get; set; }
+        public string? RoleId { get; set; }
         public string Address { get; set; }
         public string Gender { get; set; }
-        public DateOnly? DateOfBirth { get; set; }
+        public DateTime? DateOfBirth { get; set; }
+
+        // Doctor-specific properties - used when creating a doctor user
+        public string Specialization { get; set; }
+
+        // Patient-specific properties - used when creating a patient user
+        public string BloodType { get; set; }
+        public string EmergencyPhoneNumber { get; set; }
     }
 
     public class UserUpdateDTO
     {
-        public int UserId { get; set; }
+        public string UserId { get; set; }
         public string FullName { get; set; }
         public string Email { get; set; }
         public string Phone { get; set; }
         public string Username { get; set; }
-        public int? RoleId { get; set; }
+        public string? RoleId { get; set; }
         public string Address { get; set; }
         public string Gender { get; set; }
-        public DateOnly? DateOfBirth { get; set; }
+        public DateTime? DateOfBirth { get; set; }
+
+        // Doctor-specific properties - used when updating a doctor user
+        public string Specialization { get; set; }
+
+        // Patient-specific properties - used when updating a patient user
+        public string BloodType { get; set; }
+        public string EmergencyPhoneNumber { get; set; }
     }
 
     public class UserPasswordUpdateDTO
     {
-        public int UserId { get; set; }
+        public string UserId { get; set; }
         public string CurrentPassword { get; set; }
         public string NewPassword { get; set; }
         public string ConfirmPassword { get; set; }
     }
 
-    public class UserLoginDTO
+    // Yêu cầu quên mật khẩu - chỉ cần email
+    public class UserForgotPasswordDTO
     {
-        public string Username { get; set; }
-        public string Password { get; set; }
-    }
-    public class AuthResponseDTO
-    {
-        public string Token { get; set; }
-        public int UserId { get; set; }
-        public string Username { get; set; }
-        public string FullName { get; set; }
-        public string Role { get; set; } // Just the role name as string
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; }
     }
 
+    // Đặt lại mật khẩu - cần token và mật khẩu mới
+    public class UserResetPasswordDTO
+    {
+        [Required]
+        public string Token { get; set; }
+
+        [Required]
+        [MinLength(3)]
+        public string NewPassword { get; set; }
+
+        [Required]
+        [Compare("NewPassword")]
+        public string ConfirmPassword { get; set; }
+    }
 }

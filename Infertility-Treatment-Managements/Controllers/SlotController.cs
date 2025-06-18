@@ -1,14 +1,14 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Repositories.Models;
-using Infertility_Treatment_Management.DTOs;
-using Infertility_Treatment_Management.Helpers;
+using Infertility_Treatment_Managements.Models;
+using Infertility_Treatment_Managements.DTOs;
+using Infertility_Treatment_Managements.Helpers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Infertility_Treatment_Management.Controllers
+namespace Infertility_Treatment_Managements.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -25,7 +25,7 @@ namespace Infertility_Treatment_Management.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<SlotDTO>>> GetSlot()
         {
-            var slots = await _context.Slot
+            var slots = await _context.Slots
                 .Include(s => s.Bookings)
                 .ToListAsync();
 
@@ -34,9 +34,9 @@ namespace Infertility_Treatment_Management.Controllers
 
         // GET: api/Slot/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<SlotDTO>> GetSlot(int id)
+        public async Task<ActionResult<SlotDTO>> GetSlot(string id)
         {
-            var slot = await _context.Slot
+            var slot = await _context.Slots
                 .Include(s => s.Bookings)
                 .FirstOrDefaultAsync(s => s.SlotId == id);
 
@@ -50,11 +50,11 @@ namespace Infertility_Treatment_Management.Controllers
         public async Task<ActionResult<SlotDTO>> PostSlot(SlotCreateDTO slotCreateDTO)
         {
             var slot = slotCreateDTO.ToEntity();
-            _context.Slot.Add(slot);
+            _context.Slots.Add(slot);
             await _context.SaveChangesAsync();
 
             // Reload the slot with its relations for returning
-            var createdSlot = await _context.Slot
+            var createdSlot = await _context.Slots
                 .Include(s => s.Bookings)
                 .FirstOrDefaultAsync(s => s.SlotId == slot.SlotId);
 
@@ -63,11 +63,11 @@ namespace Infertility_Treatment_Management.Controllers
 
         // PUT: api/Slot/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutSlot(int id, SlotUpdateDTO slotUpdateDTO)
+        public async Task<IActionResult> PutSlot(string id, SlotUpdateDTO slotUpdateDTO)
         {
             if (id != slotUpdateDTO.SlotId) return BadRequest();
 
-            var slot = await _context.Slot.FindAsync(id);
+            var slot = await _context.Slots.FindAsync(id);
             if (slot == null) return NotFound();
 
             slotUpdateDTO.UpdateEntity(slot);
@@ -88,20 +88,39 @@ namespace Infertility_Treatment_Management.Controllers
 
         // DELETE: api/Slot/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteSlot(int id)
+        public async Task<IActionResult> DeleteSlot(string id)
         {
-            var slot = await _context.Slot.FindAsync(id);
-            if (slot == null) return NotFound();
+            try
+            {
+                var slot = await _context.Slots.FindAsync(id);
+                if (slot == null)
+                {
+                    return NotFound(new { message = $"Slot with ID {id} not found." });
+                }
 
-            _context.Slot.Remove(slot);
-            await _context.SaveChangesAsync();
+                if (await _context.Bookings.AnyAsync(b => b.SlotId == id))
+                {
+                    return BadRequest(new { message = "Cannot delete slot because it is referenced by existing bookings." });
+                }
 
-            return NoContent();
+                _context.Slots.Remove(slot);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (DbUpdateException ex)
+            {
+                return StatusCode(400, new { message = "Failed to delete slot due to database constraints.", error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An unexpected error occurred.", error = ex.Message });
+            }
         }
 
-        private async Task<bool> SlotExistsAsync(int id)
+        private async Task<bool> SlotExistsAsync(string id)
         {
-            return await _context.Slot.AnyAsync(s => s.SlotId == id);
+            return await _context.Slots.AnyAsync(s => s.SlotId == id);
         }
     }
 }

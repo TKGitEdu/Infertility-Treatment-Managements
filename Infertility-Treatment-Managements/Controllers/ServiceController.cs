@@ -1,14 +1,15 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Infertility_Treatment_Managements.DTOs;
+using Infertility_Treatment_Managements.Helpers;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Repositories.Models;
-using Infertility_Treatment_Management.DTOs;
-using Infertility_Treatment_Management.Helpers;
+using Infertility_Treatment_Managements.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Infertility_Treatment_Management.Controllers
+namespace Infertility_Treatment_Managements.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -23,21 +24,21 @@ namespace Infertility_Treatment_Management.Controllers
 
         // GET: api/Service
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ServiceDTO>>> GetServices()
+        public async Task<ActionResult<IEnumerable<DTOs.ServiceDTO>>> GetServices()
         {
-            var services = await _context.Service
-                .Include(s => s.Booking)
+            var services = await _context.Services
+                .Include(s => s.BookingsFk)
                 .ToListAsync();
 
-            return services.Select(s => s.ToDTO()).ToList();
+            return Ok(services.Select(s => s.ToDTO()));
         }
 
-        // GET: api/Service/5
+        // Fix for the CS0029 error in the GetService method
         [HttpGet("{id}")]
-        public async Task<ActionResult<ServiceDTO>> GetService(int id)
+        public async Task<ActionResult<DTOs.ServiceDTO>> GetService(string id)
         {
-            var service = await _context.Service
-                .Include(s => s.Booking)
+            var service = await _context.Services
+                .Include(s => s.BookingsFk)
                 .FirstOrDefaultAsync(s => s.ServiceId == id);
 
             if (service == null)
@@ -45,27 +46,27 @@ namespace Infertility_Treatment_Management.Controllers
                 return NotFound();
             }
 
-            return service.ToDTO();
+            return Ok(service.ToDTO()); // Wrap the result in Ok() to match the expected ActionResult type
         }
 
         // GET: api/Service/Status/Active
         [HttpGet("Status/{status}")]
-        public async Task<ActionResult<IEnumerable<ServiceDTO>>> GetServicesByStatus(string status)
+        public async Task<ActionResult<IEnumerable<DTOs.ServiceDTO>>> GetServicesByStatus(string status)
         {
-            var services = await _context.Service
+            var services = await _context.Services
                 .Where(s => s.Status == status)
-                .Include(s => s.Booking)
+                .Include(s => s.BookingsFk)
                 .ToListAsync();
 
-            return services.Select(s => s.ToDTO()).ToList();
+            return Ok(services.Select(s => s.ToDTO()));
         }
 
         // POST: api/Service
         [HttpPost]
-        public async Task<ActionResult<ServiceDTO>> CreateService(ServiceCreateDTO serviceCreateDTO)
+        public async Task<ActionResult<DTOs.ServiceDTO>> CreateService(ServiceCreateDTO serviceCreateDTO)
         {
             var service = serviceCreateDTO.ToEntity();
-            _context.Service.Add(service);
+            _context.Services.Add(service);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetService), new { id = service.ServiceId }, service.ToDTO());
@@ -73,14 +74,14 @@ namespace Infertility_Treatment_Management.Controllers
 
         // PUT: api/Service/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateService(int id, ServiceUpdateDTO serviceUpdateDTO)
+        public async Task<IActionResult> UpdateService(string id, ServiceUpdateDTO serviceUpdateDTO)
         {
             if (id != serviceUpdateDTO.ServiceId)
             {
                 return BadRequest("ID mismatch");
             }
 
-            var service = await _context.Service.FindAsync(id);
+            var service = await _context.Services.FindAsync(id);
             if (service == null)
             {
                 return NotFound();
@@ -110,9 +111,9 @@ namespace Infertility_Treatment_Management.Controllers
 
         // PATCH: api/Service/5/UpdateStatus
         [HttpPatch("{id}/UpdateStatus")]
-        public async Task<IActionResult> UpdateServiceStatus(int id, [FromBody] string status)
+        public async Task<IActionResult> UpdateServiceStatus(string id, [FromBody] string status)
         {
-            var service = await _context.Service.FindAsync(id);
+            var service = await _context.Services.FindAsync(id);
             if (service == null)
             {
                 return NotFound();
@@ -142,30 +143,53 @@ namespace Infertility_Treatment_Management.Controllers
 
         // DELETE: api/Service/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteService(int id)
+        public async Task<IActionResult> DeleteService(string id)
         {
-            var service = await _context.Service.FindAsync(id);
-            if (service == null)
+            try
             {
-                return NotFound();
-            }
+                var service = await _context.Services.FindAsync(id);
+                if (service == null)
+                {
+                    return NotFound(new { message = $"Service with ID {id} not found." });
+                }
 
-            // Check if this service is associated with any bookings
-            var hasBooking = await _context.Booking.AnyAsync(b => b.ServiceId == id);
-            if (hasBooking)
+                if (await _context.Bookings.AnyAsync(b => b.ServiceId == id))
+                {
+                    return BadRequest(new { message = "Cannot delete service because it is referenced by existing bookings." });
+                }
+
+                _context.Services.Remove(service);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (DbUpdateException ex)
             {
-                return BadRequest("Cannot delete service that is associated with bookings");
+                return StatusCode(400, new { message = "Failed to delete service due to database constraints.", error = ex.Message });
             }
-
-            _context.Service.Remove(service);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An unexpected error occurred.", error = ex.Message });
+            }
         }
 
-        private async Task<bool> ServiceExists(int id)
+        private async Task<bool> ServiceExists(string id)
         {
-            return await _context.Service.AnyAsync(s => s.ServiceId == id);
+            return await _context.Services.AnyAsync(s => s.ServiceId == id);
         }
+
+        // Thêm vào ServiceController
+        [HttpGet("Category/{category}")]
+        [AllowAnonymous]
+        public async Task<ActionResult<IEnumerable<DTOs.ServiceDTO>>> GetServicesByCategory(string category)
+        {
+            var services = await _context.Services
+                .Where(s => s.Category == category && s.Status == "Active")
+                .Include(s => s.BookingsFk)
+                .ToListAsync();
+
+            return Ok(services.Select(s => s.ToDTO()));
+        }
+
     }
 }

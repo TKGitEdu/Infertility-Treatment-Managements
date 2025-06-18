@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Infertility_Treatment_Management.DTOs
+namespace Infertility_Treatment_Managements.DTOs
 {
     // Main DTO for retrieving treatment process data
     public class TreatmentProcessDTO
     {
-        public int TreatmentProcessId { get; set; }
+        public string TreatmentProcessId { get; set; }
         public string Method { get; set; }
-        public int? PatientDetailId { get; set; }
+        public string? PatientDetailId { get; set; }
         public DateOnly? ScheduledDate { get; set; }
         public DateOnly? ActualDate { get; set; }
         public string Result { get; set; }
@@ -22,7 +22,7 @@ namespace Infertility_Treatment_Management.DTOs
     public class TreatmentProcessCreateDTO
     {
         public string Method { get; set; }
-        public int PatientDetailId { get; set; }
+        public string PatientDetailId { get; set; }
         public DateOnly? ScheduledDate { get; set; }
         public DateOnly? ActualDate { get; set; }
         public string Result { get; set; }
@@ -32,9 +32,9 @@ namespace Infertility_Treatment_Management.DTOs
     // DTO for updating an existing treatment process
     public class TreatmentProcessUpdateDTO
     {
-        public int TreatmentProcessId { get; set; }
+        public string TreatmentProcessId { get; set; }
         public string Method { get; set; }
-        public int PatientDetailId { get; set; }
+        public string PatientDetailId { get; set; }
         public DateOnly? ScheduledDate { get; set; }
         public DateOnly? ActualDate { get; set; }
         public string Result { get; set; }
@@ -44,8 +44,8 @@ namespace Infertility_Treatment_Management.DTOs
     // Simplified PatientDetail DTO for treatment process response
     public class PatientDetailBasicDTO
     {
-        public int PatientDetailId { get; set; }
-        public int? PatientId { get; set; }
+        public string PatientDetailId { get; set; }
+        public string? PatientId { get; set; }
         public string TreatmentStatus { get; set; }
         public PatientBasicDTO Patient { get; set; }
     }

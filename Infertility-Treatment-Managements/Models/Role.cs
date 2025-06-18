@@ -3,13 +3,13 @@
 using System;
 using System.Collections.Generic;
 
-namespace Repositories.Models;
+namespace Infertility_Treatment_Managements.Models;
 
 public partial class Role
 {
-    public int RoleId { get; set; }
+    public string RoleId { get; set; }
 
     public string RoleName { get; set; }
 
-    public virtual User User { get; set; }
+    public virtual ICollection<User> Users { get; set; } = new List<User>();
 }

@@ -1,12 +1,13 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Infertility_Treatment_Managements.DTOs;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Repositories.Models;
-using Infertility_Treatment_Management.DTOs;
-using System.Threading.Tasks;
+using Infertility_Treatment_Managements.Models;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
-namespace Infertility_Treatment_Management.Controllers
+namespace Infertility_Treatment_Managements.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -32,14 +33,14 @@ namespace Infertility_Treatment_Management.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Role>>> GetRole()
         {
-            return await _context.Role.ToListAsync();
+            return await _context.Roles.ToListAsync();
         }
 
         // GET: api/Role/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Role>> GetRole(int id)
+        public async Task<ActionResult<Role>> GetRole(string id)
         {
-            var role = await _context.Role.FirstOrDefaultAsync(r => r.RoleId == id);
+            var role = await _context.Roles.FirstOrDefaultAsync(r => r.RoleId == id);
             if (role == null) return NotFound();
             return role;
         }
@@ -54,18 +55,18 @@ namespace Infertility_Treatment_Management.Controllers
                 RoleName = roleCreateDTO.RoleName
             };
 
-            _context.Role.Add(role);
+            _context.Roles.Add(role);
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetRole), new { id = role.RoleId }, role);
         }
 
         // PUT: api/Role/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutRole(int id, RoleUpdateDTO roleUpdateDTO)
+        public async Task<IActionResult> PutRole(string id, RoleUpdateDTO roleUpdateDTO)
         {
             if (id != roleUpdateDTO.RoleId) return BadRequest();
 
-            var role = await _context.Role.FindAsync(id);
+            var role = await _context.Roles.FindAsync(id);
             if (role == null) return NotFound();
 
             // Update the role properties
@@ -86,18 +87,40 @@ namespace Infertility_Treatment_Management.Controllers
 
         // DELETE: api/Role/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteRole(int id)
+        public async Task<IActionResult> DeleteRole(string id)
         {
-            var role = await _context.Role.FindAsync(id);
-            if (role == null) return NotFound();
-            _context.Role.Remove(role);
-            await _context.SaveChangesAsync();
-            return NoContent();
+            try
+            {
+                var role = await _context.Roles.FindAsync(id);
+                if (role == null)
+                {
+                    return NotFound(new { message = $"Role with ID {id} not found." });
+                }
+
+                if (await _context.Users.AnyAsync(u => u.RoleId == id))
+                {
+                    return BadRequest(new { message = "Cannot delete role because it is referenced by existing users." });
+                }
+
+                _context.Roles.Remove(role);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (DbUpdateException ex)
+            {
+                return StatusCode(400, new { message = "Failed to delete role due to database constraints.", error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                // Xử lý các lỗi khác
+                return StatusCode(500, new { message = "An unexpected error occurred.", error = ex.Message });
+            }
         }
 
-        private async Task<bool> RoleExistsAsync(int id)
+        private async Task<bool> RoleExistsAsync(string id)
         {
-            return await _context.Role.AnyAsync(r => r.RoleId == id);
+            return await _context.Roles.AnyAsync(r => r.RoleId == id);
         }
     }
 }

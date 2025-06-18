@@ -1,14 +1,15 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Infertility_Treatment_Managements.DTOs;
+using Infertility_Treatment_Managements.Helpers;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Repositories.Models;
-using Infertility_Treatment_Management.DTOs;
-using Infertility_Treatment_Management.Helpers;
+using Infertility_Treatment_Managements.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Infertility_Treatment_Management.Controllers
+namespace Infertility_Treatment_Managements.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -25,9 +26,9 @@ namespace Infertility_Treatment_Management.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<PatientDetailDTO>>> GetPatientDetails()
         {
-            var patientDetails = await _context.PatientDetail
+            var patientDetails = await _context.PatientDetails
                 .Include(pd => pd.Patient)
-                .Include(pd => pd.TreatmentProcess)
+                .Include(pd => pd.TreatmentProcessesFk)
                 .ToListAsync();
 
             return patientDetails.Select(pd => pd.ToDTO()).ToList();
@@ -35,11 +36,11 @@ namespace Infertility_Treatment_Management.Controllers
 
         // GET: api/PatientDetail/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<PatientDetailDTO>> GetPatientDetail(int id)
+        public async Task<ActionResult<PatientDetailDTO>> GetPatientDetail(string id)
         {
-            var patientDetail = await _context.PatientDetail
+            var patientDetail = await _context.PatientDetails
                 .Include(pd => pd.Patient)
-                .Include(pd => pd.TreatmentProcess)
+                .Include(pd => pd.TreatmentProcessesFk)
                 .FirstOrDefaultAsync(pd => pd.PatientDetailId == id);
 
             if (patientDetail == null)
@@ -52,18 +53,18 @@ namespace Infertility_Treatment_Management.Controllers
 
         // GET: api/PatientDetail/Patient/5
         [HttpGet("Patient/{patientId}")]
-        public async Task<ActionResult<IEnumerable<PatientDetailDTO>>> GetPatientDetailsByPatient(int patientId)
+        public async Task<ActionResult<IEnumerable<PatientDetailDTO>>> GetPatientDetailsByPatient(string patientId)
         {
-            var patientExists = await _context.Patient.AnyAsync(p => p.PatientId == patientId);
+            var patientExists = await _context.Patients.AnyAsync(p => p.PatientId == patientId);
             if (!patientExists)
             {
                 return NotFound("Patient not found");
             }
 
-            var patientDetails = await _context.PatientDetail
+            var patientDetails = await _context.PatientDetails
                 .Where(pd => pd.PatientId == patientId)
                 .Include(pd => pd.Patient)
-                .Include(pd => pd.TreatmentProcess)
+                .Include(pd => pd.TreatmentProcessesFk)
                 .ToListAsync();
 
             return patientDetails.Select(pd => pd.ToDTO()).ToList();
@@ -73,10 +74,10 @@ namespace Infertility_Treatment_Management.Controllers
         [HttpGet("Status/{status}")]
         public async Task<ActionResult<IEnumerable<PatientDetailDTO>>> GetPatientDetailsByStatus(string status)
         {
-            var patientDetails = await _context.PatientDetail
+            var patientDetails = await _context.PatientDetails
                 .Where(pd => pd.TreatmentStatus == status)
                 .Include(pd => pd.Patient)
-                .Include(pd => pd.TreatmentProcess)
+                .Include(pd => pd.TreatmentProcessesFk)
                 .ToListAsync();
 
             return patientDetails.Select(pd => pd.ToDTO()).ToList();
@@ -87,18 +88,18 @@ namespace Infertility_Treatment_Management.Controllers
         public async Task<ActionResult<PatientDetailDTO>> CreatePatientDetail(PatientDetailCreateDTO patientDetailCreateDTO)
         {
             // Validate patient exists
-            var patientExists = await _context.Patient.AnyAsync(p => p.PatientId == patientDetailCreateDTO.PatientId);
+            var patientExists = await _context.Patients.AnyAsync(p => p.PatientId == patientDetailCreateDTO.PatientId);
             if (!patientExists)
             {
                 return BadRequest("Invalid PatientId: Patient does not exist");
             }
 
             var patientDetail = patientDetailCreateDTO.ToEntity();
-            _context.PatientDetail.Add(patientDetail);
+            _context.PatientDetails.Add(patientDetail);
             await _context.SaveChangesAsync();
 
             // Reload with related data for return
-            var createdPatientDetail = await _context.PatientDetail
+            var createdPatientDetail = await _context.PatientDetails
                 .Include(pd => pd.Patient)
                 .FirstOrDefaultAsync(pd => pd.PatientDetailId == patientDetail.PatientDetailId);
 
@@ -107,21 +108,21 @@ namespace Infertility_Treatment_Management.Controllers
 
         // PUT: api/PatientDetail/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdatePatientDetail(int id, PatientDetailUpdateDTO patientDetailUpdateDTO)
+        public async Task<IActionResult> UpdatePatientDetail(string id, PatientDetailUpdateDTO patientDetailUpdateDTO)
         {
             if (id != patientDetailUpdateDTO.PatientDetailId)
             {
                 return BadRequest("ID mismatch");
             }
 
-            var patientDetail = await _context.PatientDetail.FindAsync(id);
+            var patientDetail = await _context.PatientDetails.FindAsync(id);
             if (patientDetail == null)
             {
                 return NotFound();
             }
 
             // Validate patient exists
-            var patientExists = await _context.Patient.AnyAsync(p => p.PatientId == patientDetailUpdateDTO.PatientId);
+            var patientExists = await _context.Patients.AnyAsync(p => p.PatientId == patientDetailUpdateDTO.PatientId);
             if (!patientExists)
             {
                 return BadRequest("Invalid PatientId: Patient does not exist");
@@ -151,9 +152,9 @@ namespace Infertility_Treatment_Management.Controllers
 
         // PATCH: api/PatientDetail/5/UpdateStatus
         [HttpPatch("{id}/UpdateStatus")]
-        public async Task<IActionResult> UpdatePatientDetailStatus(int id, [FromBody] string treatmentStatus)
+        public async Task<IActionResult> UpdatePatientDetailStatus(string id, [FromBody] string treatmentStatus)
         {
-            var patientDetail = await _context.PatientDetail.FindAsync(id);
+            var patientDetail = await _context.PatientDetails.FindAsync(id);
             if (patientDetail == null)
             {
                 return NotFound();
@@ -183,30 +184,44 @@ namespace Infertility_Treatment_Management.Controllers
 
         // DELETE: api/PatientDetail/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeletePatientDetail(int id)
+        public async Task<IActionResult> DeletePatientDetail(string id)
         {
-            var patientDetail = await _context.PatientDetail.FindAsync(id);
-            if (patientDetail == null)
+            try
             {
-                return NotFound();
-            }
+                var patientDetail = await _context.PatientDetails.FindAsync(id);
+                if (patientDetail == null)
+                {
+                    return NotFound(new { message = $"PatientDetail with ID {id} not found." });
+                }
 
-            // Check if this patient detail has associated treatment processes
-            var hasTreatmentProcesses = await _context.TreatmentProcess.AnyAsync(tp => tp.PatientDetailId == id);
-            if (hasTreatmentProcesses)
+                if (await _context.TreatmentProcesses.AnyAsync(tp => tp.PatientDetailId == id))
+                {
+                    return BadRequest(new { message = "Cannot delete patient detail because it is referenced by existing treatment processes." });
+                }
+
+                if (await _context.TreatmentPlans.AnyAsync(tp => tp.PatientDetailId == id))
+                {
+                    return BadRequest(new { message = "Cannot delete patient detail because it is referenced by existing treatment plans." });
+                }
+
+                _context.PatientDetails.Remove(patientDetail);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (DbUpdateException ex)
             {
-                return BadRequest("Cannot delete patient detail with associated treatment processes");
+                return StatusCode(400, new { message = "Failed to delete patient detail due to database constraints.", error = ex.Message });
             }
-
-            _context.PatientDetail.Remove(patientDetail);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An unexpected error occurred.", error = ex.Message });
+            }
         }
 
-        private async Task<bool> PatientDetailExists(int id)
+        private async Task<bool> PatientDetailExists(string id)
         {
-            return await _context.PatientDetail.AnyAsync(pd => pd.PatientDetailId == id);
+            return await _context.PatientDetails.AnyAsync(pd => pd.PatientDetailId == id);
         }
     }
 }

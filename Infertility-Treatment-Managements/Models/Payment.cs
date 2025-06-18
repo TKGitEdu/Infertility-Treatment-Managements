@@ -3,13 +3,13 @@
 using System;
 using System.Collections.Generic;
 
-namespace Repositories.Models;
+namespace Infertility_Treatment_Managements.Models;
 
 public partial class Payment
 {
-    public int PaymentId { get; set; }
+    public string PaymentId { get; set; }
 
-    public int? BookingId { get; set; }
+    public string? BookingId { get; set; }
 
     public decimal? TotalAmount { get; set; }
 

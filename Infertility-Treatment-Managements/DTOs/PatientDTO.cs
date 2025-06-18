@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
-namespace Infertility_Treatment_Management.DTOs
+namespace Infertility_Treatment_Managements.DTOs
 {
     public class PatientDTO
     {
-        public int PatientId { get; set; }
-        public int? UserId { get; set; }
+        public string PatientId { get; set; }
+        public string? UserId { get; set; }
         public string Name { get; set; }
         public string Phone { get; set; }
         public string Email { get; set; }
@@ -24,7 +25,7 @@ namespace Infertility_Treatment_Management.DTOs
 
     public class PatientBasicDTO
     {
-        public int PatientId { get; set; }
+        public string PatientId { get; set; }
         public string Name { get; set; }
         public string Phone { get; set; }
         public string Email { get; set; }
@@ -34,7 +35,7 @@ namespace Infertility_Treatment_Management.DTOs
 
     public class PatientCreateDTO
     {
-        public int? UserId { get; set; }
+        public string? UserId { get; set; }
         public string Name { get; set; }
         public string Phone { get; set; }
         public string Email { get; set; }
@@ -43,12 +44,16 @@ namespace Infertility_Treatment_Management.DTOs
         public string Gender { get; set; }
         public string BloodType { get; set; }
         public string EmergencyPhoneNumber { get; set; }
+
+        // Additional fields for user creation when UserId is not provided
+        public string Username { get; set; }
+        public string Password { get; set; }
     }
 
     public class PatientUpdateDTO
     {
-        public int PatientId { get; set; }
-        public int? UserId { get; set; }
+        public string PatientId { get; set; }
+        public string? UserId { get; set; }
         public string Name { get; set; }
         public string Phone { get; set; }
         public string Email { get; set; }

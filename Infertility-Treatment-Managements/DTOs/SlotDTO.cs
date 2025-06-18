@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Infertility_Treatment_Management.DTOs
+namespace Infertility_Treatment_Managements.DTOs
 {
     public class SlotDTO
     {
-        public int SlotId { get; set; }
+        public string SlotId { get; set; }
         public string SlotName { get; set; }
         public string StartTime { get; set; }
         public string EndTime { get; set; }
@@ -16,7 +16,7 @@ namespace Infertility_Treatment_Management.DTOs
 
     public class SlotBasicDTO
     {
-        public int SlotId { get; set; }
+        public string SlotId { get; set; }
         public string SlotName { get; set; }
         public string StartTime { get; set; }
         public string EndTime { get; set; }
@@ -31,7 +31,7 @@ namespace Infertility_Treatment_Management.DTOs
 
     public class SlotUpdateDTO
     {
-        public int SlotId { get; set; }
+        public string SlotId { get; set; }
         public string SlotName { get; set; }
         public string StartTime { get; set; }
         public string EndTime { get; set; }
