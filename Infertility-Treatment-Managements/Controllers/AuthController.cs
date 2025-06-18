@@ -97,10 +97,8 @@ namespace Infertility_Treatment_Managements.Controllers
                     Gender = user.Gender,
                     DateOfBirth = user.DateOfBirth,
                     Role = roleName != null ? new RoleDTO { RoleName = roleName } : null
-                };
-
-                // Thêm token vào header
-                Response.Headers.Add("Authorization", $"Bearer {token}");
+                };                // Thêm token vào header
+                Response.Headers.Append("Authorization", $"Bearer {token}");
 
                 return userDto;
             }
@@ -287,10 +285,8 @@ namespace Infertility_Treatment_Managements.Controllers
                         RoleId = role.RoleId,
                         RoleName = role.RoleName ?? ""
                     } : null
-                };
-
-                // Add token to response
-                Response.Headers.Add("Authorization", $"Bearer {token}");
+                };                // Add token to response
+                Response.Headers.Append("Authorization", $"Bearer {token}");
 
                 return CreatedAtAction(nameof(Login), userDto);
             }
@@ -340,10 +336,8 @@ namespace Infertility_Treatment_Managements.Controllers
                     return Unauthorized("User not found");
                 }
 
-                Console.WriteLine($"Tìm thấy user: {user.Username}");
-
-                // Lấy role nếu có
-                string roleName = null;
+                Console.WriteLine($"Tìm thấy user: {user.Username}");                // Lấy role nếu có
+                string? roleName = null;
                 string? roleId = null;
 
                 if (!string.IsNullOrEmpty(user.RoleId) && !user.RoleId.Equals("null", StringComparison.OrdinalIgnoreCase))
@@ -374,10 +368,8 @@ namespace Infertility_Treatment_Managements.Controllers
                     Address = user.Address ?? "",
                     Gender = user.Gender ?? "",
                     DateOfBirth = user.DateOfBirth
-                };
-
-                // Thêm role nếu có
-                if (roleId.Length > 0 && !string.IsNullOrEmpty(roleName))
+                };                // Thêm role nếu có
+                if (roleId?.Length > 0 && !string.IsNullOrEmpty(roleName))
                 {
                     userDto.Role = new RoleDTO
                     {
@@ -459,9 +451,11 @@ namespace Infertility_Treatment_Managements.Controllers
         ";
 
                 try
-                {
-                    // Inject EmailService và gửi email
-                    await _emailService.SendEmailAsync(user.Email, "Đặt lại mật khẩu", emailBody);
+                {                    // Inject EmailService và gửi email
+                    if (!string.IsNullOrEmpty(user.Email))
+                    {
+                        await _emailService.SendEmailAsync(user.Email, "Đặt lại mật khẩu", emailBody);
+                    }
 
                     return Ok("Nếu email tồn tại trong hệ thống, một email hướng dẫn đặt lại mật khẩu sẽ được gửi.");
                 }
@@ -706,7 +700,7 @@ namespace Infertility_Treatment_Managements.Controllers
         }
 
 
-        private string GenerateJwtToken(User user, Role role = null)
+        private string GenerateJwtToken(User user, Role? role = null)
         {
             try
             {

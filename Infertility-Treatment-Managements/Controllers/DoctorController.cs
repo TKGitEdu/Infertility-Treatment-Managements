@@ -275,12 +275,11 @@ namespace Infertility_Treatment_Managements.Controllers
                 // Tạo response và thêm thông tin đăng nhập vào header nếu có
                 var response = new OkObjectResult(result);
 
-                // Nếu đã tạo tài khoản mới và có credentials, thêm vào headers
-                // Nếu đã tạo tài khoản mới và có credentials, thêm vào headers
+                // Nếu đã tạo tài khoản mới và có credentials, thêm vào headers                // Nếu đã tạo tài khoản mới và có credentials, thêm vào headers
                 if (result.User != null && !string.IsNullOrEmpty(result.User.Username))
                 {
-                    Response.Headers.Add("X-Username", System.Text.RegularExpressions.Regex.Replace(result.User.Username, @"[^\u0000-\u007F]", ""));
-                    Response.Headers.Add("X-UserId", result.User.UserId);
+                    Response.Headers.Append("X-Username", System.Text.RegularExpressions.Regex.Replace(result.User.Username, @"[^\u0000-\u007F]", ""));
+                    Response.Headers.Append("X-UserId", result.User.UserId);
                 }
 
                 return response;
