@@ -8,6 +8,7 @@ using Infertility_Treatment_Managements.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using BCrypt.Net;
 
 namespace Infertility_Treatment_Managements.Controllers
 {
