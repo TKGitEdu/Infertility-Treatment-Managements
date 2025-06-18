@@ -582,9 +582,14 @@ namespace Infertility_Treatment_Managements.Helpers
                         BookingId = "BKG_1",
                         TreatmentProcessId = "TPR_1",
                         Title = "Nhắc lịch kích trứng",
-                        Content = "Vui lòng đến phòng khám vào ngày mai lúc 09:00 để bắt đầu quy trình kích trứng",
-                        ReminderDate = DateTime.Now.AddDays(4),
-                        Status = "Chưa gửi"
+                        Description = "Vui lòng đến phòng khám vào ngày mai lúc 09:00 để bắt đầu quy trình kích trứng",
+                        ScheduledTime = DateTime.Now.AddDays(4),
+                        Status = "Pending",
+                        ReminderType = "Appointment",
+                        IsEmailNotification = true,
+                        IsSmsNotification = false,
+                        IsRepeating = false,
+                        CreateDate = DateTime.Now
                     },
                     new Reminder
                     {
@@ -593,9 +598,14 @@ namespace Infertility_Treatment_Managements.Helpers
                         DoctorId = "DOC_2",
                         BookingId = "BKG_2",
                         Title = "Nhắc lịch tư vấn IUI",
-                        Content = "Vui lòng đến phòng khám vào ngày mai lúc 15:00 để được tư vấn về quy trình IUI",
-                        ReminderDate = DateTime.Now.AddDays(2),
-                        Status = "Chưa gửi"
+                        Description = "Vui lòng đến phòng khám vào ngày mai lúc 15:00 để được tư vấn về quy trình IUI",
+                        ScheduledTime = DateTime.Now.AddDays(2),
+                        Status = "Pending",
+                        ReminderType = "Appointment",
+                        IsEmailNotification = true,
+                        IsSmsNotification = true,
+                        IsRepeating = false,
+                        CreateDate = DateTime.Now
                     },
                     new Reminder
                     {
@@ -605,9 +615,14 @@ namespace Infertility_Treatment_Managements.Helpers
                         BookingId = "BKG_3",
                         TreatmentProcessId = "TPR_6",
                         Title = "Nhắc lịch trữ đông tinh trùng",
-                        Content = "Vui lòng đến phòng khám vào ngày mai lúc 11:00 để thực hiện quy trình trữ đông tinh trùng",
-                        ReminderDate = DateTime.Now.AddDays(2),
-                        Status = "Chưa gửi"
+                        Description = "Vui lòng đến phòng khám vào ngày mai lúc 11:00 để thực hiện quy trình trữ đông tinh trùng",
+                        ScheduledTime = DateTime.Now.AddDays(2),
+                        Status = "Pending",
+                        ReminderType = "Appointment",
+                        IsEmailNotification = true,
+                        IsSmsNotification = false,
+                        IsRepeating = false,
+                        CreateDate = DateTime.Now
                     }
                 };
 
@@ -629,7 +644,10 @@ namespace Infertility_Treatment_Managements.Helpers
                         BookingId = "BKG_1",
                         Score = 5,
                         Comment = "Bác sĩ tư vấn rất nhiệt tình và chuyên nghiệp",
-                        CreateAt = DateTime.Now.AddDays(-10)
+                        RatingDate = DateTime.Now.AddDays(-10),
+                        RatingType = "Doctor",
+                        Status = "Approved",
+                        IsAnonymous = false
                     },
                     new Rating
                     {
@@ -640,7 +658,10 @@ namespace Infertility_Treatment_Managements.Helpers
                         BookingId = "BKG_2",
                         Score = 4,
                         Comment = "Dịch vụ tốt, nhân viên phòng khám thân thiện",
-                        CreateAt = DateTime.Now.AddDays(-5)
+                        RatingDate = DateTime.Now.AddDays(-5),
+                        RatingType = "Service",
+                        Status = "Approved",
+                        IsAnonymous = false
                     }
                 };
 
@@ -657,12 +678,13 @@ namespace Infertility_Treatment_Managements.Helpers
                     {
                         FeedbackId = "FBK_1",
                         PatientId = "PAT_1",
-                        DoctorId = "DOC_1",
                         ServiceId = "SRV_3",
                         Title = "Phản hồi về dịch vụ IVF",
                         Content = "Tôi rất hài lòng với quy trình điều trị IVF tại phòng khám. Đội ngũ y bác sĩ rất tận tâm và chuyên nghiệp.",
-                        CreateAt = DateTime.Now.AddDays(-15),
-                        Status = "Đã xử lý"
+                        CreateDate = DateTime.Now.AddDays(-15),
+                        Status = "Read",
+                        FeedbackType = "Service",
+                        IsPublic = true
                     },
                     new Feedback
                     {
@@ -670,8 +692,10 @@ namespace Infertility_Treatment_Managements.Helpers
                         PatientId = "PAT_3",
                         Title = "Góp ý về cơ sở vật chất",
                         Content = "Phòng khám nên bổ sung thêm khu vực chờ rộng rãi hơn cho bệnh nhân và người nhà.",
-                        CreateAt = DateTime.Now.AddDays(-7),
-                        Status = "Đang xem xét"
+                        CreateDate = DateTime.Now.AddDays(-7),
+                        Status = "New",
+                        FeedbackType = "General",
+                        IsPublic = false
                     }
                 };
 
@@ -688,30 +712,25 @@ namespace Infertility_Treatment_Managements.Helpers
                     {
                         PaymentId = "PAY_1",
                         BookingId = "BKG_1",
-                        Amount = 50000000M, // 50 triệu VND cho IVF
-                        PaymentMethod = "Chuyển khoản",
-                        PaymentDate = DateTime.Now.AddDays(-1),
-                        Status = "Đã thanh toán",
-                        TransactionCode = "TRX123456789"
+                        TotalAmount = 50000000M, // 50 triệu VND cho IVF
+                        Method = "Chuyển khoản",
+                        Status = "Đã thanh toán"
                     },
                     new Payment
                     {
                         PaymentId = "PAY_2",
                         BookingId = "BKG_2",
-                        Amount = 15000000M, // 15 triệu VND cho IUI
-                        PaymentMethod = "Tiền mặt",
-                        PaymentDate = DateTime.Now,
+                        TotalAmount = 15000000M, // 15 triệu VND cho IUI
+                        Method = "Tiền mặt",
                         Status = "Đã thanh toán"
                     },
                     new Payment
                     {
                         PaymentId = "PAY_3",
                         BookingId = "BKG_3",
-                        Amount = 500000M, // 500k VND cho tư vấn ban đầu
-                        PaymentMethod = "Thẻ tín dụng",
-                        PaymentDate = DateTime.Now.AddDays(-2),
-                        Status = "Đã thanh toán",
-                        TransactionCode = "TRX987654321"
+                        TotalAmount = 500000M, // 500k VND cho tư vấn ban đầu
+                        Method = "Thẻ tín dụng",
+                        Status = "Đã thanh toán"
                     }
                 };
 
@@ -728,21 +747,27 @@ namespace Infertility_Treatment_Managements.Helpers
                     {
                         ExaminationId = "EXM_1",
                         BookingId = "BKG_1",
+                        PatientId = "PAT_1",
+                        DoctorId = "DOC_1",
                         ExaminationDate = DateTime.Now.AddDays(-1),
+                        ExaminationDescription = "Vô sinh nguyên phát do tắc ống dẫn trứng. Điều trị bằng phương pháp IVF.",
                         Result = "Kết quả kiểm tra sức khỏe tốt, đủ điều kiện để bắt đầu chu trình IVF",
-                        Diagnosis = "Vô sinh nguyên phát do tắc ống dẫn trứng",
-                        Treatment = "Điều trị bằng phương pháp IVF",
-                        Note = "Cần tiến hành kích trứng theo lịch đã đề ra"
+                        Status = "Hoàn thành",
+                        Note = "Cần tiến hành kích trứng theo lịch đã đề ra",
+                        CreateAt = DateTime.Now.AddDays(-1)
                     },
                     new Examination
                     {
                         ExaminationId = "EXM_2",
                         BookingId = "BKG_2",
+                        PatientId = "PAT_2",
+                        DoctorId = "DOC_2",
                         ExaminationDate = DateTime.Now,
+                        ExaminationDescription = "Vô sinh do không rụng trứng. Điều trị bằng phương pháp IUI.",
                         Result = "Kết quả siêu âm cho thấy có 3 nang trứng phát triển tốt",
-                        Diagnosis = "Vô sinh do không rụng trứng",
-                        Treatment = "Điều trị bằng phương pháp IUI",
-                        Note = "Cần theo dõi thêm 3 ngày nữa trước khi tiến hành IUI"
+                        Status = "Hoàn thành", 
+                        Note = "Cần theo dõi thêm 3 ngày nữa trước khi tiến hành IUI",
+                        CreateAt = DateTime.Now
                     }
                 };
 
