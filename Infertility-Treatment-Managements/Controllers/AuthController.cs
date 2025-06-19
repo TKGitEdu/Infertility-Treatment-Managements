@@ -30,7 +30,7 @@ namespace Infertility_Treatment_Managements.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<UserDTO>> Login(UserLoginDTO loginDto)
+        public async Task<ActionResult<object>> Login(UserLoginDTO loginDto)
         {
             try
             {
@@ -83,7 +83,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 // Tạo token đơn giản
                 var token = CreateJwtToken(user.UserId, user.Username, roleName);
 
-                // Tạo response
+                // Tạo user DTO
                 var userDto = new UserDTO
                 {
                     UserId = user.UserId,
@@ -96,10 +96,17 @@ namespace Infertility_Treatment_Managements.Controllers
                     Gender = user.Gender,
                     DateOfBirth = user.DateOfBirth,
                     Role = roleName != null ? new RoleDTO { RoleName = roleName } : null
-                };                // Thêm token vào header
+                };
+
+                // Vẫn giữ nguyên cách gửi token qua header để tương thích ngược
                 Response.Headers.Append("Authorization", $"Bearer {token}");
 
-                return userDto;
+                // Trả về cả user và token trong body response
+                return Ok(new
+                {
+                    user = userDto,
+                    token = token
+                });
             }
             catch (Exception ex)
             {
@@ -596,7 +603,132 @@ namespace Infertility_Treatment_Managements.Controllers
                 });
             }
         }
+        [HttpPost("register-simple")]
+        public async Task<ActionResult<UserDTO>> RegisterSimple(SimpleUserRegisterDTO registerDto)
+        {
+            try
+            {
+                // Check if username already exists
+                if (await _Context.Users.AnyAsync(u => u.Username == registerDto.Username))
+                {
+                    return BadRequest("Username already exists");
+                }
 
+                // Check if email already exists
+                if (await _Context.Users.AnyAsync(u => u.Email == registerDto.Email))
+                {
+                    return BadRequest("Email already exists");
+                }
+
+                // Find the Patient role
+                String roldIdPatient = null;
+                var roles = await _Context.Roles.ToListAsync();
+                if (roles != null && roles.Count > 0)
+                {
+                    var patientRole = roles.FirstOrDefault(r => r.RoleName?.ToLower() == "patient");
+                    if (patientRole != null)
+                    {
+                        roldIdPatient = patientRole.RoleId.ToString();
+                    }
+                }
+
+                // Create new user with minimal information
+                var user = new User
+                {
+                    UserId = Guid.NewGuid().ToString(),
+                    FullName = registerDto.FullName ?? "",
+                    Email = registerDto.Email,
+                    Phone = registerDto.Phone ?? "",
+                    Username = registerDto.Username,
+                    Password = registerDto.Password, // Plain text password
+                    RoleId = roldIdPatient, // Default to Patient role
+                    Address = "",
+                    Gender = "",
+                    DateOfBirth = null
+                };
+
+                // Use the execution strategy provided by the DbContext
+                var strategy = _Context.Database.CreateExecutionStrategy();
+
+                await strategy.ExecuteAsync(async () =>
+                {
+                    // Begin transaction
+                    using (var transaction = await _Context.Database.BeginTransactionAsync())
+                    {
+                        try
+                        {
+                            _Context.Users.Add(user);
+                            await _Context.SaveChangesAsync();
+
+                            // Create a patient record with minimal info
+                            var patient = new Patient
+                            {
+                                PatientId = "PAT_" + Guid.NewGuid().ToString().Substring(0, 8),
+                                UserId = user.UserId,
+                                Name = user.FullName ?? "",
+                                Email = user.Email,
+                                Phone = user.Phone ?? "",
+                                Address = "",
+                                Gender = "",
+                                DateOfBirth = null,
+                                BloodType = null,
+                                EmergencyPhoneNumber = null
+                            };
+
+                            _Context.Patients.Add(patient);
+                            await _Context.SaveChangesAsync();
+
+                            // Commit transaction
+                            await transaction.CommitAsync();
+                        }
+                        catch (Exception)
+                        {
+                            // Rollback transaction if there's an error
+                            await transaction.RollbackAsync();
+                            throw;
+                        }
+                    }
+                });
+
+                // Load role safely
+                Role role = null;
+                if (!string.IsNullOrEmpty(user.RoleId) && !user.RoleId.Equals("null", StringComparison.OrdinalIgnoreCase))
+                {
+                    role = await _Context.Roles.FindAsync(user.RoleId);
+                }
+
+                // Generate token
+                var token = GenerateJwtToken(user, role);
+
+                // Return user DTO
+                var userDto = new UserDTO
+                {
+                    UserId = user.UserId,
+                    Username = user.Username,
+                    FullName = user.FullName ?? "",
+                    Email = user.Email,
+                    Phone = user.Phone ?? "",
+                    RoleId = user.RoleId,
+                    Address = "",
+                    Gender = "",
+                    DateOfBirth = null,
+                    Role = role != null ? new RoleDTO
+                    {
+                        RoleId = role.RoleId,
+                        RoleName = role.RoleName ?? ""
+                    } : null
+                };
+
+                // Add token to response
+                Response.Headers.Append("Authorization", $"Bearer {token}");
+
+                return CreatedAtAction(nameof(Login), userDto);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
 
         [HttpPost("fix-doctor-records")]
         [Authorize(Roles = "Admin")] // Chỉ admin mới có thể chạy

@@ -104,4 +104,20 @@ namespace Infertility_Treatment_Managements.DTOs
         [Compare("NewPassword")]
         public string ConfirmPassword { get; set; }
     }
+    public class SimpleUserRegisterDTO
+    {
+        [Required]
+        public string Username { get; set; }
+
+        [Required]
+        public string Password { get; set; }
+
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; }
+
+        public string? FullName { get; set; }
+
+        public string? Phone { get; set; }
+    }
 }
