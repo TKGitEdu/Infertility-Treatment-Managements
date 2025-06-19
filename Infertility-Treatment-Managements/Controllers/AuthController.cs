@@ -117,6 +117,15 @@ namespace Infertility_Treatment_Managements.Controllers
             }
         }
 
+        [HttpPost("logout")]
+        [Authorize] // Có thể yêu cầu token hợp lệ, hoặc bỏ nếu không cần
+        public IActionResult Logout()
+        {
+            // Không cần xử lý gì vì JWT là stateless
+            // Có thể ghi log nếu muốn
+            return Ok(new { message = "Logged out successfully (client-side token removed)." });
+        }
+
         // Hàm tạo token đơn giản
         private string CreateJwtToken(string userId, string username, string roleName)
         {
