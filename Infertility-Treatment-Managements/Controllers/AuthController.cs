@@ -158,10 +158,12 @@ namespace Infertility_Treatment_Managements.Controllers
         }
         //đăng kí chỉ dành cho patient
         [HttpPost("register")]
+        [AllowAnonymous]
         public async Task<ActionResult<UserDTO>> Register(UserCreateDTO userCreateDto)
         {
             try
             {
+
                 // Check if username already exists
                 if (await _Context.Users.AnyAsync(u => u.Username == userCreateDto.Username))
                 {
@@ -303,7 +305,11 @@ namespace Infertility_Treatment_Managements.Controllers
                 };                // Add token to response
                 Response.Headers.Append("Authorization", $"Bearer {token}");
 
-                return CreatedAtAction(nameof(Login), userDto);
+                return Ok(
+                    new {
+                    user = userDto, 
+                    token = token
+                }); // Return both user and token in the response body
             }
             catch (Exception ex)
             {
@@ -613,7 +619,8 @@ namespace Infertility_Treatment_Managements.Controllers
             }
         }
         [HttpPost("register-simple")]
-        public async Task<ActionResult<UserDTO>> RegisterSimple(SimpleUserRegisterDTO registerDto)
+        [AllowAnonymous] // Cho phép đăng ký mà không cần xác thực
+        public async Task<ActionResult<object>> RegisterSimple(SimpleUserRegisterDTO registerDto)
         {
             try
             {
@@ -731,7 +738,12 @@ namespace Infertility_Treatment_Managements.Controllers
                 // Add token to response
                 Response.Headers.Append("Authorization", $"Bearer {token}");
 
-                return CreatedAtAction(nameof(Login), userDto);
+                // Return both user and token in the response body
+                return Ok(new
+                {
+                    user = userDto,
+                    token = token
+                });
             }
             catch (Exception ex)
             {
