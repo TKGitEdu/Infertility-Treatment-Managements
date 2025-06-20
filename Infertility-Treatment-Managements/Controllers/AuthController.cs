@@ -156,163 +156,93 @@ namespace Infertility_Treatment_Managements.Controllers
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-        //đăng kí chỉ dành cho patient
         [HttpPost("register")]
         [AllowAnonymous]
-        public async Task<ActionResult<UserDTO>> Register(UserCreateDTO userCreateDto)
+        public async Task<ActionResult<UserDTO>> Register(UserCreateDTO dto)
         {
             try
             {
-
-                // Check if username already exists
-                if (await _Context.Users.AnyAsync(u => u.Username == userCreateDto.Username))
-                {
+                // 1. Kiểm tra trùng username/email
+                if (await _Context.Users.AnyAsync(u => u.Username == dto.Username))
                     return BadRequest("Username already exists");
-                }
-
-                // Check if email already exists
-                if (await _Context.Users.AnyAsync(u => u.Email == userCreateDto.Email))
-                {
+                if (await _Context.Users.AnyAsync(u => u.Email == dto.Email))
                     return BadRequest("Email already exists");
-                }
 
-                // Store password directly without hashing
-                string password = userCreateDto.Password;
+                // 2. Lấy Role "Patient"
+                var patientRole = await _Context.Roles
+                    .FirstOrDefaultAsync(r => r.RoleName.ToLower() == "patient");
 
-                String roldIdPatient = null;
-                var roles = await _Context.Roles.ToListAsync();
-                if(roles != null && roles.Count > 0)
+                if (patientRole == null)
                 {
-                    // Find the Patient role
-                    var patientRole = roles.FirstOrDefault(r => r.RoleName?.ToLower() == "patient");
-                    if (patientRole != null)
-                    {
-                        roldIdPatient = patientRole.RoleId.ToString();
-                    }
+                    return StatusCode(500, "Patient role not found in system");
                 }
 
-                // Create new user
+                // 3. Tạo User
                 var user = new User
                 {
                     UserId = Guid.NewGuid().ToString(),
-                    FullName = userCreateDto.FullName ?? "",
-                    Email = userCreateDto.Email ?? "",
-                    Phone = userCreateDto.Phone ?? "",
-                    Username = userCreateDto.Username ?? "",
-                    Password = password, // Plain text password
-                    RoleId = roldIdPatient, // Default to Patient role if not specified
-                    Address = userCreateDto.Address ?? "",
-                    Gender = userCreateDto.Gender ?? "",
-                    DateOfBirth = userCreateDto.DateOfBirth
+                    Username = dto.Username,
+                    FullName = dto.FullName ?? "",
+                    Email = dto.Email,
+                    Phone = dto.Phone ?? "",
+                    Password = dto.Password, // Lưu mật khẩu nguyên bản theo yêu cầu
+                    RoleId = patientRole.RoleId,
+                    Address = dto.Address ?? "",
+                    Gender = dto.Gender ?? "",
+                    DateOfBirth = dto.DateOfBirth
                 };
 
-                // Use the execution strategy provided by the DbContext
-                var strategy = _Context.Database.CreateExecutionStrategy();
-
-                await strategy.ExecuteAsync(async () =>
+                // 4. Tạo Patient
+                var patient = new Patient
                 {
-                    // Begin transaction
-                    using (var transaction = await _Context.Database.BeginTransactionAsync())
-                    {
-                        try
-                        {
-                            _Context.Users.Add(user);
-                            await _Context.SaveChangesAsync();
-
-                            // Check user's role
-                            if (!string.IsNullOrEmpty(user.RoleId) && !user.RoleId.Equals("null", StringComparison.OrdinalIgnoreCase))
-                            {
-                                var Role = await _Context.Roles.FindAsync(user.RoleId);
-
-                                // If the user is a Doctor (RoleId = 1)
-                                if (Role?.RoleName?.ToLower() == "doctor")
-                                {
-                                    // Create a doctor record
-                                    var doctor = new Doctor
-                                    {
-                                        UserId = user.UserId,
-                                        DoctorName = user.FullName ?? "",
-                                        Email = user.Email ?? "",
-                                        Phone = user.Phone ?? "",
-                                        Specialization = userCreateDto.Specialization ?? "General" // Mặc định
-                                    };
-
-                                    _Context.Doctors.Add(doctor);
-                                    await _Context.SaveChangesAsync();
-                                }
-                                // If the user is a Patient (RoleId = 2)
-                                else if (Role?.RoleName?.ToLower() == "patient")
-                                {
-                                    // Create a patient record
-                                    var patient = new Patient
-                                    {
-                                        PatientId = "PAT_" + Guid.NewGuid().ToString().Substring(0, 8),  // Generate unique PatientId
-                                        UserId = user.UserId,
-                                        Name = user.FullName ?? "",
-                                        Email = user.Email ?? "",
-                                        Phone = user.Phone ?? "",
-                                        Address = user.Address ?? "",
-                                        Gender = user.Gender ?? "",
-                                        DateOfBirth = user.DateOfBirth,
-                                        BloodType = userCreateDto.BloodType,
-                                        EmergencyPhoneNumber = userCreateDto.EmergencyPhoneNumber
-                                    };
-
-                                    _Context.Patients.Add(patient);
-                                    await _Context.SaveChangesAsync();
-                                }
-                            }
-
-                            // Commit transaction
-                            await transaction.CommitAsync();
-                        }
-                        catch (Exception)
-                        {
-                            // Rollback transaction if there's an error
-                            await transaction.RollbackAsync();
-                            throw;
-                        }
-                    }
-                });
-
-                // Load role safely
-                Role role = null;
-                if (!string.IsNullOrEmpty(user.RoleId) && !user.RoleId.Equals("null", StringComparison.OrdinalIgnoreCase))
-                {
-                    role = await _Context.Roles.FindAsync(user.RoleId);
-                }
-
-                // Generate token
-                var token = GenerateJwtToken(user, role);
-
-                // Return user DTO
-                var userDto = new UserDTO
-                {
+                    PatientId = "PAT_" + Guid.NewGuid().ToString().Substring(0, 8),
                     UserId = user.UserId,
-                    Username = user.Username ?? "",
-                    FullName = user.FullName ?? "",
-                    Email = user.Email ?? "",
+                    Name = user.FullName,
+                    Email = user.Email,
                     Phone = user.Phone ?? "",
-                    RoleId = user.RoleId,
                     Address = user.Address ?? "",
                     Gender = user.Gender ?? "",
                     DateOfBirth = user.DateOfBirth,
-                    Role = role != null ? new RoleDTO
-                    {
-                        RoleId = role.RoleId,
-                        RoleName = role.RoleName ?? ""
-                    } : null
-                };                // Add token to response
+                    BloodType = dto.BloodType ?? "Unknown",
+                    EmergencyPhoneNumber = dto.EmergencyPhoneNumber ?? user.Phone ?? ""
+                };
+
+                // 5. Thêm cả User và Patient trong một transaction
+                _Context.Users.Add(user);
+                _Context.Patients.Add(patient);
+
+                // 6. Lưu các thay đổi vào database
+                await _Context.SaveChangesAsync();
+
+                // 7. Tạo token và trả về
+                var token = GenerateJwtToken(user, patientRole);
                 Response.Headers.Append("Authorization", $"Bearer {token}");
 
-                return Ok(
-                    new {
-                    user = userDto, 
-                    token = token
-                }); // Return both user and token in the response body
+                // 8. Chuẩn bị DTO để trả về
+                var userDto = new UserDTO
+                {
+                    UserId = user.UserId,
+                    Username = user.Username,
+                    FullName = user.FullName,
+                    Email = user.Email,
+                    Phone = user.Phone,
+                    RoleId = user.RoleId,
+                    Address = user.Address,
+                    Gender = user.Gender,
+                    DateOfBirth = user.DateOfBirth,
+                    Role = new RoleDTO
+                    {
+                        RoleId = patientRole.RoleId,
+                        RoleName = patientRole.RoleName ?? ""
+                    }
+                };
+
+                return Ok(new { user = userDto, token });
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Registration error: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }

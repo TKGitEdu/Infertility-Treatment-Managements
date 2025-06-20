@@ -94,7 +94,6 @@ namespace Infertility_Treatment_Managements.Helpers
                 Phone = dto.Phone,
                 Username = dto.Username,
                 Password = dto.Password,
-                RoleId = dto.RoleId,
                 Address = dto.Address,
                 Gender = dto.Gender,
                 DateOfBirth = dto.DateOfBirth // Just use the DateOnly? value directly
@@ -224,14 +223,14 @@ namespace Infertility_Treatment_Managements.Helpers
             return new Patient
             {
                 UserId = dto.UserId,
-                Name = dto.Name,
-                Phone = dto.Phone,
-                Email = dto.Email,
+                Name = dto.Name ?? "",
+                Phone = dto.Phone ?? "",
+                Email = dto.Email ?? "",
                 DateOfBirth = dto.DateOfBirth.HasValue ? ToDateTime(dto.DateOfBirth) : null,
-                Address = dto.Address,
-                Gender = dto.Gender,
-                BloodType = dto.BloodType,
-                EmergencyPhoneNumber = dto.EmergencyPhoneNumber
+                Address = dto.Address ?? "",
+                Gender = dto.Gender ?? "",
+                BloodType = dto.BloodType ?? "Unknown", // Giá trị mặc định nếu null
+                EmergencyPhoneNumber = dto.EmergencyPhoneNumber ?? dto.Phone ?? "" // Sử dụng SĐT chính nếu không có
             };
         }
 
