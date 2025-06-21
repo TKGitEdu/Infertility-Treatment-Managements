@@ -35,23 +35,28 @@ namespace Infertility_Treatment_Managements.DTOs
 
     public class UserCreateDTO
     {
-        // Base user information
-        public string FullName { get; set; }
-        public string Email { get; set; }
-        public string Phone { get; set; }
+        [Required]
         public string Username { get; set; }
+
+        [Required]
         public string Password { get; set; }
-        public string? RoleId { get; set; }
-        public string Address { get; set; }
-        public string Gender { get; set; }
+
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; }
+
+        [Required]
+        public string FullName { get; set; }
+
+        public string? Phone { get; set; }
+        public string? Address { get; set; }
+        public string? Gender { get; set; }
         public DateTime? DateOfBirth { get; set; }
 
-        // Doctor-specific properties - used when creating a doctor user
-        public string Specialization { get; set; }
-
-        // Patient-specific properties - used when creating a patient user
-        public string BloodType { get; set; }
-        public string EmergencyPhoneNumber { get; set; }
+        // Những trường này không bắt buộc cho đăng ký bệnh nhân
+        public string? BloodType { get; set; }
+        public string? EmergencyPhoneNumber { get; set; }
+        public string? Specialization { get; set; } // Chỉ dùng cho bác sĩ
     }
 
     public class UserUpdateDTO
@@ -103,5 +108,21 @@ namespace Infertility_Treatment_Managements.DTOs
         [Required]
         [Compare("NewPassword")]
         public string ConfirmPassword { get; set; }
+    }
+    public class SimpleUserRegisterDTO
+    {
+        [Required]
+        public string Username { get; set; }
+
+        [Required]
+        public string Password { get; set; }
+
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; }
+
+        public string? FullName { get; set; }
+
+        public string? Phone { get; set; }
     }
 }
