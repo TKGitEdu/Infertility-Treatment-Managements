@@ -158,7 +158,7 @@ namespace Infertility_Treatment_Managements.Controllers
         }
         [HttpPost("register")]
         [AllowAnonymous]
-        public async Task<ActionResult<UserDTO>> Register(UserCreateDTO dto)
+        public async Task<ActionResult<string>> Register(UserCreateDTO dto)
         {
             try
             {
@@ -237,7 +237,7 @@ namespace Infertility_Treatment_Managements.Controllers
                     }
                 };
 
-                return Ok(new { user = userDto, token });
+                return Ok("Đăng ký thành công");
             }
             catch (Exception ex)
             {

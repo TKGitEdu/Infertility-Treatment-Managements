@@ -56,6 +56,8 @@ namespace Infertility_Treatment_Managements.DTOs
         // Những trường này không bắt buộc cho đăng ký bệnh nhân
         public string? BloodType { get; set; }
         public string? EmergencyPhoneNumber { get; set; }
+        // Thêm thuộc tính để loại bỏ khỏi Swagger schema
+        [System.Text.Json.Serialization.JsonIgnore]
         public string? Specialization { get; set; } // Chỉ dùng cho bác sĩ
     }
 
