@@ -207,18 +207,27 @@ namespace Infertility_Treatment_Managements.Controllers
                     EmergencyPhoneNumber = dto.EmergencyPhoneNumber ?? user.Phone ?? ""
                 };
 
-                // 5. Thêm cả User và Patient trong một transaction
+                // 5. Tạo PatientDetail
+                var patientDetail = new PatientDetail
+                {
+                    PatientDetailId = "PATD_" + Guid.NewGuid().ToString().Substring(0, 8),
+                    PatientId = patient.PatientId,
+                    TreatmentStatus = "New" // Trạng thái mặc định khi mới đăng ký
+                };
+
+                // 6. Thêm cả User, Patient và PatientDetail trong một transaction
                 _Context.Users.Add(user);
                 _Context.Patients.Add(patient);
+                _Context.PatientDetails.Add(patientDetail);
 
-                // 6. Lưu các thay đổi vào database
+                // 7. Lưu các thay đổi vào database
                 await _Context.SaveChangesAsync();
 
-                // 7. Tạo token và trả về
+                // 8. Tạo token và trả về
                 var token = GenerateJwtToken(user, patientRole);
                 Response.Headers.Append("Authorization", $"Bearer {token}");
 
-                // 8. Chuẩn bị DTO để trả về
+                // 9. Chuẩn bị DTO để trả về
                 var userDto = new UserDTO
                 {
                     UserId = user.UserId,
