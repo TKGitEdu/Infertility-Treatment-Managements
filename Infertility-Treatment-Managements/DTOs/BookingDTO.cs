@@ -55,15 +55,15 @@ namespace Infertility_Treatment_Managements.DTOs
 
     public class BookingUpdateDTO
     {
-        public string BookingId { get; set; }
-        public string PatientId { get; set; }
-        public string ServiceId { get; set; }
+        public string? BookingId { get; set; }
+        public string? PatientId { get; set; }
+        public string? ServiceId { get; set; }
         public string? PaymentId { get; set; }
-        public string DoctorId { get; set; }
-        public string SlotId { get; set; }
+        public string? DoctorId { get; set; }
+        public string? SlotId { get; set; }
         public DateTime DateBooking { get; set; }
-        public string Description { get; set; }
-        public string Note { get; set; }
+        public string? Description { get; set; }
+        public string? Note { get; set; }
     }
 
 }

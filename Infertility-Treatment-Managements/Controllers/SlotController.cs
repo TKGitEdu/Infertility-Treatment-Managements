@@ -44,7 +44,43 @@ namespace Infertility_Treatment_Managements.Controllers
 
             return slot.ToDTO();
         }
+        // Thêm endpoint này vào SlotController.cs
+        [HttpGet("available")]
+        public async Task<ActionResult<IEnumerable<SlotBasicDTO>>> GetAvailableSlots(
+            [FromQuery] string date,
+            [FromQuery] string doctorId)
+        {
+            if (string.IsNullOrEmpty(doctorId) || !DateTime.TryParse(date, out DateTime parsedDate))
+            {
+                return BadRequest("Invalid doctor ID or date format");
+            }
 
+            // Lấy tất cả slot
+            var allSlots = await _context.Slots
+                .OrderBy(s => s.StartTime)
+                .ToListAsync();
+
+            // Lấy danh sách slot đã được đặt cho bác sĩ này vào ngày này
+            var bookedSlots = await _context.Bookings
+                .Where(b => b.DoctorId == doctorId &&
+                       b.DateBooking.Date == parsedDate.Date)
+                .Select(b => b.SlotId)
+                .ToListAsync();
+
+            // Lọc ra các slot còn trống
+            var availableSlots = allSlots
+                .Where(s => !bookedSlots.Contains(s.SlotId))
+                .Select(s => new SlotBasicDTO
+                {
+                    SlotId = s.SlotId,
+                    SlotName = s.SlotName,
+                    StartTime = s.StartTime,
+                    EndTime = s.EndTime
+                })
+                .ToList();
+
+            return Ok(availableSlots);
+        }
         // POST: api/Slot
         [HttpPost]
         public async Task<ActionResult<SlotDTO>> PostSlot(SlotCreateDTO slotCreateDTO)

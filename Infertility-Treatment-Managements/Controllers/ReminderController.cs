@@ -25,8 +25,6 @@ namespace Infertility_Treatment_Managements.Controllers
             _emailService = emailService;
         }
 
-        // GET: api/Reminder
-        [HttpGet]
         [Authorize(Roles = "Admin,Doctor")]
         public async Task<ActionResult<IEnumerable<ReminderDTO>>> GetReminders()
         {
