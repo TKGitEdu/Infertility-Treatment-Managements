@@ -448,7 +448,7 @@ namespace Infertility_Treatment_Managements.Helpers
                 context.SaveChanges();
             }
 
-            // Thêm kế hoạch điều trị mẫu
+            // Thêm kế hoạch điều trị mẫu với ServiceId
             if (!context.TreatmentPlans.Any())
             {
                 var treatmentPlans = new List<TreatmentPlan>
@@ -458,6 +458,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         TreatmentPlanId = "TP_1",
                         DoctorId = "DOC_1",
                         PatientDetailId = "PATD_1",
+                        ServiceId = "SRV_3", // IVF service
                         Method = "IVF",
                         StartDate = DateTime.Now.AddDays(5),
                         EndDate = DateTime.Now.AddDays(35),
@@ -469,6 +470,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         TreatmentPlanId = "TP_2",
                         DoctorId = "DOC_2",
                         PatientDetailId = "PATD_2",
+                        ServiceId = "SRV_4", // IUI service
                         Method = "IUI",
                         StartDate = DateTime.Now.AddDays(7),
                         EndDate = DateTime.Now.AddDays(21),
@@ -480,6 +482,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         TreatmentPlanId = "TP_3",
                         DoctorId = "DOC_3",
                         PatientDetailId = "PATD_3",
+                        ServiceId = "SRV_6", // Trữ đông tinh trùng
                         Method = "Trữ đông tinh trùng",
                         StartDate = DateTime.Now.AddDays(3),
                         EndDate = DateTime.Now.AddDays(4),
@@ -492,7 +495,7 @@ namespace Infertility_Treatment_Managements.Helpers
                 context.SaveChanges();
             }
 
-            // Thêm quy trình điều trị mẫu
+            // Thêm quy trình điều trị mẫu với các trường đã cập nhật
             if (!context.TreatmentProcesses.Any())
             {
                 var treatmentProcesses = new List<TreatmentProcess>
@@ -503,8 +506,8 @@ namespace Infertility_Treatment_Managements.Helpers
                         PatientDetailId = "PATD_1",
                         TreatmentPlanId = "TP_1",
                         DoctorId = "DOC_1",
-                        Method = "Kích trứng",
                         ScheduledDate = DateTime.Now.AddDays(5),
+                        ActualDate = null,
                         Status = "Đã lên lịch",
                         Result = "Chưa thực hiện"
                     },
@@ -514,8 +517,8 @@ namespace Infertility_Treatment_Managements.Helpers
                         PatientDetailId = "PATD_1",
                         TreatmentPlanId = "TP_1",
                         DoctorId = "DOC_1",
-                        Method = "Lấy trứng",
                         ScheduledDate = DateTime.Now.AddDays(15),
+                        ActualDate = null,
                         Status = "Đã lên lịch",
                         Result = "Chưa thực hiện"
                     },
@@ -525,8 +528,8 @@ namespace Infertility_Treatment_Managements.Helpers
                         PatientDetailId = "PATD_1",
                         TreatmentPlanId = "TP_1",
                         DoctorId = "DOC_1",
-                        Method = "Chuyển phôi",
                         ScheduledDate = DateTime.Now.AddDays(25),
+                        ActualDate = null,
                         Status = "Đã lên lịch",
                         Result = "Chưa thực hiện"
                     },
@@ -536,8 +539,8 @@ namespace Infertility_Treatment_Managements.Helpers
                         PatientDetailId = "PATD_2",
                         TreatmentPlanId = "TP_2",
                         DoctorId = "DOC_2",
-                        Method = "Kích trứng nhẹ",
                         ScheduledDate = DateTime.Now.AddDays(7),
+                        ActualDate = null,
                         Status = "Chờ xác nhận",
                         Result = "Chưa thực hiện"
                     },
@@ -547,8 +550,8 @@ namespace Infertility_Treatment_Managements.Helpers
                         PatientDetailId = "PATD_2",
                         TreatmentPlanId = "TP_2",
                         DoctorId = "DOC_2",
-                        Method = "Bơm tinh trùng",
                         ScheduledDate = DateTime.Now.AddDays(14),
+                        ActualDate = null,
                         Status = "Chờ xác nhận",
                         Result = "Chưa thực hiện"
                     },
@@ -558,8 +561,8 @@ namespace Infertility_Treatment_Managements.Helpers
                         PatientDetailId = "PATD_3",
                         TreatmentPlanId = "TP_3",
                         DoctorId = "DOC_3",
-                        Method = "Lấy mẫu và trữ đông tinh trùng",
                         ScheduledDate = DateTime.Now.AddDays(3),
+                        ActualDate = null,
                         Status = "Đã lên lịch",
                         Result = "Chưa thực hiện"
                     }
@@ -765,7 +768,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         ExaminationDate = DateTime.Now,
                         ExaminationDescription = "Vô sinh do không rụng trứng. Điều trị bằng phương pháp IUI.",
                         Result = "Kết quả siêu âm cho thấy có 3 nang trứng phát triển tốt",
-                        Status = "Hoàn thành", 
+                        Status = "Hoàn thành",
                         Note = "Cần theo dõi thêm 3 ngày nữa trước khi tiến hành IUI",
                         CreateAt = DateTime.Now
                     }

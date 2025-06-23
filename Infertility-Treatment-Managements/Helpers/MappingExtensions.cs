@@ -576,7 +576,6 @@ namespace Infertility_Treatment_Managements.Helpers
             return new TreatmentProcessDTO
             {
                 TreatmentProcessId = entity.TreatmentProcessId,
-                Method = entity.Method,
                 PatientDetailId = entity.PatientDetailId,
                 ScheduledDate = entity.ScheduledDate.HasValue ? ToDateOnly(entity.ScheduledDate) : null,
                 ActualDate = entity.ActualDate.HasValue ? ToDateOnly(entity.ActualDate) : null,
@@ -593,7 +592,6 @@ namespace Infertility_Treatment_Managements.Helpers
             return new TreatmentProcessBasicDTO
             {
                 TreatmentProcessId = entity.TreatmentProcessId,
-                Method = entity.Method,
                 ScheduledDate = entity.ScheduledDate.HasValue ? ToDateOnly(entity.ScheduledDate) : null,
                 ActualDate = entity.ActualDate.HasValue ? ToDateOnly(entity.ActualDate) : null,
                 Status = entity.Status,
@@ -605,7 +603,6 @@ namespace Infertility_Treatment_Managements.Helpers
         {
             return new TreatmentProcess
             {
-                Method = dto.Method,
                 PatientDetailId = dto.PatientDetailId,
                 ScheduledDate = dto.ScheduledDate.HasValue ? ToDateTime(dto.ScheduledDate) : null,
                 ActualDate = dto.ActualDate.HasValue ? ToDateTime(dto.ActualDate) : null,
@@ -616,7 +613,6 @@ namespace Infertility_Treatment_Managements.Helpers
 
         public static void UpdateEntity(this TreatmentProcessUpdateDTO dto, TreatmentProcess entity)
         {
-            entity.Method = dto.Method;
             entity.PatientDetailId = dto.PatientDetailId;
             entity.ScheduledDate = dto.ScheduledDate.HasValue ? ToDateTime(dto.ScheduledDate) : null;
             entity.ActualDate = dto.ActualDate.HasValue ? ToDateTime(dto.ActualDate) : null;

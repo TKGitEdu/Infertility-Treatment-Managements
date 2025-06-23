@@ -61,7 +61,6 @@ namespace Infertility_Treatment_Managements.Controllers
                 TreatmentProcesses = tp.TreatmentProcesses.Select(tpr => new TreatmentProcessBasicDTO
                 {
                     TreatmentProcessId = tpr.TreatmentProcessId,
-                    Method = tpr.Method,
                     ScheduledDate = tpr.ScheduledDate.HasValue ? DateOnly.FromDateTime(tpr.ScheduledDate.Value) : null,
                     ActualDate = tpr.ActualDate.HasValue ? DateOnly.FromDateTime(tpr.ActualDate.Value) : null,
                     Result = tpr.Result,
@@ -129,7 +128,6 @@ namespace Infertility_Treatment_Managements.Controllers
                 TreatmentProcesses = treatmentPlan.TreatmentProcesses.Select(tpr => new TreatmentProcessBasicDTO
                 {
                     TreatmentProcessId = tpr.TreatmentProcessId,
-                    Method = tpr.Method,
                     ScheduledDate = tpr.ScheduledDate.HasValue ? DateOnly.FromDateTime(tpr.ScheduledDate.Value) : null,
                     ActualDate = tpr.ActualDate.HasValue ? DateOnly.FromDateTime(tpr.ActualDate.Value) : null,
                     Result = tpr.Result,
@@ -206,7 +204,6 @@ namespace Infertility_Treatment_Managements.Controllers
                 TreatmentProcesses = tp.TreatmentProcesses.Select(tpr => new TreatmentProcessBasicDTO
                 {
                     TreatmentProcessId = tpr.TreatmentProcessId,
-                    Method = tpr.Method,
                     ScheduledDate = tpr.ScheduledDate.HasValue ? DateOnly.FromDateTime(tpr.ScheduledDate.Value) : null,
                     ActualDate = tpr.ActualDate.HasValue ? DateOnly.FromDateTime(tpr.ActualDate.Value) : null,
                     Result = tpr.Result,
@@ -271,7 +268,6 @@ namespace Infertility_Treatment_Managements.Controllers
                 TreatmentProcesses = tp.TreatmentProcesses.Select(tpr => new TreatmentProcessBasicDTO
                 {
                     TreatmentProcessId = tpr.TreatmentProcessId,
-                    Method = tpr.Method,
                     ScheduledDate = tpr.ScheduledDate.HasValue ? DateOnly.FromDateTime(tpr.ScheduledDate.Value) : null,
                     ActualDate = tpr.ActualDate.HasValue ? DateOnly.FromDateTime(tpr.ActualDate.Value) : null,
                     Result = tpr.Result,

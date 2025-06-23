@@ -165,7 +165,6 @@ namespace Infertility_Treatment_Managements.Controllers
                 var treatmentProcess = new TreatmentProcess
                 {
                     TreatmentProcessId = "TPR_" + Guid.NewGuid().ToString().Substring(0, 8),
-                    Method = treatmentProcessCreateDTO.Method,
                     PatientDetailId = treatmentProcessCreateDTO.PatientDetailId,
                     ScheduledDate = treatmentProcessCreateDTO.ScheduledDate.HasValue ? 
                         new DateTime(treatmentProcessCreateDTO.ScheduledDate.Value.Year, 
@@ -198,7 +197,6 @@ namespace Infertility_Treatment_Managements.Controllers
                 var result = new TreatmentProcessDTO
                 {
                     TreatmentProcessId = treatmentProcess.TreatmentProcessId,
-                    Method = treatmentProcess.Method,
                     PatientDetailId = treatmentProcess.PatientDetailId,
                     ScheduledDate = treatmentProcess.ScheduledDate.HasValue ? DateOnly.FromDateTime(treatmentProcess.ScheduledDate.Value) : null,
                     ActualDate = treatmentProcess.ActualDate.HasValue ? DateOnly.FromDateTime(treatmentProcess.ActualDate.Value) : null,
@@ -239,7 +237,6 @@ namespace Infertility_Treatment_Managements.Controllers
             }
 
             // Update treatment process
-            treatmentProcess.Method = treatmentProcessUpdateDTO.Method;
             treatmentProcess.PatientDetailId = treatmentProcessUpdateDTO.PatientDetailId;
             treatmentProcess.ScheduledDate = treatmentProcessUpdateDTO.ScheduledDate.HasValue ? 
                 new DateTime(treatmentProcessUpdateDTO.ScheduledDate.Value.Year, 
@@ -351,7 +348,6 @@ namespace Infertility_Treatment_Managements.Controllers
             var dto = new TreatmentProcessDTO
             {
                 TreatmentProcessId = tp.TreatmentProcessId,
-                Method = tp.Method,
                 PatientDetailId = tp.PatientDetailId,
                 ScheduledDate = tp.ScheduledDate.HasValue ? DateOnly.FromDateTime(tp.ScheduledDate.Value) : null,
                 ActualDate = tp.ActualDate.HasValue ? DateOnly.FromDateTime(tp.ActualDate.Value) : null,

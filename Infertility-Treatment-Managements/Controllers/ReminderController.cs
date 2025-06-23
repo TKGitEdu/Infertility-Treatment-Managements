@@ -593,7 +593,6 @@ namespace Infertility_Treatment_Managements.Controllers
                 dto.TreatmentProcess = new TreatmentProcessBasicDTO
                 {
                     TreatmentProcessId = reminder.TreatmentProcess.TreatmentProcessId,
-                    Method = reminder.TreatmentProcess.Method,
                     ScheduledDate = reminder.TreatmentProcess.ScheduledDate.HasValue ? 
                         DateOnly.FromDateTime(reminder.TreatmentProcess.ScheduledDate.Value) : null,
                     ActualDate = reminder.TreatmentProcess.ActualDate.HasValue ? 

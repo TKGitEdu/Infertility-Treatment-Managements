@@ -136,19 +136,20 @@ namespace Infertility_Treatment_Managements.Models
                 entity.ToTable("TreatmentPlans");
                 entity.Property(tp => tp.TreatmentPlanId).HasColumnName("TreatmentPlanID").HasMaxLength(50);
                 entity.Property(tp => tp.DoctorId).HasColumnName("DoctorID").HasMaxLength(50);
+                entity.Property(tp => tp.ServiceId).HasColumnName("ServiceID").HasMaxLength(50); // Added ServiceID
                 entity.Property(tp => tp.PatientDetailId).HasColumnName("PatientDetailID").HasMaxLength(50);
-                entity.Property(tp => tp.Method).HasMaxLength(100);
-                entity.Property(tp => tp.Status).HasMaxLength(50);
-                entity.Property(tp => tp.TreatmentDescription).HasMaxLength(500);
+                entity.Property(tp => tp.Method).HasMaxLength(100).IsRequired();
+                entity.Property(tp => tp.Status).HasMaxLength(50).IsRequired();
+                entity.Property(tp => tp.TreatmentDescription).HasMaxLength(500).IsRequired();
             });
 
             modelBuilder.Entity<TreatmentProcess>(entity =>
             {
                 entity.ToTable("TreatmentProcesses");
                 entity.Property(tp => tp.TreatmentProcessId).HasColumnName("TreatmentProcessID").HasMaxLength(50);
+                entity.Property(tp => tp.DoctorId).HasColumnName("DoctorID").HasMaxLength(50);
                 entity.Property(tp => tp.PatientDetailId).HasColumnName("PatientDetailID").HasMaxLength(50);
                 entity.Property(tp => tp.TreatmentPlanId).HasColumnName("TreatmentPlanID").HasMaxLength(50);
-                entity.Property(tp => tp.Method).HasMaxLength(100);
                 entity.Property(tp => tp.Result).HasMaxLength(500);
                 entity.Property(tp => tp.Status).HasMaxLength(50);
             });
@@ -416,6 +417,13 @@ namespace Infertility_Treatment_Managements.Models
                 .HasForeignKey(tp => tp.PatientDetailId)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            // Configure TreatmentProcess-Doctor relationship (new)
+            modelBuilder.Entity<TreatmentProcess>()
+                .HasOne(tp => tp.Doctor)
+                .WithMany()
+                .HasForeignKey(tp => tp.DoctorId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             // Configure TreatmentProcess-TreatmentPlan relationship
             modelBuilder.Entity<TreatmentProcess>()
                 .HasOne(tp => tp.TreatmentPlan)
@@ -428,6 +436,13 @@ namespace Infertility_Treatment_Managements.Models
                 .HasOne(tp => tp.Doctor)
                 .WithMany(d => d.TreatmentPlans)
                 .HasForeignKey(tp => tp.DoctorId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Configure TreatmentPlan-Service relationship (new)
+            modelBuilder.Entity<TreatmentPlan>()
+                .HasOne(tp => tp.Service)
+                .WithMany()
+                .HasForeignKey(tp => tp.ServiceId)
                 .OnDelete(DeleteBehavior.SetNull);
 
             // Configure TreatmentPlan-PatientDetail relationship
