@@ -35,7 +35,8 @@ namespace Infertility_Treatment_Managements.Controllers
 
             var result = treatmentProcesses.Select(tp => MapToDTO(tp)).ToList();
             return Ok(result);
-        }        // GET: api/TreatmentProcess/{id}
+        }        
+        // GET: api/TreatmentProcess/{id}
         [HttpGet("{id}")]
         [Authorize]
         public async Task<ActionResult<TreatmentProcessDTO>> GetTreatmentProcess(string id)
