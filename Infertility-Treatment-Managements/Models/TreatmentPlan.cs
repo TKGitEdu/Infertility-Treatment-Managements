@@ -8,7 +8,7 @@ namespace Infertility_Treatment_Managements.Models
         public string TreatmentPlanId { get; set; }
         public string? DoctorId { get; set; }
         public string? ServiceId { get; set; } // New property for ServiceID
-        public string Method { get; set; }
+        public string? Method { get; set; }
         public string? PatientDetailId { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }

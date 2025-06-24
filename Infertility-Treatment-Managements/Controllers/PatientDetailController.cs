@@ -21,207 +21,110 @@ namespace Infertility_Treatment_Managements.Controllers
         {
             _context = context;
         }
+        //Tuy nhiên, nếu bạn muốn một phương thức mới để lấy tất cả kế hoạch điều trị của 
+        //một bệnh nhân qua tất cả chi tiết bệnh nhân của họ, 
+        //    bạn có thể thêm phương thức này:
 
-        // GET: api/PatientDetail
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<PatientDetailDTO>>> GetPatientDetails()
-        {
-            var patientDetails = await _context.PatientDetails
-                .Include(pd => pd.Patient)
-                .Include(pd => pd.TreatmentProcessesFk)
-                .ToListAsync();
-
-            return patientDetails.Select(pd => pd.ToDTO()).ToList();
-        }
-
-        // GET: api/PatientDetail/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<PatientDetailDTO>> GetPatientDetail(string id)
-        {
-            var patientDetail = await _context.PatientDetails
-                .Include(pd => pd.Patient)
-                .Include(pd => pd.TreatmentProcessesFk)
-                .FirstOrDefaultAsync(pd => pd.PatientDetailId == id);
-
-            if (patientDetail == null)
-            {
-                return NotFound();
-            }
-
-            return patientDetail.ToDTO();
-        }
-
-        // GET: api/PatientDetail/Patient/5
-        [HttpGet("Patient/{patientId}")]
-        public async Task<ActionResult<IEnumerable<PatientDetailDTO>>> GetPatientDetailsByPatient(string patientId)
+        // GET: api/PatientDetail/Patient/{patientId}/TreatmentPlans
+        [HttpGet("Patient/{patientId}/TreatmentPlans")]
+        [AllowAnonymous]
+        public async Task<ActionResult<IEnumerable<TreatmentPlanDTO>>> GetAllTreatmentPlansByPatient(string patientId)
         {
             var patientExists = await _context.Patients.AnyAsync(p => p.PatientId == patientId);
             if (!patientExists)
             {
-                return NotFound("Patient not found");
+                return NotFound($"Patient with ID {patientId} not found");
             }
 
-            var patientDetails = await _context.PatientDetails
+            // Lấy tất cả chi tiết bệnh nhân của bệnh nhân
+            var patientDetailIds = await _context.PatientDetails
                 .Where(pd => pd.PatientId == patientId)
-                .Include(pd => pd.Patient)
-                .Include(pd => pd.TreatmentProcessesFk)
+                .Select(pd => pd.PatientDetailId)
                 .ToListAsync();
 
-            return patientDetails.Select(pd => pd.ToDTO()).ToList();
-        }
+            if (!patientDetailIds.Any())
+            {
+                return Ok(new List<TreatmentPlanDTO>());
+            }
 
-        // GET: api/PatientDetail/Status/Active
-        [HttpGet("Status/{status}")]
-        public async Task<ActionResult<IEnumerable<PatientDetailDTO>>> GetPatientDetailsByStatus(string status)
-        {
-            var patientDetails = await _context.PatientDetails
-                .Where(pd => pd.TreatmentStatus == status)
-                .Include(pd => pd.Patient)
-                .Include(pd => pd.TreatmentProcessesFk)
+            // Lấy tất cả kế hoạch điều trị cho các chi tiết bệnh nhân này
+            var treatmentPlans = await _context.TreatmentPlans
+                .Where(tp => patientDetailIds.Contains(tp.PatientDetailId))
+                .Include(tp => tp.Doctor)
+                .Include(tp => tp.PatientDetail)
+                    .ThenInclude(pd => pd.Patient)
+                .Include(tp => tp.TreatmentProcesses)
                 .ToListAsync();
 
-            return patientDetails.Select(pd => pd.ToDTO()).ToList();
-        }
+            var result = treatmentPlans.Select(tp => new TreatmentPlanDTO
+            {
+                TreatmentPlanId = tp.TreatmentPlanId,
+                DoctorId = tp.DoctorId,
+                Method = tp.Method,
+                PatientDetailId = tp.PatientDetailId,
+                StartDate = tp.StartDate.HasValue ? DateOnly.FromDateTime(tp.StartDate.Value) : null,
+                EndDate = tp.EndDate.HasValue ? DateOnly.FromDateTime(tp.EndDate.Value) : null,
+                Status = tp.Status,
+                TreatmentDescription = tp.TreatmentDescription,
+                Doctor = tp.Doctor != null ? new DoctorBasicDTO
+                {
+                    DoctorId = tp.Doctor.DoctorId,
+                    DoctorName = tp.Doctor.DoctorName,
+                    Specialization = tp.Doctor.Specialization,
+                    Phone = tp.Doctor.Phone,
+                    Email = tp.Doctor.Email
+                } : null,
+                PatientDetail = tp.PatientDetail != null ? new PatientDetailBasicDTO
+                {
+                    PatientDetailId = tp.PatientDetail.PatientDetailId,
+                    PatientId = tp.PatientDetail.PatientId,
+                    TreatmentStatus = tp.PatientDetail.TreatmentStatus,
+                    Patient = tp.PatientDetail.Patient != null ? new PatientBasicDTO
+                    {
+                        PatientId = tp.PatientDetail.Patient.PatientId,
+                        Name = tp.PatientDetail.Patient.Name,
+                        Email = tp.PatientDetail.Patient.Email,
+                        Phone = tp.PatientDetail.Patient.Phone,
+                        Gender = tp.PatientDetail.Patient.Gender,
+                        DateOfBirth = tp.PatientDetail.Patient.DateOfBirth.HasValue ?
+                            DateOnly.FromDateTime(tp.PatientDetail.Patient.DateOfBirth.Value) : null
+                    } : null
+                } : null,
+                TreatmentProcesses = tp.TreatmentProcesses.Select(tpr => new TreatmentProcessBasicDTO
+                {
+                    TreatmentProcessId = tpr.TreatmentProcessId,
+                    Method = tp.Method,
+                    ScheduledDate = tpr.ScheduledDate.HasValue ? DateOnly.FromDateTime(tpr.ScheduledDate.Value) : null,
+                    ActualDate = tpr.ActualDate.HasValue ? DateOnly.FromDateTime(tpr.ActualDate.Value) : null,
+                    Result = tpr.Result,
+                    Status = tpr.Status
+                }).ToList()
+            }).ToList();
 
-        // POST: api/PatientDetail
-        [HttpPost]
-        public async Task<ActionResult<PatientDetailDTO>> CreatePatientDetail(PatientDetailCreateDTO patientDetailCreateDTO)
+            return Ok(result);
+        }
+        // GET: api/PatientDetail/User/{userId}/PatientId
+        [HttpGet("User/{userId}/PatientId")]
+        [AllowAnonymous]
+        public async Task<ActionResult<string>> GetPatientIdByUserId(string userId)
         {
-            // Validate patient exists
-            var patientExists = await _context.Patients.AnyAsync(p => p.PatientId == patientDetailCreateDTO.PatientId);
-            if (!patientExists)
+            if (string.IsNullOrEmpty(userId))
             {
-                return BadRequest("Invalid PatientId: Patient does not exist");
+                return BadRequest("UserId is required");
             }
 
-            var patientDetail = patientDetailCreateDTO.ToEntity();
-            _context.PatientDetails.Add(patientDetail);
-            await _context.SaveChangesAsync();
+            var patient = await _context.Patients
+                .Where(p => p.UserId == userId)
+                .Select(p => new { p.PatientId })
+                .FirstOrDefaultAsync();
 
-            // Reload with related data for return
-            var createdPatientDetail = await _context.PatientDetails
-                .Include(pd => pd.Patient)
-                .FirstOrDefaultAsync(pd => pd.PatientDetailId == patientDetail.PatientDetailId);
+            if (patient == null)
+            {
+                return NotFound($"No patient found with UserId: {userId}");
+            }
 
-            return CreatedAtAction(nameof(GetPatientDetail), new { id = createdPatientDetail.PatientDetailId }, createdPatientDetail.ToDTO());
+            return Ok(patient.PatientId);
         }
 
-        // PUT: api/PatientDetail/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdatePatientDetail(string id, PatientDetailUpdateDTO patientDetailUpdateDTO)
-        {
-            if (id != patientDetailUpdateDTO.PatientDetailId)
-            {
-                return BadRequest("ID mismatch");
-            }
-
-            var patientDetail = await _context.PatientDetails.FindAsync(id);
-            if (patientDetail == null)
-            {
-                return NotFound();
-            }
-
-            // Validate patient exists
-            var patientExists = await _context.Patients.AnyAsync(p => p.PatientId == patientDetailUpdateDTO.PatientId);
-            if (!patientExists)
-            {
-                return BadRequest("Invalid PatientId: Patient does not exist");
-            }
-
-            patientDetailUpdateDTO.UpdateEntity(patientDetail);
-            _context.Entry(patientDetail).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await PatientDetailExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // PATCH: api/PatientDetail/5/UpdateStatus
-        [HttpPatch("{id}/UpdateStatus")]
-        public async Task<IActionResult> UpdatePatientDetailStatus(string id, [FromBody] string treatmentStatus)
-        {
-            var patientDetail = await _context.PatientDetails.FindAsync(id);
-            if (patientDetail == null)
-            {
-                return NotFound();
-            }
-
-            patientDetail.TreatmentStatus = treatmentStatus;
-            _context.Entry(patientDetail).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await PatientDetailExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // DELETE: api/PatientDetail/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeletePatientDetail(string id)
-        {
-            try
-            {
-                var patientDetail = await _context.PatientDetails.FindAsync(id);
-                if (patientDetail == null)
-                {
-                    return NotFound(new { message = $"PatientDetail with ID {id} not found." });
-                }
-
-                if (await _context.TreatmentProcesses.AnyAsync(tp => tp.PatientDetailId == id))
-                {
-                    return BadRequest(new { message = "Cannot delete patient detail because it is referenced by existing treatment processes." });
-                }
-
-                if (await _context.TreatmentPlans.AnyAsync(tp => tp.PatientDetailId == id))
-                {
-                    return BadRequest(new { message = "Cannot delete patient detail because it is referenced by existing treatment plans." });
-                }
-
-                _context.PatientDetails.Remove(patientDetail);
-                await _context.SaveChangesAsync();
-
-                return NoContent();
-            }
-            catch (DbUpdateException ex)
-            {
-                return StatusCode(400, new { message = "Failed to delete patient detail due to database constraints.", error = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "An unexpected error occurred.", error = ex.Message });
-            }
-        }
-
-        private async Task<bool> PatientDetailExists(string id)
-        {
-            return await _context.PatientDetails.AnyAsync(pd => pd.PatientDetailId == id);
-        }
     }
 }

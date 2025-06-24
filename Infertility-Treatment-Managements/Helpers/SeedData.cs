@@ -359,7 +359,17 @@ namespace Infertility_Treatment_Managements.Helpers
                         Category = "Testing",
                         Price = 800000M,
                         Status = "Active"
-                    }
+                    },
+                    // Add new FET service
+                        new Service
+                        {
+                            ServiceId = "SRV_FET",
+                            Name = "Chuyển phôi đông lạnh (FET)",
+                            Description = "Quy trình rã đông và chuyển phôi đã trữ đông vào tử cung của bệnh nhân",
+                            Category = "InfertilityTreatment",
+                            Price = 35000000M,
+                            Status = "Active"
+                        }
                 };
 
                 context.Services.AddRange(services);
@@ -463,8 +473,9 @@ namespace Infertility_Treatment_Managements.Helpers
                         StartDate = DateTime.Now.AddDays(5),
                         EndDate = DateTime.Now.AddDays(35),
                         Status = "Đã lên lịch",
-                        TreatmentDescription = "Kế hoạch điều trị IVF đầy đủ bao gồm kích trứng, lấy trứng, thụ tinh và chuyển phôi"
+                        TreatmentDescription = "Khám tổng quát; Kích thích buồng trứng; Chọc hút trứng; Thụ tinh trong ống nghiệm; Nuôi phôi; Chuyển phôi vào tử cung"
                     },
+
                     new TreatmentPlan
                     {
                         TreatmentPlanId = "TP_2",
@@ -475,8 +486,9 @@ namespace Infertility_Treatment_Managements.Helpers
                         StartDate = DateTime.Now.AddDays(7),
                         EndDate = DateTime.Now.AddDays(21),
                         Status = "Chờ xác nhận",
-                        TreatmentDescription = "Kế hoạch điều trị IUI bao gồm kích trứng nhẹ và bơm tinh trùng vào buồng tử cung"
+                        TreatmentDescription = "Khám tổng quát; Kích thích nhẹ buồng trứng; Theo dõi nang noãn; Lọc rửa tinh trùng; Bơm tinh trùng vào buồng tử cung"
                     },
+
                     new TreatmentPlan
                     {
                         TreatmentPlanId = "TP_3",
@@ -487,8 +499,23 @@ namespace Infertility_Treatment_Managements.Helpers
                         StartDate = DateTime.Now.AddDays(3),
                         EndDate = DateTime.Now.AddDays(4),
                         Status = "Đã lên lịch",
-                        TreatmentDescription = "Trữ đông tinh trùng để sử dụng trong tương lai"
+                        TreatmentDescription = "Lấy mẫu tinh dịch; Đánh giá chất lượng; Tiến hành trữ đông; Lưu trữ mẫu tại ngân hàng tinh trùng"
+                    },
+
+
+                    new TreatmentPlan
+                    {
+                        TreatmentPlanId = "TP_FET_1",
+                        DoctorId = "DOC_2",
+                        PatientDetailId = "PATD_2",
+                        ServiceId = "SRV_FET", // Mã dịch vụ FET
+                        Method = "FET",
+                        StartDate = DateTime.Now.AddDays(5),
+                        EndDate = DateTime.Now.AddDays(10),
+                        Status = "Đã lên lịch",
+                        TreatmentDescription = "Chuẩn bị nội mạc tử cung; Rã đông phôi; Chuyển phôi vào tử cung"
                     }
+
                 };
 
                 context.TreatmentPlans.AddRange(treatmentPlans);
