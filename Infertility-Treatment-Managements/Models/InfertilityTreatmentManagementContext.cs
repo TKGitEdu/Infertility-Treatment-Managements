@@ -29,7 +29,7 @@ namespace Infertility_Treatment_Managements.Models
         public virtual DbSet<User> Users { get; set; }
         public virtual DbSet<BlogPost> BlogPosts { get; set; }
         public virtual DbSet<ContentPage> ContentPages { get; set; }
-        public virtual DbSet<Reminder> Reminders { get; set; }
+        public virtual DbSet<Notification> Notifications { get; set; }
         public virtual DbSet<Rating> Ratings { get; set; }
         public virtual DbSet<Feedback> Feedbacks { get; set; }
 
@@ -198,21 +198,42 @@ namespace Infertility_Treatment_Managements.Models
                 entity.Property(cp => cp.Status).HasMaxLength(50);
             });
 
-            // Reminder configuration
-            modelBuilder.Entity<Reminder>(entity =>
-            {
-                entity.ToTable("Reminders");
-                entity.Property(r => r.ReminderId).HasColumnName("ReminderID").HasMaxLength(50);
-                entity.Property(r => r.PatientId).HasColumnName("PatientID").HasMaxLength(50);
-                entity.Property(r => r.DoctorId).HasColumnName("DoctorID").HasMaxLength(50);
-                entity.Property(r => r.BookingId).HasColumnName("BookingID").HasMaxLength(50);
-                entity.Property(r => r.TreatmentProcessId).HasColumnName("TreatmentProcessID").HasMaxLength(50);
-                entity.Property(r => r.Title).HasMaxLength(200);
-                entity.Property(r => r.Description).HasMaxLength(500);
-                entity.Property(r => r.ReminderType).HasMaxLength(50);
-                entity.Property(r => r.Status).HasMaxLength(50);
-                entity.Property(r => r.RepeatPattern).HasMaxLength(50);
-            });
+            // Notification configuration
+            modelBuilder.Entity<Notification>(entity =>
+{
+    entity.ToTable("Notifications");
+    entity.Property(n => n.NotificationId).HasColumnName("NotificationID").HasMaxLength(50);
+    entity.Property(n => n.PatientId).HasColumnName("PatientID").HasMaxLength(50);
+    entity.Property(n => n.DoctorId).HasColumnName("DoctorID").HasMaxLength(50);
+    entity.Property(n => n.BookingId).HasColumnName("BookingID").HasMaxLength(50);
+    entity.Property(n => n.TreatmentProcessId).HasColumnName("TreatmentProcessID").HasMaxLength(50);
+
+    // Các trường mới
+    entity.Property(n => n.Type).HasMaxLength(50);
+    entity.Property(n => n.Message).HasMaxLength(500);
+    entity.Property(n => n.Time);
+
+    // Relationships giữ nguyên như Reminder
+    entity.HasOne(n => n.Patient)
+        .WithMany()
+        .HasForeignKey(n => n.PatientId)
+        .OnDelete(DeleteBehavior.SetNull);
+
+    entity.HasOne(n => n.Doctor)
+        .WithMany()
+        .HasForeignKey(n => n.DoctorId)
+        .OnDelete(DeleteBehavior.SetNull);
+
+    entity.HasOne(n => n.Booking)
+        .WithMany()
+        .HasForeignKey(n => n.BookingId)
+        .OnDelete(DeleteBehavior.SetNull);
+
+    entity.HasOne(n => n.TreatmentProcess)
+        .WithMany()
+        .HasForeignKey(n => n.TreatmentProcessId)
+        .OnDelete(DeleteBehavior.SetNull);
+});
 
             // Rating configuration
             modelBuilder.Entity<Rating>(entity =>
@@ -266,25 +287,25 @@ namespace Infertility_Treatment_Managements.Models
                 .OnDelete(DeleteBehavior.NoAction);
 
             // Configure relationships for Reminder
-            modelBuilder.Entity<Reminder>()
+            modelBuilder.Entity<Notification>()
                 .HasOne(r => r.Patient)
                 .WithMany()
                 .HasForeignKey(r => r.PatientId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity<Reminder>()
+            modelBuilder.Entity<Notification>()
                 .HasOne(r => r.Doctor)
                 .WithMany()
                 .HasForeignKey(r => r.DoctorId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity<Reminder>()
+            modelBuilder.Entity<Notification>()
                 .HasOne(r => r.Booking)
                 .WithMany()
                 .HasForeignKey(r => r.BookingId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity<Reminder>()
+            modelBuilder.Entity<Notification>()
                 .HasOne(r => r.TreatmentProcess)
                 .WithMany()
                 .HasForeignKey(r => r.TreatmentProcessId)

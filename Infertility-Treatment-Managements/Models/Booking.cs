@@ -24,6 +24,7 @@ public partial class Booking
     public string Description { get; set; }
 
     public DateTime? CreateAt { get; set; }
+    public string Status { get; set; } // hoặc StatusId nếu bạn dùng bảng Status riêng
 
     public string Note { get; set; }
 

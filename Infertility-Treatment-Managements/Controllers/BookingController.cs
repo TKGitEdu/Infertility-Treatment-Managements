@@ -1,6 +1,7 @@
 ﻿using Infertility_Treatment_Managements.DTOs;
 using Infertility_Treatment_Managements.Helpers;
 using Infertility_Treatment_Managements.Models;
+using Infertility_Treatment_Managements.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -18,70 +19,269 @@ namespace Infertility_Treatment_Managements.Controllers
     public class BookingController : ControllerBase
     {
         private readonly InfertilityTreatmentManagementContext _context;
-
-        public BookingController(InfertilityTreatmentManagementContext context)
+        private readonly IEmailService _emailService; // Thêm dependency
+        public BookingController(InfertilityTreatmentManagementContext context, IEmailService emailService)
         {
             _context = context;
+            _emailService = emailService; // Inject EmailService
         }
 
-        // GET: api/Booking
-        // Lấy tất cả danh sách booking - yêu cầu quyền Admin hoặc Doctor
-        [HttpGet]
-        [Authorize(Roles = "Admin,Doctor")]
+        // GET: api/Booking/services
+        // Lấy danh sách dịch vụ điều trị
+        [HttpGet("services")]
+        [AllowAnonymous]
+        public async Task<ActionResult<IEnumerable<ServiceDTO>>> GetTreatmentServices()
+        {
+            var services = await _context.Services
+                .Where(s => s.Status == "Active")
+                .ToListAsync();
 
+            return Ok(services.Select(s => s.ToDTO()));
+        }
+        // GET: api/Booking/all
+        // Lấy tất cả booking (chỉ cho Admin)
+        [HttpGet("all")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<IEnumerable<BookingDTO>>> GetAllBookings()
+        {
+            var bookings = await _context.Bookings
+                .Include(b => b.Patient)
+                .Include(b => b.Service)
+                .Include(b => b.Doctor)
+                .Include(b => b.Slot)
+                .OrderByDescending(b => b.DateBooking)
+                .ToListAsync();
+
+            return Ok(bookings.Select(b => b.ToDTO()));
+        }
+        // GET: api/Booking/doctors
+        // Lấy danh sách bác sĩ - chỉ trả về ID và tên
+        [HttpGet("doctors")]
+        [AllowAnonymous]
+        public async Task<ActionResult<IEnumerable<object>>> GetDoctors()
         {
             try
             {
-                // Lấy thông tin người dùng hiện tại
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Unauthorized("Không thể xác định người dùng");
-                }
-
-                // Truy vấn danh sách booking
-                IQueryable<Booking> query = _context.Bookings
-                    .Include(b => b.Patient)
-                    .Include(b => b.Service)
-                    .Include(b => b.Doctor)
-                    .Include(b => b.Slot)
-                    .Include(b => b.Payment);
-
-                // Nếu là Doctor, chỉ hiển thị các booking được chỉ định cho bác sĩ đó
-                if (userRole == "Doctor")
-                {
-                    var doctor = await _context.Doctors
-                        .FirstOrDefaultAsync(d => d.UserId == userId);
-
-                    if (doctor == null)
+                // Truy vấn chỉ lấy các trường cần thiết
+                var doctors = await _context.Doctors
+                    .Select(d => new
                     {
-                        return BadRequest("Không tìm thấy thông tin bác sĩ");
-                    }
+                        doctorId = d.DoctorId,
+                        doctorName = d.DoctorName ?? "Không có tên",
+                        specialization = d.Specialization ?? "Chuyên khoa chung",
+                        phone = d.Phone ?? ""
+                    })
+                    .ToListAsync();
 
-                    query = query.Where(b => b.DoctorId == doctor.DoctorId);
-                }
-
-                // Sắp xếp theo ngày đặt lịch, mới nhất lên đầu
-                var bookings = await query.OrderByDescending(b => b.DateBooking).ToListAsync();
-
-                // Chuyển đổi sang DTO và trả về
-                return Ok(bookings.Select(b => b.ToDTO()));
+                return Ok(doctors);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Lỗi khi lấy danh sách đặt lịch: {ex.Message}");
+                return StatusCode(500, $"Lỗi khi lấy danh sách bác sĩ: {ex.Message}");
             }
         }
 
+        // GET: api/Booking/slots
+        // Lấy tất cả các khung giờ
+        [HttpGet("slots")]
+        [AllowAnonymous]
+        public async Task<ActionResult<IEnumerable<SlotBasicDTO>>> GetAllSlots()
+        {
+            var slots = await _context.Slots
+                .OrderBy(s => s.StartTime)
+                .ToListAsync();
 
-        // POST: api/Booking
-        // Tạo mới lịch đặt khám - yêu cầu đăng nhập với vai trò Patient
-        [HttpPost]
+            return Ok(slots.Select(s => new SlotBasicDTO
+            {
+                SlotId = s.SlotId,
+                SlotName = s.SlotName,
+                StartTime = s.StartTime,
+                EndTime = s.EndTime
+            }));
+        }
+
+        // GET: api/Booking/available-slots
+        // Lấy các khung giờ còn trống cho bác sĩ và ngày cụ thể
+        [HttpGet("available-slots")]
+        [AllowAnonymous]
+        public async Task<ActionResult<IEnumerable<SlotBasicDTO>>> GetAvailableSlots(
+            [FromQuery] string doctorId,
+            [FromQuery] DateTime date)
+        {
+            // Kiểm tra dữ liệu đầu vào
+            if (string.IsNullOrEmpty(doctorId))
+            {
+                return BadRequest("Vui lòng chọn bác sĩ");
+            }
+
+            // Kiểm tra bác sĩ tồn tại
+            var doctor = await _context.Doctors.FindAsync(doctorId);
+            if (doctor == null)
+            {
+                return NotFound($"Không tìm thấy bác sĩ với ID {doctorId}");
+            }
+
+            // Lấy danh sách tất cả các khung giờ
+            var allSlots = await _context.Slots
+                .OrderBy(s => s.StartTime)
+                .ToListAsync();
+
+            // Lấy danh sách các khung giờ đã được đặt cho bác sĩ trong ngày đó
+            var bookedSlots = await _context.Bookings
+                .Where(b => b.DoctorId == doctorId &&
+                       b.DateBooking.Date == date.Date)
+                .Select(b => b.SlotId)
+                .ToListAsync();
+
+            // Lọc ra các khung giờ còn trống
+            var availableSlots = allSlots
+                .Where(s => !bookedSlots.Contains(s.SlotId))
+                .Select(s => new SlotBasicDTO
+                {
+                    SlotId = s.SlotId,
+                    SlotName = s.SlotName,
+                    StartTime = s.StartTime,
+                    EndTime = s.EndTime
+                })
+                .ToList();
+
+            return Ok(availableSlots);
+        }
+
+        // POST: api/Booking/check-availability
+        // Kiểm tra xem một khung giờ cụ thể có sẵn sàng không
+        [HttpPost("check-availability")]
+        [AllowAnonymous]
+        public async Task<ActionResult<bool>> CheckSlotAvailability(CheckSlotAvailabilityDTO checkDTO)
+        {
+            // Kiểm tra dữ liệu đầu vào
+            if (string.IsNullOrEmpty(checkDTO.DoctorId) ||
+                string.IsNullOrEmpty(checkDTO.SlotId))
+            {
+                return BadRequest("Vui lòng cung cấp đầy đủ thông tin bác sĩ và khung giờ");
+            }
+
+            // Kiểm tra bác sĩ tồn tại
+            var doctor = await _context.Doctors.FindAsync(checkDTO.DoctorId);
+            if (doctor == null)
+            {
+                return NotFound($"Không tìm thấy bác sĩ với ID {checkDTO.DoctorId}");
+            }
+
+            // Kiểm tra khung giờ tồn tại
+            var slot = await _context.Slots.FindAsync(checkDTO.SlotId);
+            if (slot == null)
+            {
+                return NotFound($"Không tìm thấy khung giờ với ID {checkDTO.SlotId}");
+            }
+
+            // Kiểm tra xem khung giờ đã được đặt chưa
+            var isBooked = await _context.Bookings
+                .AnyAsync(b => b.DoctorId == checkDTO.DoctorId &&
+                          b.DateBooking.Date == checkDTO.Date.Date &&
+                          b.SlotId == checkDTO.SlotId);
+
+            // Trả về kết quả: true nếu khung giờ còn trống, false nếu đã được đặt
+            return Ok(new { isAvailable = !isBooked });
+        }
+
+        // POST: api/Booking/create
+        // Tạo lịch hẹn mới - yêu cầu đăng nhập
+        //[HttpPost("create")]
+        //[Authorize(Roles = "Patient")]
+        //public async Task<ActionResult<BookingDTO>> CreateBooking(SimpleBookingCreateDTO bookingDTO)
+        //{
+        //    try
+        //    {
+        //        // Lấy UserId từ token
+        //        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        //        if (string.IsNullOrEmpty(userId))
+        //        {
+        //            return Unauthorized("Không thể xác định người dùng");
+        //        }
+
+        //        // Tìm Patient từ UserId
+        //        var patient = await _context.Patients
+        //            .FirstOrDefaultAsync(p => p.UserId == userId);
+
+        //        if (patient == null)
+        //        {
+        //            return BadRequest("Không tìm thấy thông tin bệnh nhân");
+        //        }
+
+        //        // Kiểm tra dịch vụ
+        //        var service = await _context.Services
+        //            .FirstOrDefaultAsync(s => s.ServiceId == bookingDTO.ServiceId && s.Status == "Active");
+
+        //        if (service == null)
+        //        {
+        //            return BadRequest($"Dịch vụ với ID {bookingDTO.ServiceId} không tồn tại hoặc không hoạt động");
+        //        }
+
+        //        // Kiểm tra bác sĩ
+        //        var doctor = await _context.Doctors.FindAsync(bookingDTO.DoctorId);
+        //        if (doctor == null)
+        //        {
+        //            return BadRequest($"Bác sĩ với ID {bookingDTO.DoctorId} không tồn tại");
+        //        }
+
+        //        // Kiểm tra khung giờ
+        //        var slot = await _context.Slots.FindAsync(bookingDTO.SlotId);
+        //        if (slot == null)
+        //        {
+        //            return BadRequest($"Khung giờ với ID {bookingDTO.SlotId} không tồn tại");
+        //        }
+
+        //        // Kiểm tra xem khung giờ đã được đặt chưa
+        //        var isBooked = await _context.Bookings
+        //            .AnyAsync(b => b.DoctorId == bookingDTO.DoctorId &&
+        //                      b.DateBooking.Date == bookingDTO.DateBooking.Date &&
+        //                      b.SlotId == bookingDTO.SlotId);
+
+        //        if (isBooked)
+        //        {
+        //            return BadRequest("Khung giờ này đã được đặt. Vui lòng chọn khung giờ khác.");
+        //        }
+
+        //        // Tạo booking mới
+        //        var booking = new Booking
+        //        {
+        //            BookingId = "BK_" + Guid.NewGuid().ToString().Substring(0, 8),
+        //            PatientId = patient.PatientId,
+        //            ServiceId = bookingDTO.ServiceId,
+        //            DoctorId = bookingDTO.DoctorId,
+        //            SlotId = bookingDTO.SlotId,
+        //            DateBooking = bookingDTO.DateBooking,
+        //            Description = bookingDTO.Description ?? $"Đặt lịch sử dụng dịch vụ {service.Name}",
+        //            Note = bookingDTO.Note,
+        //            CreateAt = DateTime.Now
+        //        };
+
+        //        _context.Bookings.Add(booking);
+        //        await _context.SaveChangesAsync();
+
+        //        // Lấy booking đầy đủ thông tin
+        //        var bookingFull = await _context.Bookings
+        //            .Include(b => b.Patient)
+        //            .Include(b => b.Service)
+        //            .Include(b => b.Doctor)
+        //            .Include(b => b.Slot)
+        //            .FirstOrDefaultAsync(b => b.BookingId == booking.BookingId);
+
+        //        return Ok(bookingFull.ToDTO());
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, $"Lỗi khi đặt lịch: {ex.Message}");
+        //    }
+        //}
+        
+
+        // POST: api/Booking/create
+        // Tạo lịch hẹn mới - yêu cầu đăng nhập
+        [HttpPost("create")]
         [Authorize(Roles = "Patient")]
-        public async Task<ActionResult<BookingDTO>> CreateBooking(BookingCreateDTO createDTO)
+        public async Task<ActionResult<BookingDTO>> CreateBooking(SimpleBookingCreateDTO bookingDTO)
         {
             try
             {
@@ -101,54 +301,75 @@ namespace Infertility_Treatment_Managements.Controllers
                     return BadRequest("Không tìm thấy thông tin bệnh nhân");
                 }
 
-                // Kiểm tra tồn tại của service
-                var service = await _context.Services.FindAsync(createDTO.ServiceId);
+                // Kiểm tra dịch vụ
+                var service = await _context.Services
+                    .FirstOrDefaultAsync(s => s.ServiceId == bookingDTO.ServiceId && s.Status == "Active");
+
                 if (service == null)
                 {
-                    return BadRequest($"Dịch vụ với ID {createDTO.ServiceId} không tồn tại");
+                    return BadRequest($"Dịch vụ với ID {bookingDTO.ServiceId} không tồn tại hoặc không hoạt động");
                 }
 
-                // Kiểm tra tồn tại của doctor
-                var doctor = await _context.Doctors.FindAsync(createDTO.DoctorId);
+                // Kiểm tra bác sĩ
+                var doctor = await _context.Doctors.FindAsync(bookingDTO.DoctorId);
                 if (doctor == null)
                 {
-                    return BadRequest($"Bác sĩ với ID {createDTO.DoctorId} không tồn tại");
+                    return BadRequest($"Bác sĩ với ID {bookingDTO.DoctorId} không tồn tại");
                 }
 
-                // Kiểm tra tồn tại của slot
-                var slot = await _context.Slots.FindAsync(createDTO.SlotId);
+                // Kiểm tra khung giờ
+                var slot = await _context.Slots.FindAsync(bookingDTO.SlotId);
                 if (slot == null)
                 {
-                    return BadRequest($"Khung giờ với ID {createDTO.SlotId} không tồn tại");
+                    return BadRequest($"Khung giờ với ID {bookingDTO.SlotId} không tồn tại");
                 }
 
                 // Kiểm tra xem khung giờ đã được đặt chưa
                 var isBooked = await _context.Bookings
-                    .AnyAsync(b => b.DoctorId == createDTO.DoctorId &&
-                             b.DateBooking.Date == createDTO.DateBooking.Date &&
-                             b.SlotId == createDTO.SlotId);
+                    .AnyAsync(b => b.DoctorId == bookingDTO.DoctorId &&
+                              b.DateBooking.Date == bookingDTO.DateBooking.Date &&
+                              b.SlotId == bookingDTO.SlotId);
 
                 if (isBooked)
                 {
                     return BadRequest("Khung giờ này đã được đặt. Vui lòng chọn khung giờ khác.");
                 }
 
-                // Tạo mới booking
+                // Tạo booking mới
                 var booking = new Booking
                 {
-                    BookingId = Guid.NewGuid().ToString(),
+                    BookingId = "BK_" + Guid.NewGuid().ToString().Substring(0, 8),
                     PatientId = patient.PatientId,
-                    ServiceId = createDTO.ServiceId,
-                    DoctorId = createDTO.DoctorId,
-                    SlotId = createDTO.SlotId,
-                    DateBooking = createDTO.DateBooking,
-                    Description = createDTO.Description ?? "",
-                    Note = createDTO.Note ?? "",
+                    ServiceId = bookingDTO.ServiceId,
+                    DoctorId = bookingDTO.DoctorId,
+                    SlotId = bookingDTO.SlotId,
+                    DateBooking = bookingDTO.DateBooking,
+                    Description = bookingDTO.Description ?? $"Đặt lịch sử dụng dịch vụ {service.Name}",
+                    Note = bookingDTO.Note,
                     CreateAt = DateTime.Now
                 };
 
                 _context.Bookings.Add(booking);
                 await _context.SaveChangesAsync();
+
+                // Gửi email thông báo
+                var emailSubject = "Xác nhận đặt lịch hẹn thành công";
+                var emailBody = $@"Kính gửi {patient.Name},
+            
+                Lịch hẹn của bạn đã được đặt thành công với thông tin sau:
+                - Mã lịch hẹn: {booking.BookingId}
+                - Dịch vụ: {service.Name}
+                - Bác sĩ: {doctor.DoctorName}
+                - Ngày: {booking.DateBooking.ToString("dd/MM/yyyy")}
+                - Khung giờ: {slot.StartTime} - {slot.EndTime}
+                - Ghi chú: {booking.Note ?? "Không có"}
+
+                Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!
+                Trân trọng,
+                Phòng khám của chúng tôi.
+                ";
+
+                await _emailService.SendEmailAsync(patient.Email, emailSubject, emailBody);
 
                 // Lấy booking đầy đủ thông tin
                 var bookingFull = await _context.Bookings
@@ -162,7 +383,7 @@ namespace Infertility_Treatment_Managements.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Lỗi khi tạo lịch: {ex.Message}");
+                return StatusCode(500, $"Lỗi khi đặt lịch: {ex.Message}");
             }
         }
 
@@ -172,74 +393,36 @@ namespace Infertility_Treatment_Managements.Controllers
         [Authorize(Roles = "Patient")]
         public async Task<ActionResult<IEnumerable<BookingDTO>>> GetMyBookings()
         {
-            try
+            // Lấy UserId từ token
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
             {
-                // Lấy UserId từ token
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Unauthorized("Không thể xác định người dùng");
-                }
-
-                // Tìm Patient từ UserId
-                var patient = await _context.Patients
-                    .FirstOrDefaultAsync(p => p.UserId == userId);
-
-                if (patient == null)
-                {
-                    return BadRequest("Không tìm thấy thông tin bệnh nhân");
-                }
-
-                // Tải đầy đủ thông tin booking cùng với các quan hệ liên quan
-                var bookings = await _context.Bookings
-                    .Include(b => b.Patient)
-                    .Include(b => b.Service)
-                    .Include(b => b.Doctor)
-                    .Include(b => b.Slot)
-                    .Include(b => b.Payment)
-                    .Include(b => b.Examination)
-                    .Where(b => b.PatientId == patient.PatientId)
-                    .OrderByDescending(b => b.DateBooking)
-                    .ToListAsync();
-
-                // Kiểm tra kết quả và trả về thông báo nếu không có booking nào
-                if (!bookings.Any())
-                {
-                    return Ok(new List<BookingDTO>()); // Trả về danh sách rỗng
-                }
-
-                // Chuyển đổi sang DTO và trả về
-                var bookingDTOs = bookings.Select(b => new BookingDTO
-                {
-                    BookingId = b.BookingId,
-                    PatientId = b.PatientId,
-                    ServiceId = b.ServiceId,
-                    PaymentId = b.PaymentId,
-                    DoctorId = b.DoctorId,
-                    SlotId = b.SlotId,
-                    DateBooking = b.DateBooking,
-                    Description = b.Description,
-                    Note = b.Note,
-                    CreateAt = b.CreateAt,
-                    Doctor = b.Doctor?.ToBasicDTO(),
-                    Patient = b.Patient?.ToBasicDTO(),
-                    Service = b.Service?.ToBasicDTO(),
-                    Slot = b.Slot?.ToBasicDTO(),
-                    Payment = b.Payment?.ToBasicDTO(),
-                    Examination = b.Examination?.ToBasicDTO()
-                }).ToList();
-
-                return Ok(bookingDTOs);
+                return Unauthorized("Không thể xác định người dùng");
             }
-            catch (Exception ex)
+
+            // Tìm Patient từ UserId
+            var patient = await _context.Patients
+                .FirstOrDefaultAsync(p => p.UserId == userId);
+
+            if (patient == null)
             {
-                return StatusCode(500, $"Lỗi khi lấy danh sách đặt lịch: {ex.Message}");
+                return BadRequest("Không tìm thấy thông tin bệnh nhân");
             }
+
+            var bookings = await _context.Bookings
+                .Include(b => b.Service)
+                .Include(b => b.Doctor)
+                .Include(b => b.Slot)
+                .Where(b => b.PatientId == patient.PatientId)
+                .OrderByDescending(b => b.DateBooking)
+                .ToListAsync();
+
+            return Ok(bookings.Select(b => b.ToDTO()));
         }
 
-        // GET: api/Booking/{BookingId}
-        // Lấy chi tiết đặt lịch theo ID - yêu cầu đăng nhập
-        [HttpGet("{id}")]
+        // GET: api/Booking/details/{id}
+        // Lấy chi tiết đặt lịch
+        [HttpGet("details/{id}")]
         [Authorize(Roles = "Patient,Doctor,Admin")]
         public async Task<ActionResult<BookingDTO>> GetBookingDetails(string id)
         {
@@ -287,134 +470,6 @@ namespace Infertility_Treatment_Managements.Controllers
             }
 
             return Ok(booking.ToDTO());
-        }
-
-        // PUT: api/Booking/{id}
-        // Cập nhật thông tin đặt lịch - yêu cầu đăng nhập
-        [HttpPut("{id}")]
-        [Authorize(Roles = "Patient")]
-        public async Task<ActionResult<BookingDTO>> UpdateBooking(string id, BookingUpdateDTO updateDTO)
-        {
-            try
-            {
-                // Lấy UserId từ token
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Unauthorized("Không thể xác định người dùng");
-                }
-
-                // Tìm Patient từ UserId
-                var patient = await _context.Patients
-                    .FirstOrDefaultAsync(p => p.UserId == userId);
-
-                if (patient == null)
-                {
-                    return BadRequest("Không tìm thấy thông tin bệnh nhân");
-                }
-
-                // Tìm booking cần cập nhật
-                var booking = await _context.Bookings
-                    .FirstOrDefaultAsync(b => b.BookingId == id && b.PatientId == patient.PatientId);
-
-                if (booking == null)
-                {
-                    return NotFound($"Không tìm thấy lịch đặt với ID {id}");
-                }
-
-                // Kiểm tra nếu đã thanh toán thì không cho cập nhật
-                if (booking.PaymentId != null)
-                {
-                    return BadRequest("Không thể cập nhật lịch đã thanh toán");
-                }
-
-                // Kiểm tra nếu lịch hẹn trong vòng 24 giờ thì không cho cập nhật
-                if (booking.DateBooking <= DateTime.Now.AddHours(24))
-                {
-                    return BadRequest("Không thể cập nhật lịch hẹn trong vòng 24 giờ trước khi khám");
-                }
-
-                // Cập nhật thông tin booking
-                if (!string.IsNullOrEmpty(updateDTO.Description))
-                {
-                    booking.Description = updateDTO.Description;
-                }
-
-                if (!string.IsNullOrEmpty(updateDTO.Note))
-                {
-                    booking.Note = updateDTO.Note;
-                }
-
-                // Cập nhật ngày hẹn nếu có
-                if (updateDTO.DateBooking != null && updateDTO.DateBooking != default(DateTime))
-                {
-                    booking.DateBooking = updateDTO.DateBooking;
-                }
-
-                // Cập nhật các thông tin khác nếu cần
-                if (!string.IsNullOrEmpty(updateDTO.ServiceId))
-                {
-                    var service = await _context.Services.FindAsync(updateDTO.ServiceId);
-                    if (service == null)
-                    {
-                        return BadRequest($"Dịch vụ với ID {updateDTO.ServiceId} không tồn tại");
-                    }
-                    booking.ServiceId = updateDTO.ServiceId;
-                }
-
-                if (!string.IsNullOrEmpty(updateDTO.DoctorId))
-                {
-                    var doctor = await _context.Doctors.FindAsync(updateDTO.DoctorId);
-                    if (doctor == null)
-                    {
-                        return BadRequest($"Bác sĩ với ID {updateDTO.DoctorId} không tồn tại");
-                    }
-                    booking.DoctorId = updateDTO.DoctorId;
-                }
-
-                if (!string.IsNullOrEmpty(updateDTO.SlotId))
-                {
-                    var slot = await _context.Slots.FindAsync(updateDTO.SlotId);
-                    if (slot == null)
-                    {
-                        return BadRequest($"Khung giờ với ID {updateDTO.SlotId} không tồn tại");
-                    }
-
-                    // Kiểm tra xem khung giờ đã được đặt chưa (nếu thay đổi)
-                    if (updateDTO.SlotId != booking.SlotId)
-                    {
-                        var isBooked = await _context.Bookings
-                            .AnyAsync(b => b.DoctorId == booking.DoctorId &&
-                                      b.DateBooking.Date == booking.DateBooking.Date &&
-                                      b.SlotId == updateDTO.SlotId &&
-                                      b.BookingId != id);
-
-                        if (isBooked)
-                        {
-                            return BadRequest("Khung giờ này đã được đặt. Vui lòng chọn khung giờ khác.");
-                        }
-                    }
-
-                    booking.SlotId = updateDTO.SlotId;
-                }
-
-                _context.Entry(booking).State = EntityState.Modified;
-                await _context.SaveChangesAsync();
-
-                // Lấy booking đầy đủ thông tin
-                var bookingFull = await _context.Bookings
-                    .Include(b => b.Patient)
-                    .Include(b => b.Service)
-                    .Include(b => b.Doctor)
-                    .Include(b => b.Slot)
-                    .FirstOrDefaultAsync(b => b.BookingId == id);
-
-                return Ok(bookingFull.ToDTO());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Lỗi khi cập nhật lịch: {ex.Message}");
-            }
         }
 
         // DELETE: api/Booking/cancel/{id}
@@ -466,4 +521,21 @@ namespace Infertility_Treatment_Managements.Controllers
         }
     }
 
+    // DTO classes
+    public class SimpleBookingCreateDTO
+    {
+        public string ServiceId { get; set; }
+        public string DoctorId { get; set; }
+        public string SlotId { get; set; }
+        public DateTime DateBooking { get; set; }
+        public string? Description { get; set; }
+        public string? Note { get; set; }
+    }
+
+    public class CheckSlotAvailabilityDTO
+    {
+        public string DoctorId { get; set; }
+        public string SlotId { get; set; }
+        public DateTime Date { get; set; }
+    }
 }
