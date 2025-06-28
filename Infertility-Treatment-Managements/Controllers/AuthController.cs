@@ -237,7 +237,8 @@ namespace Infertility_Treatment_Managements.Controllers
                         RoleName = patientRole.RoleName ?? ""
                     }
                 };
-
+               
+              
                 return Ok(new { user = userDto, token });
             }
             catch (Exception ex)

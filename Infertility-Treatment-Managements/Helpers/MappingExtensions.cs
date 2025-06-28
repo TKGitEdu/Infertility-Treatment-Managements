@@ -687,7 +687,6 @@ namespace Infertility_Treatment_Managements.Helpers
         }
         #endregion
     }
-
     public class ServiceDTO
     {
         public string ServiceId { get; set; }
@@ -698,4 +697,5 @@ namespace Infertility_Treatment_Managements.Helpers
         public string Category { get; set; } = string.Empty; // Thêm thuộc tính Category
         public ICollection<BookingBasicDTO> Bookings { get; set; } = new List<BookingBasicDTO>();
     }
+    
 }

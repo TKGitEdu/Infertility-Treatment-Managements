@@ -17,7 +17,7 @@ namespace Infertility_Treatment_Managements.Services
         private readonly int _smtpPort;
         private readonly string _smtpUser;
         private readonly string _smtpPassword;
-        private readonly string _senderName;
+        public readonly string _senderName;
 
         public EmailService(IConfiguration configuration)
         {

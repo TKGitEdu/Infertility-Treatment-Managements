@@ -569,139 +569,121 @@ namespace Infertility_Treatment_Managements.Helpers
                 context.SaveChanges();
             }
 
-            // Thêm nhắc nhở mẫu
-            if (!context.Reminders.Any())
+            // Thêm notification mẫu
+            if (!context.Notifications.Any())
             {
-                var reminders = new List<Reminder>
-                {
-                    new Reminder
-                    {
-                        ReminderId = "RMD_1",
-                        PatientId = "PAT_1",
-                        DoctorId = "DOC_1",
-                        BookingId = "BKG_1",
-                        TreatmentProcessId = "TPR_1",
-                        Title = "Nhắc lịch kích trứng",
-                        Description = "Vui lòng đến phòng khám vào ngày mai lúc 09:00 để bắt đầu quy trình kích trứng",
-                        ScheduledTime = DateTime.Now.AddDays(4),
-                        Status = "Pending",
-                        ReminderType = "Appointment",
-                        IsEmailNotification = true,
-                        IsSmsNotification = false,
-                        IsRepeating = false,
-                        CreateDate = DateTime.Now
-                    },
-                    new Reminder
-                    {
-                        ReminderId = "RMD_2",
-                        PatientId = "PAT_2",
-                        DoctorId = "DOC_2",
-                        BookingId = "BKG_2",
-                        Title = "Nhắc lịch tư vấn IUI",
-                        Description = "Vui lòng đến phòng khám vào ngày mai lúc 15:00 để được tư vấn về quy trình IUI",
-                        ScheduledTime = DateTime.Now.AddDays(2),
-                        Status = "Pending",
-                        ReminderType = "Appointment",
-                        IsEmailNotification = true,
-                        IsSmsNotification = true,
-                        IsRepeating = false,
-                        CreateDate = DateTime.Now
-                    },
-                    new Reminder
-                    {
-                        ReminderId = "RMD_3",
-                        PatientId = "PAT_3",
-                        DoctorId = "DOC_3",
-                        BookingId = "BKG_3",
-                        TreatmentProcessId = "TPR_6",
-                        Title = "Nhắc lịch trữ đông tinh trùng",
-                        Description = "Vui lòng đến phòng khám vào ngày mai lúc 11:00 để thực hiện quy trình trữ đông tinh trùng",
-                        ScheduledTime = DateTime.Now.AddDays(2),
-                        Status = "Pending",
-                        ReminderType = "Appointment",
-                        IsEmailNotification = true,
-                        IsSmsNotification = false,
-                        IsRepeating = false,
-                        CreateDate = DateTime.Now
-                    }
-                };
-
-                context.Reminders.AddRange(reminders);
-                context.SaveChanges();
-            }
-
-            // Thêm các đánh giá mẫu
-            if (!context.Ratings.Any())
+                        var notifications = new List<Notification>
             {
-                var ratings = new List<Rating>
+                new Notification
                 {
-                    new Rating
-                    {
-                        RatingId = "RTG_1",
-                        PatientId = "PAT_1",
-                        DoctorId = "DOC_1",
-                        ServiceId = "SRV_1",
-                        BookingId = "BKG_1",
-                        Score = 5,
-                        Comment = "Bác sĩ tư vấn rất nhiệt tình và chuyên nghiệp",
-                        RatingDate = DateTime.Now.AddDays(-10),
-                        RatingType = "Doctor",
-                        Status = "Approved",
-                        IsAnonymous = false
-                    },
-                    new Rating
-                    {
-                        RatingId = "RTG_2",
-                        PatientId = "PAT_2",
-                        DoctorId = "DOC_2",
-                        ServiceId = "SRV_4",
-                        BookingId = "BKG_2",
-                        Score = 4,
-                        Comment = "Dịch vụ tốt, nhân viên phòng khám thân thiện",
-                        RatingDate = DateTime.Now.AddDays(-5),
-                        RatingType = "Service",
-                        Status = "Approved",
-                        IsAnonymous = false
-                    }
-                };
-
-                context.Ratings.AddRange(ratings);
-                context.SaveChanges();
-            }
-
-            // Thêm phản hồi mẫu
-            if (!context.Feedbacks.Any())
-            {
-                var feedbacks = new List<Feedback>
+                    NotificationId = "NTF_1",
+                    PatientId = "PAT_1",
+                    DoctorId = "DOC_1",
+                    BookingId = "BKG_1",
+                    TreatmentProcessId = "TPR_1",
+                    Type = "appointment",
+                    Message = "Vui lòng đến phòng khám vào ngày mai lúc 09:00 để bắt đầu quy trình kích trứng",
+                    Time = DateTime.Now.AddDays(4)
+                },
+                new Notification
                 {
-                    new Feedback
-                    {
-                        FeedbackId = "FBK_1",
-                        PatientId = "PAT_1",
-                        ServiceId = "SRV_3",
-                        Title = "Phản hồi về dịch vụ IVF",
-                        Content = "Tôi rất hài lòng với quy trình điều trị IVF tại phòng khám. Đội ngũ y bác sĩ rất tận tâm và chuyên nghiệp.",
-                        CreateDate = DateTime.Now.AddDays(-15),
-                        Status = "Read",
-                        FeedbackType = "Service",
-                        IsPublic = true
-                    },
-                    new Feedback
-                    {
-                        FeedbackId = "FBK_2",
-                        PatientId = "PAT_3",
-                        Title = "Góp ý về cơ sở vật chất",
-                        Content = "Phòng khám nên bổ sung thêm khu vực chờ rộng rãi hơn cho bệnh nhân và người nhà.",
-                        CreateDate = DateTime.Now.AddDays(-7),
-                        Status = "New",
-                        FeedbackType = "General",
-                        IsPublic = false
-                    }
-                };
+                    NotificationId = "NTF_2",
+                    PatientId = "PAT_2",
+                    DoctorId = "DOC_2",
+                    BookingId = "BKG_2",
+                    Type = "appointment",
+                    Message = "Vui lòng đến phòng khám vào ngày mai lúc 15:00 để được tư vấn về quy trình IUI",
+                    Time = DateTime.Now.AddDays(2)
+                },
+                new Notification
+                {
+                    NotificationId = "NTF_3",
+                    PatientId = "PAT_3",
+                    DoctorId = "DOC_3",
+                    BookingId = "BKG_3",
+                    TreatmentProcessId = "TPR_6",
+                    Type = "treatment",
+                    Message = "Vui lòng đến phòng khám vào ngày mai lúc 11:00 để thực hiện quy trình trữ đông tinh trùng",
+                    Time = DateTime.Now.AddDays(2)
+                }
+            };
 
-                context.Feedbacks.AddRange(feedbacks);
-                context.SaveChanges();
-            }
+                        context.Notifications.AddRange(notifications);
+                        context.SaveChanges();
+                    }
+
+                    // Thêm các đánh giá mẫu
+                    if (!context.Ratings.Any())
+                    {
+                        var ratings = new List<Rating>
+                        {
+                            new Rating
+                            {
+                                RatingId = "RTG_1",
+                                PatientId = "PAT_1",
+                                DoctorId = "DOC_1",
+                                ServiceId = "SRV_1",
+                                BookingId = "BKG_1",
+                                Score = 5,
+                                Comment = "Bác sĩ tư vấn rất nhiệt tình và chuyên nghiệp",
+                                RatingDate = DateTime.Now.AddDays(-10),
+                                RatingType = "Doctor",
+                                Status = "Approved",
+                                IsAnonymous = false
+                            },
+                            new Rating
+                            {
+                                RatingId = "RTG_2",
+                                PatientId = "PAT_2",
+                                DoctorId = "DOC_2",
+                                ServiceId = "SRV_4",
+                                BookingId = "BKG_2",
+                                Score = 4,
+                                Comment = "Dịch vụ tốt, nhân viên phòng khám thân thiện",
+                                RatingDate = DateTime.Now.AddDays(-5),
+                                RatingType = "Service",
+                                Status = "Approved",
+                                IsAnonymous = false
+                            }
+                        };
+
+                        context.Ratings.AddRange(ratings);
+                        context.SaveChanges();
+                    }
+
+                    // Thêm phản hồi mẫu
+                    if (!context.Feedbacks.Any())
+                    {
+                        var feedbacks = new List<Feedback>
+                        {
+                            new Feedback
+                            {
+                                FeedbackId = "FBK_1",
+                                PatientId = "PAT_1",
+                                ServiceId = "SRV_3",
+                                Title = "Phản hồi về dịch vụ IVF",
+                                Content = "Tôi rất hài lòng với quy trình điều trị IVF tại phòng khám. Đội ngũ y bác sĩ rất tận tâm và chuyên nghiệp.",
+                                CreateDate = DateTime.Now.AddDays(-15),
+                                Status = "Read",
+                                FeedbackType = "Service",
+                                IsPublic = true
+                            },
+                            new Feedback
+                            {
+                                FeedbackId = "FBK_2",
+                                PatientId = "PAT_3",
+                                Title = "Góp ý về cơ sở vật chất",
+                                Content = "Phòng khám nên bổ sung thêm khu vực chờ rộng rãi hơn cho bệnh nhân và người nhà.",
+                                CreateDate = DateTime.Now.AddDays(-7),
+                                Status = "New",
+                                FeedbackType = "General",
+                                IsPublic = false
+                            }
+                        };
+
+                        context.Feedbacks.AddRange(feedbacks);
+                        context.SaveChanges();
+                    }
 
             // Thêm thanh toán mẫu
             if (!context.Payments.Any())
