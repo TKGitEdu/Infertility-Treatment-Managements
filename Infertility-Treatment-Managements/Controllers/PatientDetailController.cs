@@ -60,6 +60,7 @@ namespace Infertility_Treatment_Managements.Controllers
             {
                 TreatmentPlanId = tp.TreatmentPlanId,
                 DoctorId = tp.DoctorId,
+                ServiceId = tp.ServiceId,
                 Method = tp.Method,
                 PatientDetailId = tp.PatientDetailId,
                 StartDate = tp.StartDate.HasValue ? DateOnly.FromDateTime(tp.StartDate.Value) : null,
@@ -125,6 +126,31 @@ namespace Infertility_Treatment_Managements.Controllers
 
             return Ok(patient.PatientId);
         }
+
+        // GET: api/PatientDetail/Patient/{patientId}/PatientDetailId
+        // Lấy PatientDetailId đầu tiên theo PatientId
+        [HttpGet("Patient/{patientId}/PatientDetailId")]
+        [AllowAnonymous]
+        public async Task<ActionResult<string>> GetPatientDetailIdByPatientId(string patientId)
+        {
+            if (string.IsNullOrEmpty(patientId))
+            {
+                return BadRequest("PatientId is required");
+            }
+
+            var patientDetail = await _context.PatientDetails
+                .Where(pd => pd.PatientId == patientId)
+                .Select(pd => pd.PatientDetailId)
+                .FirstOrDefaultAsync();
+
+            if (patientDetail == null)
+            {
+                return NotFound($"No PatientDetail found with PatientId: {patientId}");
+            }
+
+            return Ok(patientDetail);
+        }
+
 
     }
 }

@@ -14,6 +14,7 @@ namespace Infertility_Treatment_Managements.DTOs
         public string Description { get; set; }
         public string Note { get; set; }
         public DateTime? CreateAt { get; set; }
+        public string Status { get; set; } // hoặc StatusId nếu bạn dùng bảng Status riêng
 
         // Basic doctor information
         public DoctorBasicDTO Doctor { get; set; }

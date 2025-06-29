@@ -309,6 +309,7 @@ namespace Infertility_Treatment_Managements.Helpers
                 Description = entity.Description,
                 Note = entity.Note,
                 CreateAt = entity.CreateAt,
+                Status = entity.Status,
                 Patient = entity.Patient?.ToBasicDTO(),
                 Service = entity.Service?.ToBasicDTO(),
                 Payment = entity.Payment?.ToBasicDTO(),

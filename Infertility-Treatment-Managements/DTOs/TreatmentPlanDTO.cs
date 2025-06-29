@@ -7,6 +7,7 @@ namespace Infertility_Treatment_Managements.DTOs
     {
         public string TreatmentPlanId { get; set; }
         public string? DoctorId { get; set; }
+        public string? ServiceId { get; set; }
         public string Method { get; set; }
         public string? PatientDetailId { get; set; }
         public DateOnly? StartDate { get; set; }

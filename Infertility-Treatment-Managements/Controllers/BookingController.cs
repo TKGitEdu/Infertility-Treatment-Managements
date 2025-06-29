@@ -148,42 +148,6 @@ namespace Infertility_Treatment_Managements.Controllers
             return Ok(availableSlots);
         }
 
-        // POST: api/Booking/check-availability
-        // Kiểm tra xem một khung giờ cụ thể có sẵn sàng không
-        [HttpPost("check-availability")]
-        [AllowAnonymous]
-        public async Task<ActionResult<bool>> CheckSlotAvailability(CheckSlotAvailabilityDTO checkDTO)
-        {
-            // Kiểm tra dữ liệu đầu vào
-            if (string.IsNullOrEmpty(checkDTO.DoctorId) ||
-                string.IsNullOrEmpty(checkDTO.SlotId))
-            {
-                return BadRequest("Vui lòng cung cấp đầy đủ thông tin bác sĩ và khung giờ");
-            }
-
-            // Kiểm tra bác sĩ tồn tại
-            var doctor = await _context.Doctors.FindAsync(checkDTO.DoctorId);
-            if (doctor == null)
-            {
-                return NotFound($"Không tìm thấy bác sĩ với ID {checkDTO.DoctorId}");
-            }
-
-            // Kiểm tra khung giờ tồn tại
-            var slot = await _context.Slots.FindAsync(checkDTO.SlotId);
-            if (slot == null)
-            {
-                return NotFound($"Không tìm thấy khung giờ với ID {checkDTO.SlotId}");
-            }
-
-            // Kiểm tra xem khung giờ đã được đặt chưa
-            var isBooked = await _context.Bookings
-                .AnyAsync(b => b.DoctorId == checkDTO.DoctorId &&
-                          b.DateBooking.Date == checkDTO.Date.Date &&
-                          b.SlotId == checkDTO.SlotId);
-
-            // Trả về kết quả: true nếu khung giờ còn trống, false nếu đã được đặt
-            return Ok(new { isAvailable = !isBooked });
-        }
 
         // POST: api/Booking/create
         // Tạo lịch hẹn mới - yêu cầu đăng nhập, gửi mail thông báo sau khi tạo thành công
@@ -380,6 +344,57 @@ namespace Infertility_Treatment_Managements.Controllers
 
             return Ok(booking.ToDTO());
         }
+
+        // PUT: api/Booking/update/{id}
+        // Cập nhật thông tin đặt lịch khi patient yêu cầu hủy lịch hẹn.
+        [HttpPut("update/{id}")]
+        [Authorize(Roles = "Patient")]
+        public async Task<IActionResult> UpdateBookingStatusToCancelled(string id)
+        {
+            // Lấy UserId từ token
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("Không thể xác định người dùng");
+            }
+
+            // Tìm Patient từ UserId
+            var patient = await _context.Patients
+                .FirstOrDefaultAsync(p => p.UserId == userId);
+
+            if (patient == null)
+            {
+                return BadRequest("Không tìm thấy thông tin bệnh nhân");
+            }
+
+            // Tìm booking của bệnh nhân
+            var booking = await _context.Bookings
+                .FirstOrDefaultAsync(b => b.BookingId == id && b.PatientId == patient.PatientId);
+
+            if (booking == null)
+            {
+                return NotFound($"Không tìm thấy lịch đặt với ID {id}");
+            }
+
+            // Kiểm tra nếu đã thanh toán thì không cho hủy
+            if (booking.PaymentId != null)
+            {
+                return BadRequest("Không thể hủy lịch đã thanh toán");
+            }
+
+            // Kiểm tra nếu lịch hẹn trong vòng 24 giờ thì không cho hủy
+            if (booking.DateBooking <= DateTime.Now.AddHours(24))
+            {
+                return BadRequest("Không thể hủy lịch hẹn trong vòng 24 giờ trước khi khám");
+            }
+
+            // Cập nhật trạng thái về "canceled"
+            booking.Status = "cancelled";
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Đã cập nhật trạng thái lịch đặt thành 'canceled' thành công" });
+        }
+
 
         // DELETE: api/Booking/cancel/{id}
         // Hủy đặt lịch - yêu cầu đăng nhập

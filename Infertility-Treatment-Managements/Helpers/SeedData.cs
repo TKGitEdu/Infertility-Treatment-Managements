@@ -426,6 +426,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         DateBooking = DateTime.Now.AddDays(1),
                         Description = "Đăng ký điều trị IVF",
                         CreateAt = DateTime.Now.AddDays(-2),
+                        Status = "Pending",
                         Note = "Đã xác nhận qua điện thoại"
                     },
                     new Booking
@@ -438,6 +439,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         DateBooking = DateTime.Now.AddDays(3),
                         Description = "Đăng ký điều trị IUI",
                         CreateAt = DateTime.Now.AddDays(-1),
+                        Status = "Pending",
                         Note = "Lần đầu tiên thực hiện IUI"
                     },
                     new Booking
@@ -450,6 +452,20 @@ namespace Infertility_Treatment_Managements.Helpers
                         DateBooking = DateTime.Now.AddDays(2),
                         Description = "Tư vấn về điều trị hiếm muộn",
                         CreateAt = DateTime.Now.AddDays(-3),
+                        Status = "Pending",
+                        Note = "Cần tư vấn các phương pháp điều trị phù hợp"
+                    },
+                    new Booking
+                    {
+                        BookingId = "BKG_4",
+                        PatientId = "PAT_2",
+                        DoctorId = "DOC_2",
+                        ServiceId = "SRV_FET", // Tư vấn ban đầu
+                        SlotId = "SLOT_07", // Sáng 11:00-12:00
+                        DateBooking = DateTime.Now.AddDays(2),
+                        Description = "Trử đông tinh trùng",
+                        CreateAt = DateTime.Now.AddDays(-3),
+                        Status = "Pending",
                         Note = "Cần tư vấn các phương pháp điều trị phù hợp"
                     }
                 };
@@ -472,7 +488,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         Method = "IVF",
                         StartDate = DateTime.Now.AddDays(5),
                         EndDate = DateTime.Now.AddDays(35),
-                        Status = "Đã lên lịch",
+                        Status = "Thụ tinh trong ống nghiệm",
                         TreatmentDescription = "Khám tổng quát; Kích thích buồng trứng; Chọc hút trứng; Thụ tinh trong ống nghiệm; Nuôi phôi; Chuyển phôi vào tử cung"
                     },
 
@@ -485,7 +501,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         Method = "IUI",
                         StartDate = DateTime.Now.AddDays(7),
                         EndDate = DateTime.Now.AddDays(21),
-                        Status = "Chờ xác nhận",
+                        Status = "Kích thích nhẹ buồng trứng",
                         TreatmentDescription = "Khám tổng quát; Kích thích nhẹ buồng trứng; Theo dõi nang noãn; Lọc rửa tinh trùng; Bơm tinh trùng vào buồng tử cung"
                     },
 
@@ -498,7 +514,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         Method = "Trữ đông tinh trùng",
                         StartDate = DateTime.Now.AddDays(3),
                         EndDate = DateTime.Now.AddDays(4),
-                        Status = "Đã lên lịch",
+                        Status = "Lấy mẫu tinh dịch",
                         TreatmentDescription = "Lấy mẫu tinh dịch; Đánh giá chất lượng; Tiến hành trữ đông; Lưu trữ mẫu tại ngân hàng tinh trùng"
                     },
 
@@ -512,7 +528,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         Method = "FET",
                         StartDate = DateTime.Now.AddDays(5),
                         EndDate = DateTime.Now.AddDays(10),
-                        Status = "Đã lên lịch",
+                        Status = "Chuẩn bị nội mạc tử cung",
                         TreatmentDescription = "Chuẩn bị nội mạc tử cung; Rã đông phôi; Chuyển phôi vào tử cung"
                     }
 
