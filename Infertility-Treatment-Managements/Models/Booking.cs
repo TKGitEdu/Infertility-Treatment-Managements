@@ -30,7 +30,7 @@ public partial class Booking
 
     public virtual Doctor Doctor { get; set; }
 
-    public virtual Examination Examination { get; set; }
+    public virtual ICollection<Examination> Examinations { get; set; } = new List<Examination>();
 
     public virtual Patient Patient { get; set; }
 

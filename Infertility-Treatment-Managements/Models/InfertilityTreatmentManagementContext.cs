@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Infertility_Treatment_Managements.Models;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace Infertility_Treatment_Managements.Models
 {
@@ -207,11 +201,13 @@ namespace Infertility_Treatment_Managements.Models
     entity.Property(n => n.DoctorId).HasColumnName("DoctorID").HasMaxLength(50);
     entity.Property(n => n.BookingId).HasColumnName("BookingID").HasMaxLength(50);
     entity.Property(n => n.TreatmentProcessId).HasColumnName("TreatmentProcessID").HasMaxLength(50);
-
     // Các trường mới
     entity.Property(n => n.Type).HasMaxLength(50);
     entity.Property(n => n.Message).HasMaxLength(500);
     entity.Property(n => n.Time);
+    entity.Property(n => n.DoctorIsRead).HasDefaultValue(false);
+    entity.Property(n => n.PatientIsRead).HasDefaultValue(false);
+
 
     // Relationships giữ nguyên như Reminder
     entity.HasOne(n => n.Patient)
@@ -424,11 +420,11 @@ namespace Infertility_Treatment_Managements.Models
                 .HasForeignKey<Payment>(p => p.BookingId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            // Configure Examination-Booking relationship (1:1)
+            // Configure Examination-Booking relationship (1:N)
             modelBuilder.Entity<Examination>()
                 .HasOne(e => e.Booking)
-                .WithOne(b => b.Examination)
-                .HasForeignKey<Examination>(e => e.BookingId)
+                .WithMany(b => b.Examinations)
+                .HasForeignKey(e => e.BookingId)
                 .OnDelete(DeleteBehavior.SetNull);
 
             // Configure TreatmentProcess-PatientDetail relationship

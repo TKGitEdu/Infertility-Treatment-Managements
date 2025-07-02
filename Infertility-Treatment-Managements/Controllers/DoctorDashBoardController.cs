@@ -416,6 +416,163 @@ namespace Infertility_Treatment_Managements.Controllers
         }
 
 
+        /// <summary>
+        /// Đánh dấu thông báo đã đọc
+        /// </summary>
+        /// <param name="notificationId">ID của thông báo</param>
+        /// <returns>Kết quả cập nhật trạng thái</returns>
+        [HttpPut("notifications/{notificationId}/read")]
+        [Authorize(Roles = "Doctor")]
+        public async Task<ActionResult> MarkNotificationAsRead(string notificationId)
+        {
+            if (string.IsNullOrEmpty(notificationId))
+            {
+                return BadRequest("notificationId is required");
+            }
+
+            var notification = await _context.Notifications
+                .FirstOrDefaultAsync(n => n.NotificationId == notificationId);
+
+            if (notification == null)
+            {
+                return NotFound($"Notification with ID {notificationId} not found");
+            }
+
+            // Đánh dấu thông báo đã đọc
+            notification.DoctorIsRead = true;
+            _context.Entry(notification).State = EntityState.Modified;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                NotificationId = notification.NotificationId,
+                DoctorIsRead = notification.DoctorIsRead,
+                Message = "Notification marked as read"
+            });
+        }
+        /// <summary>
+        /// Lấy danh sách thông báo của bác sĩ dựa trên userId
+        /// </summary>
+        /// <param name="userId">ID của người dùng (bác sĩ)</param>
+        /// <param name="limit">Số lượng thông báo tối đa cần lấy</param>
+        /// <param name="onlyUnread">Chỉ lấy các thông báo chưa đọc</param>
+        /// <returns>Danh sách thông báo của bác sĩ</returns>
+        [HttpGet("notifications")]
+        [Authorize(Roles = "Doctor")]
+        public async Task<ActionResult<IEnumerable<object>>> GetDoctorNotifications(
+            [FromQuery] string userId,
+            [FromQuery] int limit = 20,
+            [FromQuery] bool docvachuadoc = false||true)
+        {
+            if (string.IsNullOrEmpty(userId))
+            {
+                return BadRequest("userId is required");
+            }
+
+            // Truy xuất DoctorId từ UserId
+            var doctor = await _context.Doctors
+                .FirstOrDefaultAsync(d => d.UserId == userId);
+
+            if (doctor == null)
+            {
+                return NotFound("Doctor not found for the given userId");
+            }
+
+            string doctorId = doctor.DoctorId;
+
+            // Xây dựng truy vấn cơ bản
+            var query = _context.Notifications
+                .Include(n => n.Patient)
+                .Include(n => n.Booking)
+                .Include(n => n.TreatmentProcess)
+                .Where(n => n.DoctorId == doctorId);
+
+            // Lọc theo trạng thái đã đọc nếu cần
+            if (docvachuadoc)
+            {
+                query = query.Where(n => n.DoctorIsRead == null || n.DoctorIsRead == false);
+            }
+
+            // Thực hiện truy vấn
+            var notificationList = await query
+                .OrderByDescending(n => n.Time)
+                .Take(limit)
+                .ToListAsync();
+
+            // Chuyển đổi kết quả ở bên ngoài LINQ query để tránh lỗi null
+            var notifications = notificationList.Select(n => new
+            {
+                NotificationId = n.NotificationId,
+                PatientId = n.PatientId,
+                PatientName = n.Patient?.Name,
+                DoctorId = n.DoctorId,
+                BookingId = n.BookingId,
+                TreatmentProcessId = n.TreatmentProcessId,
+                Type = n.Type,
+                Message = n.Message,
+                Time = n.Time,
+                DoctorIsRead = n.DoctorIsRead ?? false,
+                BookingDate = n.Booking?.DateBooking,
+                BookingStatus = n.Booking?.Status,
+                TreatmentStatus = n.TreatmentProcess?.Status
+            }).ToList();
+
+            return Ok(notifications);
+        }
+        /// <summary>
+        /// Đánh dấu tất cả thông báo của bác sĩ là đã đọc
+        /// </summary>
+        /// <param name="notificationIds">Danh sách ID của các thông báo cần đánh dấu</param>
+        /// <returns>Số lượng thông báo đã được cập nhật</returns>
+        [HttpPut("notifications/read-all")]
+        [Authorize(Roles = "Doctor")]
+        public async Task<ActionResult> MarkAllNotificationsAsRead([FromBody] List<string> notificationIds)
+        {
+            if (notificationIds == null || !notificationIds.Any())
+            {
+                return BadRequest("At least one notificationId is required");
+            }
+
+            // Lấy tất cả thông báo cần đánh dấu
+            var notifications = await _context.Notifications
+                .Where(n => notificationIds.Contains(n.NotificationId))
+                .ToListAsync();
+
+            if (!notifications.Any())
+            {
+                return NotFound("No notifications found with the provided IDs");
+            }
+
+            // Đánh dấu tất cả thông báo đã đọc
+            foreach (var notification in notifications)
+            {
+                notification.DoctorIsRead = true;
+                _context.Entry(notification).State = EntityState.Modified;
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Chuyển đổi thành NotificationDTO để trả về
+            var notificationDTOs = notifications.Select(n => new NotificationDTO
+            {
+                NotificationId = n.NotificationId,
+                PatientId = n.PatientId,
+                DoctorId = n.DoctorId,
+                BookingId = n.BookingId,
+                TreatmentProcessId = n.TreatmentProcessId,
+                Type = n.Type,
+                Message = n.Message,
+                Time = n.Time
+            }).ToList();
+
+            return Ok(new
+            {
+                UpdatedCount = notifications.Count,
+                Message = $"{notifications.Count} notifications marked as read",
+                Notifications = notificationDTOs
+            });
+        }
 
     }
 }

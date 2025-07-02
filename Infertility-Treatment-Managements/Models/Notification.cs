@@ -14,7 +14,8 @@ namespace Infertility_Treatment_Managements.Models
         public string Type { get; set; } // "appointment" | "test" | "treatment"
         public string Message { get; set; }
         public DateTime Time { get; set; }
-
+        public bool? DoctorIsRead { get; set; } // Trạng thái đã đọc hay chưa, mặc định là false
+        public bool? PatientIsRead { get; set; }
         // Navigation properties
         public virtual Patient? Patient { get; set; }
         public virtual Doctor? Doctor { get; set; }

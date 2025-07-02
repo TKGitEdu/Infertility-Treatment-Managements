@@ -315,7 +315,7 @@ namespace Infertility_Treatment_Managements.Helpers
                 Payment = entity.Payment?.ToBasicDTO(),
                 Doctor = entity.Doctor?.ToBasicDTO(),
                 Slot = entity.Slot?.ToBasicDTO(),
-                Examination = entity.Examination?.ToBasicDTO()
+                Examinations = entity.Examinations?.Select(e => e.ToBasicDTO()).ToList() ?? new List<ExaminationBasicDTO>()
             };
         }
 

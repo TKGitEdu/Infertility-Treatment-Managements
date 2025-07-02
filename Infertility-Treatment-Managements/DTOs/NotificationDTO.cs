@@ -14,6 +14,7 @@ namespace Infertility_Treatment_Managements.DTOs
         public string Type { get; set; } // "appointment" | "test" | "treatment"
         public string Message { get; set; }
         public DateTime Time { get; set; }
+        public bool? IsRead { get; set; }
     }
 
     public class NotificationCreateDTO
@@ -25,6 +26,7 @@ namespace Infertility_Treatment_Managements.DTOs
         public string Type { get; set; }
         public string Message { get; set; }
         public DateTime Time { get; set; }
+        public bool? IsRead { get; set; }
     }
 
     public class NotificationUpdateDTO
@@ -37,13 +39,14 @@ namespace Infertility_Treatment_Managements.DTOs
         public string Type { get; set; }
         public string Message { get; set; }
         public DateTime Time { get; set; }
+        public bool? IsRead { get; set; }
     }
-
     public class NotificationBasicDTO
     {
         public string NotificationId { get; set; }
         public string Type { get; set; }
         public string Message { get; set; }
         public DateTime Time { get; set; }
+        public bool? IsRead { get; set; }
     }
 }

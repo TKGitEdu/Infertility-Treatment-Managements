@@ -388,7 +388,9 @@ namespace Infertility_Treatment_Managements.Controllers
                 Message = $"Quá trình điều trị mới đã được thêm vào: {treatmentDescription}",
                 Time = DateTime.Now,
                 Type = "Treatment",
-                TreatmentProcessId = treatmentProcess.TreatmentProcessId
+                TreatmentProcessId = treatmentProcess.TreatmentProcessId,
+                PatientIsRead = false,
+                DoctorIsRead = false
             };
 
             _context.Notifications.Add(notification);
@@ -550,7 +552,9 @@ namespace Infertility_Treatment_Managements.Controllers
                 Message = $"Bác sĩ {doctor.DoctorName} đã tạo lịch hẹn mới cho bạn vào ngày {bookingDTO.DateBooking.ToString("dd/MM/yyyy")}",
                 Time = DateTime.Now,
                 Type = "Booking",
-                BookingId = booking.BookingId
+                BookingId = booking.BookingId,
+                PatientIsRead = false,
+                DoctorIsRead = false
             };
 
             _context.Notifications.Add(notification);
