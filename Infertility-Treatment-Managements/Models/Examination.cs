@@ -25,4 +25,5 @@ public partial class Examination
     public string Note { get; set; }
 
     public virtual Booking Booking { get; set; }
+    public virtual Doctor Doctor { get; set; }
 }

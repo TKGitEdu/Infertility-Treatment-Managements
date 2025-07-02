@@ -96,7 +96,7 @@ namespace Infertility_Treatment_Managements.Controllers
                     TreatmentProcessId = tpr.TreatmentProcessId,
                     Method = tp.Method,
                     ScheduledDate = tpr.ScheduledDate.HasValue ? DateOnly.FromDateTime(tpr.ScheduledDate.Value) : null,
-                    ActualDate = tpr.ActualDate.HasValue ? DateOnly.FromDateTime(tpr.ActualDate.Value) : null,
+                    ActualDate = tpr.ScheduledDate.HasValue ? DateOnly.FromDateTime(tpr.ScheduledDate.Value) : null,
                     Result = tpr.Result,
                     Status = tpr.Status
                 }).ToList()

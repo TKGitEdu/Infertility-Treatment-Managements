@@ -130,7 +130,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 TreatmentProcessId = tp.TreatmentProcessId,
                 PatientDetailId = tp.PatientDetailId,
                 ScheduledDate = tp.ScheduledDate.HasValue ? DateOnly.FromDateTime(tp.ScheduledDate.Value) : null,
-                ActualDate = tp.ActualDate.HasValue ? DateOnly.FromDateTime(tp.ActualDate.Value) : null,
+                ActualDate = tp.ScheduledDate.HasValue ? DateOnly.FromDateTime(tp.ScheduledDate.Value) : null,
                 Result = tp.Result,
                 Status = tp.Status
             };

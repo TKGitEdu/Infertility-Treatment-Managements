@@ -10,7 +10,6 @@ namespace Infertility_Treatment_Managements.Models
         public string? PatientDetailId { get; set; }
         public string? TreatmentPlanId { get; set; }
         public DateTime? ScheduledDate { get; set; }
-        public DateTime? ActualDate { get; set; }
         public string Result { get; set; }
         public string Status { get; set; }
 

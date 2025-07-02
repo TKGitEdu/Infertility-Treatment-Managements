@@ -550,7 +550,6 @@ namespace Infertility_Treatment_Managements.Helpers
                         TreatmentPlanId = "TP_1",
                         DoctorId = "DOC_1",
                         ScheduledDate = DateTime.Now.AddDays(5),
-                        ActualDate = null,
                         Status = "Đã lên lịch",
                         Result = "Chưa thực hiện"
                     },
@@ -561,7 +560,6 @@ namespace Infertility_Treatment_Managements.Helpers
                         TreatmentPlanId = "TP_1",
                         DoctorId = "DOC_1",
                         ScheduledDate = DateTime.Now.AddDays(15),
-                        ActualDate = null,
                         Status = "Đã lên lịch",
                         Result = "Chưa thực hiện"
                     },
@@ -572,7 +570,6 @@ namespace Infertility_Treatment_Managements.Helpers
                         TreatmentPlanId = "TP_1",
                         DoctorId = "DOC_1",
                         ScheduledDate = DateTime.Now.AddDays(25),
-                        ActualDate = null,
                         Status = "Đã lên lịch",
                         Result = "Chưa thực hiện"
                     },
@@ -583,7 +580,6 @@ namespace Infertility_Treatment_Managements.Helpers
                         TreatmentPlanId = "TP_2",
                         DoctorId = "DOC_2",
                         ScheduledDate = DateTime.Now.AddDays(7),
-                        ActualDate = null,
                         Status = "Chờ xác nhận",
                         Result = "Chưa thực hiện"
                     },
@@ -594,7 +590,6 @@ namespace Infertility_Treatment_Managements.Helpers
                         TreatmentPlanId = "TP_2",
                         DoctorId = "DOC_2",
                         ScheduledDate = DateTime.Now.AddDays(14),
-                        ActualDate = null,
                         Status = "Chờ xác nhận",
                         Result = "Chưa thực hiện"
                     },
@@ -605,7 +600,6 @@ namespace Infertility_Treatment_Managements.Helpers
                         TreatmentPlanId = "TP_3",
                         DoctorId = "DOC_3",
                         ScheduledDate = DateTime.Now.AddDays(3),
-                        ActualDate = null,
                         Status = "Đã lên lịch",
                         Result = "Chưa thực hiện"
                     }

@@ -138,7 +138,7 @@ namespace Infertility_Treatment_Managements.Models
                 entity.Property(tp => tp.DoctorId).HasColumnName("DoctorID").HasMaxLength(50);
                 entity.Property(tp => tp.ServiceId).HasColumnName("ServiceID").HasMaxLength(50); // Added ServiceID
                 entity.Property(tp => tp.PatientDetailId).HasColumnName("PatientDetailID").HasMaxLength(50);
-                entity.Property(tp => tp.Method).HasMaxLength(100).IsRequired();
+                entity.Property(tp => tp.Method).HasMaxLength(100).IsRequired(false);
                 entity.Property(tp => tp.Status).HasMaxLength(50).IsRequired();
                 entity.Property(tp => tp.TreatmentDescription).HasMaxLength(500).IsRequired();
             });
