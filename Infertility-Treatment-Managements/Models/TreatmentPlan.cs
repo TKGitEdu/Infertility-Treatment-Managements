@@ -19,5 +19,8 @@ namespace Infertility_Treatment_Managements.Models
         public virtual Service Service { get; set; } // New navigation property
         public virtual PatientDetail PatientDetail { get; set; }
         public virtual ICollection<TreatmentProcess> TreatmentProcesses { get; set; } = new List<TreatmentProcess>();
+        public virtual ICollection<TreatmentStep> TreatmentSteps { get; set; }
+        public virtual ICollection<TreatmentMedication> TreatmentMedications { get; set; }
+
     }
 }

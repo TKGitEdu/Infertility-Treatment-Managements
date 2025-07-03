@@ -538,6 +538,74 @@ namespace Infertility_Treatment_Managements.Helpers
                 context.SaveChanges();
             }
 
+            // Tạo các TreatmentSteps từ TreatmentPlans đã thêm
+            if (!context.TreatmentSteps.Any())
+            {
+                var plans = context.TreatmentPlans.ToList();
+                var treatmentSteps = new List<TreatmentStep>();
+
+                foreach (var plan in plans)
+                {
+                    var steps = plan.TreatmentDescription.Split(';');
+                    for (int i = 0; i < steps.Length; i++)
+                    {
+                        var step = new TreatmentStep
+                        {
+                            TreatmentStepId ="TS_"+Guid.NewGuid().ToString(), // Tạo ID ngẫu nhiên
+                            TreatmentPlanId = plan.TreatmentPlanId,
+                            StepOrder = i + 1,
+                            StepName = steps[i].Trim(),
+                            Description = "placeholder(500)"
+                        };
+                        treatmentSteps.Add(step);
+                    }
+                }
+
+                context.TreatmentSteps.AddRange(treatmentSteps);
+                context.SaveChanges();
+            }
+            if (!context.TreatmentMedications.Any())
+            {
+                var medications = new List<TreatmentMedication>
+            {
+                new TreatmentMedication
+                {
+                    MedicationId = "M_"+Guid.NewGuid().ToString(),
+                    TreatmentPlanId = "TP_1",
+                    DrugType = "Kích thích buồng trứng",
+                    DrugName = "Gonal-F",
+                    Description = "placeholder(500)"
+                },
+                new TreatmentMedication
+                {
+                    MedicationId = "M_"+Guid.NewGuid().ToString(),
+                    TreatmentPlanId = "TP_2",
+                    DrugType = "Hỗ trợ rụng trứng",
+                    DrugName = "Clomid",
+                    Description = "placeholder(500)"
+                },
+                new TreatmentMedication
+                {
+                    MedicationId = "M_"+Guid.NewGuid().ToString(),
+                    TreatmentPlanId = "TP_3",
+                    DrugType = "Kháng sinh",
+                    DrugName = "Doxycycline",
+                    Description = "placeholder(500)"
+                },
+                new TreatmentMedication
+                {
+                    MedicationId = "M_" + Guid.NewGuid().ToString(),
+                    TreatmentPlanId = "TP_FET_1",
+                    DrugType = "Hỗ trợ nội mạc",
+                    DrugName = "Estrogen",
+                    Description = "placeholder(500)"
+                }
+            };
+
+                context.TreatmentMedications.AddRange(medications);
+                context.SaveChanges();
+            }
+
             // Thêm quy trình điều trị mẫu với các trường đã cập nhật
             if (!context.TreatmentProcesses.Any())
             {

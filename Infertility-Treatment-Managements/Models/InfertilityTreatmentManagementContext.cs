@@ -26,6 +26,9 @@ namespace Infertility_Treatment_Managements.Models
         public virtual DbSet<Notification> Notifications { get; set; }
         public virtual DbSet<Rating> Ratings { get; set; }
         public virtual DbSet<Feedback> Feedbacks { get; set; }
+        public virtual DbSet<TreatmentStep> TreatmentSteps { get; set; }
+        public virtual DbSet<TreatmentMedication> TreatmentMedications { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -161,6 +164,40 @@ namespace Infertility_Treatment_Managements.Models
                 entity.Property(u => u.Address).HasMaxLength(200);
                 entity.Property(u => u.Gender).HasMaxLength(10);
             });
+            // Add in the entity configurations section 
+            modelBuilder.Entity<TreatmentStep>(entity =>
+            {
+                entity.ToTable("TreatmentSteps");
+                entity.Property(ts => ts.TreatmentStepId).HasColumnName("TreatmentStepID").HasMaxLength(50);
+                entity.Property(ts => ts.TreatmentPlanId).HasColumnName("TreatmentPlanID").HasMaxLength(50);
+                entity.Property(ts => ts.StepOrder).IsRequired();
+                entity.Property(ts => ts.StepName).HasMaxLength(100).IsRequired();
+                entity.Property(ts => ts.Description).HasMaxLength(500);
+            });
+
+            modelBuilder.Entity<TreatmentMedication>(entity =>
+            {
+                entity.ToTable("TreatmentMedications");
+                entity.Property(m => m.MedicationId)
+                    .HasColumnName("MedicationID")
+                    .HasMaxLength(50);
+
+                entity.Property(m => m.TreatmentPlanId)
+                    .HasColumnName("TreatmentPlanID")
+                    .HasMaxLength(50);
+
+                entity.Property(m => m.DrugType)
+                    .HasMaxLength(100)
+                    .IsRequired();
+
+                entity.Property(m => m.DrugName)
+                    .HasMaxLength(100)
+                    .IsRequired();
+
+                entity.Property(m => m.Description)
+                    .HasMaxLength(500);
+            });
+
             // BlogPost configuration
             modelBuilder.Entity<BlogPost>(entity =>
             {
@@ -469,6 +506,20 @@ namespace Infertility_Treatment_Managements.Models
                 .HasForeignKey(tp => tp.PatientDetailId)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            // Configure TreatmentStep-TreatmentPlan relationship
+            modelBuilder.Entity<TreatmentStep>()
+                .HasOne(ts => ts.TreatmentPlan)
+                .WithMany(tp => tp.TreatmentSteps)
+                .HasForeignKey(ts => ts.TreatmentPlanId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Thiết lập quan hệ
+            modelBuilder.Entity<TreatmentMedication>()
+                .HasOne(m => m.TreatmentPlan)
+                .WithMany(p => p.TreatmentMedications)
+                .HasForeignKey(m => m.TreatmentPlanId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Configure User-Role relationship
             modelBuilder.Entity<User>()
                 .HasOne(u => u.Role)
@@ -493,6 +544,7 @@ namespace Infertility_Treatment_Managements.Models
             modelBuilder.Entity<Booking>()
                 .HasIndex(b => b.SlotId)
                 .HasDatabaseName("IDX_Bookings_SlotID");
+
         }
     }
 }
