@@ -98,14 +98,71 @@ namespace Infertility_Treatment_Managements.Controllers
                     Role = roleName != null ? new RoleDTO { RoleName = roleName } : null
                 };
 
+                // Lấy DoctorId nếu user có vai trò là Doctor
+                string doctorId = null;
+                if (roleName == "Doctor")
+                {
+                    var doctor = await _Context.Doctors
+                        .AsNoTracking()
+                        .Where(d => d.UserId == user.UserId)
+                        .Select(d => new { d.DoctorId })
+                        .FirstOrDefaultAsync();
+
+                    doctorId = doctor?.DoctorId;
+
+                    if (doctor != null)
+                    {
+                        userDto.Doctor = new DoctorBasicDTO
+                        {
+                            DoctorId = doctor.DoctorId,
+                            UserId = user.UserId,
+                            Email = user.Email,
+                            Phone = user.Phone
+                        };
+                    }
+                }
+
+                // Lấy PatientId nếu user có vai trò là Patient
+                string patientId = null;
+                if (roleName == "Patient")
+                {
+                    var patient = await _Context.Patients
+                        .AsNoTracking()
+                        .Where(p => p.UserId == user.UserId)
+                        .Select(p => new { p.PatientId, p.Name, p.Email, p.Phone, p.Gender, p.DateOfBirth })
+                        .FirstOrDefaultAsync();
+
+                    patientId = patient?.PatientId;
+
+                    if (patient != null)
+                    {
+                        userDto.Patients = new List<PatientBasicDTO>
+                {
+                    new PatientBasicDTO
+                    {
+                        PatientId = patient.PatientId,
+                        Name = patient.Name,
+                        Email = patient.Email,
+                        Phone = patient.Phone,
+                        Gender = patient.Gender,
+                        DateOfBirth = patient.DateOfBirth.HasValue
+                            ? DateOnly.FromDateTime(patient.DateOfBirth.Value)
+                            : null
+                    }
+                };
+                    }
+                }
+
                 // Vẫn giữ nguyên cách gửi token qua header để tương thích ngược
                 Response.Headers.Append("Authorization", $"Bearer {token}");
 
-                // Trả về cả user và token trong body response
+                // Trả về cả user, token, doctorId và patientId trong body response
                 return Ok(new
                 {
                     user = userDto,
-                    token = token
+                    token = token,
+                    doctorId = doctorId,
+                    patientId = patientId
                 });
             }
             catch (Exception ex)

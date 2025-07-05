@@ -11,6 +11,7 @@ public partial class PatientDetail
     public string PatientDetailId { get; set; }
 
     public string? PatientId { get; set; }
+    public string Name { get; set; }
 
     public string TreatmentStatus { get; set; }
     public string? MedicalHistory { get; set; } // lưu lịch sử dùng thuốc; thuốc

@@ -217,6 +217,7 @@ namespace Infertility_Treatment_Managements.Controllers
                     SlotId = bookingDTO.SlotId,
                     DateBooking = bookingDTO.DateBooking,
                     Description = bookingDTO.Description ?? $"Đặt lịch sử dụng dịch vụ {service.Name}",
+                    Status = "Pending",
                     Note = bookingDTO.Note,
                     CreateAt = DateTime.Now
                 };
@@ -236,7 +237,7 @@ namespace Infertility_Treatment_Managements.Controllers
                         <li><b>Bác sĩ:</b> {doctor.DoctorName}</li>
                         <li><b>Ngày:</b> {booking.DateBooking:dd/MM/yyyy}</li>
                         <li><b>Khung giờ:</b> {slot.StartTime} - {slot.EndTime}</li>
-                        <li><b>Ghi chú:</b> {booking.Note ?? "Không có"}</li>
+                        <li><b>Ghi chú:</b> {booking.Description ?? "Không có"}</li>
                     </ul>
                     <p>Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!</p>
                     <p>Trân trọng,<br><b>Phòng khám của chúng tôi</b></p>

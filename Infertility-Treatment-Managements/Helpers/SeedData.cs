@@ -170,6 +170,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         {
                             PatientDetailId = "PATD_1",
                             PatientId = "PAT_1",
+                            Name = "Phạm Thị Dung",
                             TreatmentStatus = "Đang điều trị"
                         }
                     ),
@@ -204,6 +205,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         {
                             PatientDetailId = "PATD_2",
                             PatientId = "PAT_2",
+                            Name = "Nguyễn Thị Em",
                             TreatmentStatus = "Mới đăng ký"
                         }
                     ),
@@ -238,6 +240,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         {
                             PatientDetailId = "PATD_3",
                             PatientId = "PAT_3",
+                            Name = "Trần Văn Phong",
                             TreatmentStatus = "Đang điều trị"
                         }
                     )
@@ -489,7 +492,8 @@ namespace Infertility_Treatment_Managements.Helpers
                         StartDate = DateTime.Now.AddDays(5),
                         EndDate = DateTime.Now.AddDays(35),
                         Status = "Thụ tinh trong ống nghiệm",
-                        TreatmentDescription = "Khám tổng quát; Kích thích buồng trứng; Chọc hút trứng; Thụ tinh trong ống nghiệm; Nuôi phôi; Chuyển phôi vào tử cung"
+                        TreatmentDescription = "Khám tổng quát; Kích thích buồng trứng; Chọc hút trứng; Thụ tinh trong ống nghiệm; Nuôi phôi; Chuyển phôi vào tử cung",
+                        Giaidoan = "in-progress" //completed
                     },
 
                     new TreatmentPlan
@@ -502,7 +506,8 @@ namespace Infertility_Treatment_Managements.Helpers
                         StartDate = DateTime.Now.AddDays(7),
                         EndDate = DateTime.Now.AddDays(21),
                         Status = "Kích thích nhẹ buồng trứng",
-                        TreatmentDescription = "Khám tổng quát; Kích thích nhẹ buồng trứng; Theo dõi nang noãn; Lọc rửa tinh trùng; Bơm tinh trùng vào buồng tử cung"
+                        TreatmentDescription = "Khám tổng quát; Kích thích nhẹ buồng trứng; Theo dõi nang noãn; Lọc rửa tinh trùng; Bơm tinh trùng vào buồng tử cung",
+                        Giaidoan = "in-progress" 
                     },
 
                     new TreatmentPlan
@@ -515,7 +520,8 @@ namespace Infertility_Treatment_Managements.Helpers
                         StartDate = DateTime.Now.AddDays(3),
                         EndDate = DateTime.Now.AddDays(4),
                         Status = "Lấy mẫu tinh dịch",
-                        TreatmentDescription = "Lấy mẫu tinh dịch; Đánh giá chất lượng; Tiến hành trữ đông; Lưu trữ mẫu tại ngân hàng tinh trùng"
+                        TreatmentDescription = "Lấy mẫu tinh dịch; Đánh giá chất lượng; Tiến hành trữ đông; Lưu trữ mẫu tại ngân hàng tinh trùng",
+                        Giaidoan = "cancelled" 
                     },
 
 
@@ -529,7 +535,8 @@ namespace Infertility_Treatment_Managements.Helpers
                         StartDate = DateTime.Now.AddDays(5),
                         EndDate = DateTime.Now.AddDays(10),
                         Status = "Chuẩn bị nội mạc tử cung",
-                        TreatmentDescription = "Chuẩn bị nội mạc tử cung; Rã đông phôi; Chuyển phôi vào tử cung"
+                        TreatmentDescription = "Chuẩn bị nội mạc tử cung; Rã đông phôi; Chuyển phôi vào tử cung",
+                        Giaidoan = "completed" //completed
                     }
 
                 };
@@ -690,7 +697,7 @@ namespace Infertility_Treatment_Managements.Helpers
                     BookingId = "BKG_1",
                     TreatmentProcessId = "TPR_1",
                     Type = "appointment",
-                    Message = "Vui lòng đến phòng khám vào ngày mai lúc 09:00 để bắt đầu quy trình kích trứng",
+                    Message = "Vui lòng đến phòng khám để bắt đầu quy trình kích trứng",
                     Time = DateTime.Now.AddDays(4)
                 },
                 new Notification
@@ -700,7 +707,7 @@ namespace Infertility_Treatment_Managements.Helpers
                     DoctorId = "DOC_2",
                     BookingId = "BKG_2",
                     Type = "appointment",
-                    Message = "Vui lòng đến phòng khám vào ngày mai lúc 15:00 để được tư vấn về quy trình IUI",
+                    Message = "Vui lòng đến phòng khám để được tư vấn về quy trình IUI",
                     Time = DateTime.Now.AddDays(2)
                 },
                 new Notification
@@ -711,7 +718,7 @@ namespace Infertility_Treatment_Managements.Helpers
                     BookingId = "BKG_3",
                     TreatmentProcessId = "TPR_6",
                     Type = "treatment",
-                    Message = "Vui lòng đến phòng khám vào ngày mai lúc 11:00 để thực hiện quy trình trữ đông tinh trùng",
+                    Message = "Vui lòng đến phòng khám để thực hiện quy trình trữ đông tinh trùng",
                     Time = DateTime.Now.AddDays(2)
                 }
             };

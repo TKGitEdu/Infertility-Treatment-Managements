@@ -14,6 +14,7 @@ namespace Infertility_Treatment_Managements.DTOs
         public DateOnly? EndDate { get; set; }
         public string Status { get; set; }
         public string TreatmentDescription { get; set; }
+        public string Giaidoan { get; set; } // New property for treatment stage
 
         // Navigation properties
         public DoctorBasicDTO Doctor { get; set; }

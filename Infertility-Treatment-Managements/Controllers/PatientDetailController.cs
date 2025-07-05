@@ -67,6 +67,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 EndDate = tp.EndDate.HasValue ? DateOnly.FromDateTime(tp.EndDate.Value) : null,
                 Status = tp.Status,
                 TreatmentDescription = tp.TreatmentDescription,
+                Giaidoan = tp.Giaidoan, // Thêm trường Giaidoan
                 Doctor = tp.Doctor != null ? new DoctorBasicDTO
                 {
                     DoctorId = tp.Doctor.DoctorId,

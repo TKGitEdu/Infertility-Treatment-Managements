@@ -463,7 +463,7 @@ namespace Infertility_Treatment_Managements.Controllers
         public async Task<ActionResult<IEnumerable<object>>> GetDoctorNotifications(
             [FromQuery] string userId,
             [FromQuery] int limit = 20,
-            [FromQuery] bool docvachuadoc = false||true)
+            [FromQuery] bool docvachuadoc = false || true)
         {
             if (string.IsNullOrEmpty(userId))
             {
@@ -573,6 +573,103 @@ namespace Infertility_Treatment_Managements.Controllers
                 Notifications = notificationDTOs
             });
         }
+        [HttpGet("examinations")]
+        [Authorize(Roles = "Doctor")]
+        public async Task<ActionResult<IEnumerable<ExaminationDTO>>> GetExaminationsByDoctor([FromQuery] string doctorId)
+        {
+            if (string.IsNullOrEmpty(doctorId))
+                return BadRequest("doctorId is required");
 
+            var exists = await _context.Doctors.AnyAsync(d => d.DoctorId == doctorId);
+            if (!exists)
+                return NotFound($"Doctor with ID {doctorId} not found");
+
+             var examinations = await (
+                 from e in _context.Examinations
+                 where e.DoctorId == doctorId
+                 orderby e.ExaminationDate descending
+                 select new
+                 {
+                        e.ExaminationId,
+                        e.BookingId,
+                        e.ExaminationDate,
+                        e.ExaminationDescription,
+                        e.Result,
+                        e.Status,
+                        e.Note,
+                        e.CreateAt,
+                        PatientName = _context.Patients
+                            .Where(p => p.PatientId == e.PatientId)
+                            .Select(p => p.Name)
+                            .FirstOrDefault(),
+                        // Nếu muốn trả về ExaminationDTO thì map các trường cần thiết
+                 }
+             ).ToListAsync();
+
+            return Ok(examinations);
+        }
+
+        [HttpGet("treatmentplans")]
+        [Authorize(Roles = "Doctor")]
+        public async Task<ActionResult<IEnumerable<object>>> GetTreatmentPlansByDoctor([FromQuery] string doctorId)
+        {
+            if (string.IsNullOrEmpty(doctorId))
+                return BadRequest("doctorId is required");
+
+            var exists = await _context.Doctors.AnyAsync(d => d.DoctorId == doctorId);
+            if (!exists)
+                return NotFound($"Doctor with ID {doctorId} not found");
+
+            var treatmentPlans = await _context.TreatmentPlans
+                .Include(tp => tp.PatientDetail)
+                .Where(tp => tp.DoctorId == doctorId)
+                .OrderByDescending(tp => tp.StartDate)
+                .Select(tp => new
+                {
+                    tp.TreatmentPlanId,
+                    tp.DoctorId,
+                    tp.ServiceId,
+                    tp.Method,
+                    tp.PatientDetailId,
+                    StartDate = tp.StartDate != null ? DateOnly.FromDateTime(tp.StartDate.Value) : (DateOnly?)null,
+                    EndDate = tp.EndDate != null ? DateOnly.FromDateTime(tp.EndDate.Value) : (DateOnly?)null,
+                    tp.Status,
+                    tp.TreatmentDescription,
+                    PatientDetailName = tp.PatientDetail != null ? tp.PatientDetail.Name : null
+                })
+                .ToListAsync();
+
+            return Ok(treatmentPlans);
+        }
+
+        [HttpPut("treatmentplan/update")]
+        [Authorize(Roles = "Doctor")]
+        public async Task<IActionResult> UpdateTreatmentPlan([FromBody] TreatmentPlanUpdateDTO dto)
+        {
+            if (dto == null || string.IsNullOrEmpty(dto.TreatmentPlanId))
+                return BadRequest("Thiếu thông tin TreatmentPlanId");
+
+            // Tìm treatment plan theo ID
+            var plan = await _context.TreatmentPlans.FirstOrDefaultAsync(tp => tp.TreatmentPlanId == dto.TreatmentPlanId);
+            if (plan == null)
+                return NotFound($"Không tìm thấy TreatmentPlan với ID {dto.TreatmentPlanId}");
+
+            // Kiểm tra quyền: chỉ cho phép bác sĩ sở hữu kế hoạch được sửa
+            if (plan.DoctorId != dto.DoctorId)
+                return Forbid("Bạn không có quyền cập nhật kế hoạch điều trị này");
+
+            // Cập nhật các trường
+            plan.Method = dto.Method;
+            plan.PatientDetailId = dto.PatientDetailId;
+            plan.StartDate = dto.StartDate?.ToDateTime(TimeOnly.MinValue);
+            plan.EndDate = dto.EndDate?.ToDateTime(TimeOnly.MinValue);
+            plan.Status = dto.Status;
+            plan.TreatmentDescription = dto.TreatmentDescription;
+
+            _context.TreatmentPlans.Update(plan);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Cập nhật kế hoạch điều trị thành công" });
+        }
     }
 }

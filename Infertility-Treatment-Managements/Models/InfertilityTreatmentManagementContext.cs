@@ -89,6 +89,7 @@ namespace Infertility_Treatment_Managements.Models
                 entity.ToTable("PatientDetails");
                 entity.Property(pd => pd.PatientDetailId).HasColumnName("PatientDetailID").HasMaxLength(50);
                 entity.Property(pd => pd.PatientId).HasColumnName("PatientID").HasMaxLength(50);
+                entity.Property(pd => pd.Name).HasMaxLength(100);
                 entity.Property(pd => pd.TreatmentStatus).HasMaxLength(100);
             });
 
@@ -138,6 +139,7 @@ namespace Infertility_Treatment_Managements.Models
                 entity.Property(tp => tp.Method).HasMaxLength(100).IsRequired(false);
                 entity.Property(tp => tp.Status).HasMaxLength(50).IsRequired();
                 entity.Property(tp => tp.TreatmentDescription).HasMaxLength(500).IsRequired();
+                entity.Property(tp => tp.Giaidoan).HasMaxLength(100).IsRequired(false); // Added Giaidoan
             });
 
             modelBuilder.Entity<TreatmentProcess>(entity =>
@@ -414,7 +416,7 @@ namespace Infertility_Treatment_Managements.Models
                 .WithMany(u => u.Patients)
                 .HasForeignKey(p => p.UserId)
                 .OnDelete(DeleteBehavior.SetNull);
-
+             
             // Configure PatientDetail-Patient relationship
             modelBuilder.Entity<PatientDetail>()
                 .HasOne(pd => pd.Patient)
