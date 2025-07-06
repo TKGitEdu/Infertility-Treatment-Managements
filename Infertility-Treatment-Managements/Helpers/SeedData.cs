@@ -450,7 +450,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         BookingId = "BKG_3",
                         PatientId = "PAT_3",
                         DoctorId = "DOC_3",
-                        ServiceId = "SRV_1", // Tư vấn ban đầu
+                        ServiceId = "SRV_6", // trữ đông tinh trùng
                         SlotId = "SLOT_06", // Sáng 11:00-12:00
                         DateBooking = DateTime.Now.AddDays(2),
                         Description = "Tư vấn về điều trị hiếm muộn",
@@ -521,7 +521,8 @@ namespace Infertility_Treatment_Managements.Helpers
                         EndDate = DateTime.Now.AddDays(4),
                         Status = "Lấy mẫu tinh dịch",
                         TreatmentDescription = "Lấy mẫu tinh dịch; Đánh giá chất lượng; Tiến hành trữ đông; Lưu trữ mẫu tại ngân hàng tinh trùng",
-                        Giaidoan = "cancelled" 
+                        //Giaidoan = "cancelled" 
+                        Giaidoan = "in-progress" //completed
                     },
 
 
