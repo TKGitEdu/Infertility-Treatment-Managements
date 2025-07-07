@@ -671,5 +671,461 @@ namespace Infertility_Treatment_Managements.Controllers
 
             return Ok(new { message = "Cập nhật kế hoạch điều trị thành công" });
         }
+
+        // DTO for creating treatment plan with minimal required fields from frontend
+        public class CreateTreatmentPlanDTO
+        {
+            // Required fields from frontend
+            public string DoctorId { get; set; }
+            public string PatientId { get; set; }
+            public string ServiceId { get; set; }
+
+            // Optional fields that can be set later
+            public string? Method { get; set; }
+            public DateOnly? StartDate { get; set; }
+            public DateOnly? EndDate { get; set; }
+            public string? Status { get; set; }
+            public string? TreatmentDescription { get; set; }
+            public string? Giaidoan { get; set; } // Treatment stage
+        }
+
+        [HttpPost("treatmentplan/create")]
+        [Authorize(Roles = "Doctor")]
+        public async Task<ActionResult<object>> CreateTreatmentPlan([FromBody] CreateTreatmentPlanDTO dto)
+        {
+            // Validate required fields
+            if (string.IsNullOrEmpty(dto.DoctorId))
+                return BadRequest("DoctorId is required");
+
+            if (string.IsNullOrEmpty(dto.PatientId))
+                return BadRequest("PatientId is required");
+
+            if (string.IsNullOrEmpty(dto.ServiceId))
+                return BadRequest("ServiceId is required");
+
+            // Verify doctor exists
+            var doctor = await _context.Doctors.FindAsync(dto.DoctorId);
+            if (doctor == null)
+                return NotFound($"Doctor with ID {dto.DoctorId} not found");
+
+            // Verify service exists
+            var service = await _context.Services.FindAsync(dto.ServiceId);
+            if (service == null)
+                return NotFound($"Service with ID {dto.ServiceId} not found");
+
+            // Find or create PatientDetail for the PatientId
+            var patientDetail = await _context.PatientDetails
+                .FirstOrDefaultAsync(pd => pd.PatientId == dto.PatientId);
+
+            if (patientDetail == null)
+            {
+                // Verify patient exists before creating PatientDetail
+                var patientExists = await _context.Patients.AnyAsync(p => p.PatientId == dto.PatientId);
+                if (!patientExists)
+                    return NotFound($"Patient with ID {dto.PatientId} not found");
+
+                // Create new PatientDetail if it doesn't exist
+                patientDetail = new PatientDetail
+                {
+                    PatientDetailId = "PATD_" + Guid.NewGuid().ToString().Substring(0, 8),
+                    PatientId = dto.PatientId,
+                    TreatmentStatus = "Đang điều trị"
+                };
+
+                _context.PatientDetails.Add(patientDetail);
+                await _context.SaveChangesAsync();
+            }
+
+            // Create a new treatment plan with unique ID
+            var treatmentPlan = new TreatmentPlan
+            {
+                TreatmentPlanId = "TP_" + Guid.NewGuid().ToString().Substring(0, 8),
+                DoctorId = dto.DoctorId,
+                ServiceId = dto.ServiceId,
+                PatientDetailId = patientDetail.PatientDetailId,
+
+                // Set fields with default values if not provided
+                Method = dto.Method ?? "Chưa xác định",
+                StartDate = dto.StartDate?.ToDateTime(TimeOnly.MinValue) ?? DateTime.Now,
+                EndDate = dto.EndDate?.ToDateTime(TimeOnly.MinValue),
+                Status = dto.Status ?? "Mới tạo",
+                TreatmentDescription = dto.TreatmentDescription ?? "Chờ bác sĩ cập nhật thông tin",
+                Giaidoan = dto.Giaidoan ?? "Giai đoạn 1"
+            };
+
+            try
+            {
+                // Add and save the treatment plan
+                _context.TreatmentPlans.Add(treatmentPlan);
+                await _context.SaveChangesAsync();
+
+                // Create notification for patient
+                var notification = new Notification
+                {
+                    NotificationId = "NOTIF_" + Guid.NewGuid().ToString().Substring(0, 8),
+                    PatientId = dto.PatientId,
+                    DoctorId = dto.DoctorId,
+                    Message = $"Bác sĩ {doctor.DoctorName} đã tạo kế hoạch điều trị mới cho bạn. Vui lòng kiểm tra thông tin chi tiết.",
+                    Time = DateTime.Now,
+                    Type = "TreatmentPlan"
+                };
+                _context.Notifications.Add(notification);
+                await _context.SaveChangesAsync();
+
+                // Load related entities to return complete data
+                var result = await _context.TreatmentPlans
+                    .Include(tp => tp.Doctor)
+                    .Include(tp => tp.PatientDetail)
+                        .ThenInclude(pd => pd.Patient)
+                    .Include(tp => tp.Service)
+                    .FirstOrDefaultAsync(tp => tp.TreatmentPlanId == treatmentPlan.TreatmentPlanId);
+
+                // Map to response object and return
+                return Ok(new
+                {
+                    Message = "Tạo kế hoạch điều trị thành công",
+                    TreatmentPlan = new
+                    {
+                        result.TreatmentPlanId,
+                        result.DoctorId,
+                        result.ServiceId,
+                        result.PatientDetailId,
+                        PatientId = result.PatientDetail?.PatientId,
+                        result.Method,
+                        StartDate = result.StartDate.HasValue ? DateOnly.FromDateTime(result.StartDate.Value) : (DateOnly?)null,
+                        EndDate = result.EndDate.HasValue ? DateOnly.FromDateTime(result.EndDate.Value) :  (DateOnly?)null,
+                        result.Status,
+                        result.TreatmentDescription,
+                        result.Giaidoan,
+                        Doctor = result.Doctor != null ? new
+                        {
+                            result.Doctor.DoctorId,
+                            result.Doctor.DoctorName
+                        } : null,
+                        PatientDetail = result.PatientDetail != null ? new
+                        {
+                            result.PatientDetail.PatientDetailId,
+                            result.PatientDetail.PatientId,
+                            PatientName = result.PatientDetail.Patient?.Name
+                        } : null,
+                        Service = result.Service != null ? new
+                        {
+                            result.Service.ServiceId,
+                            result.Service.Name
+                        } : null
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+        // DTO for flexible treatment plan update with specific fields
+        public class FlexibleTreatmentPlanUpdateDTO
+        {
+            // Required fields
+            public string TreatmentPlanId { get; set; }
+            public string DoctorId { get; set; }
+
+            // Optional fields for flexible update
+            public string? Method { get; set; }
+            public DateOnly? StartDate { get; set; }
+            public DateOnly? EndDate { get; set; }
+            public string? TreatmentDescription { get; set; }
+            public string? Status { get; set; } // List of stages as semicolon-separated string
+            public string? Giaidoan { get; set; } // Current stage, default: "in-progress"
+        }
+
+        /// <summary>
+        /// Cập nhật kế hoạch điều trị với các trường linh hoạt
+        /// </summary>
+        /// <param name="dto">DTO chứa thông tin cập nhật</param>
+        /// <returns>Kết quả cập nhật</returns>
+        [HttpPut("treatmentplan/flexible-update")]
+        [Authorize(Roles = "Doctor")]
+        public async Task<IActionResult> UpdateTreatmentPlanFlexible([FromBody] FlexibleTreatmentPlanUpdateDTO dto)
+        {
+            // Validate required fields
+            if (dto == null || string.IsNullOrEmpty(dto.TreatmentPlanId))
+                return BadRequest("Thiếu thông tin TreatmentPlanId");
+
+            if (string.IsNullOrEmpty(dto.DoctorId))
+                return BadRequest("Thiếu thông tin DoctorId");
+
+            // Tìm treatment plan theo ID
+            var plan = await _context.TreatmentPlans
+                .Include(tp => tp.PatientDetail)
+                .FirstOrDefaultAsync(tp => tp.TreatmentPlanId == dto.TreatmentPlanId);
+
+            if (plan == null)
+                return NotFound($"Không tìm thấy kế hoạch điều trị với ID {dto.TreatmentPlanId}");
+
+            // Kiểm tra quyền: chỉ cho phép bác sĩ sở hữu kế hoạch được sửa
+            if (plan.DoctorId != dto.DoctorId)
+                return Forbid("Bạn không có quyền cập nhật kế hoạch điều trị này");
+
+            // Track if any changes were made
+            bool hasChanges = false;
+
+            // Cập nhật các trường một cách linh hoạt, chỉ khi có giá trị được cung cấp
+            if (dto.Method != null)
+            {
+                plan.Method = dto.Method;
+                hasChanges = true;
+            }
+
+            if (dto.StartDate.HasValue)
+            {
+                plan.StartDate = dto.StartDate.Value.ToDateTime(TimeOnly.MinValue);
+                hasChanges = true;
+            }
+
+            if (dto.EndDate.HasValue)
+            {
+                plan.EndDate = dto.EndDate.Value.ToDateTime(TimeOnly.MinValue);
+                hasChanges = true;
+            }
+
+            if (dto.TreatmentDescription != null)
+            {
+                plan.TreatmentDescription = dto.TreatmentDescription;
+                hasChanges = true;
+            }
+
+            if (dto.Status != null)
+            {
+                plan.Status = dto.Status; // Store status as semicolon-separated list
+                hasChanges = true;
+            }
+
+            if (dto.Giaidoan != null)
+            {
+                plan.Giaidoan = dto.Giaidoan;
+                hasChanges = true;
+            }
+            else if (hasChanges && string.IsNullOrEmpty(plan.Giaidoan))
+            {
+                // If other changes were made and Giaidoan is empty, set default value
+                plan.Giaidoan = "in-progress";
+            }
+
+            if (!hasChanges)
+                return BadRequest("Không có thông tin nào được cập nhật");
+
+            try
+            {
+                _context.TreatmentPlans.Update(plan);
+                await _context.SaveChangesAsync();
+
+                // Create notification for patient about the update
+                if (plan.PatientDetail?.PatientId != null)
+                {
+                    var notification = new Notification
+                    {
+                        NotificationId = "NOTIF_" + Guid.NewGuid().ToString().Substring(0, 8),
+                        PatientId = plan.PatientDetail.PatientId,
+                        DoctorId = dto.DoctorId,
+                        Message = $"Kế hoạch điều trị của bạn đã được cập nhật. Vui lòng kiểm tra thông tin mới.",
+                        Time = DateTime.Now,
+                        Type = "TreatmentPlan"
+                    };
+                    _context.Notifications.Add(notification);
+                    await _context.SaveChangesAsync();
+                }
+
+                // Return updated plan data
+                return Ok(new
+                {
+                    Message = "Cập nhật kế hoạch điều trị thành công",
+                    TreatmentPlan = new
+                    {
+                        plan.TreatmentPlanId,
+                        plan.DoctorId,
+                        plan.ServiceId,
+                        plan.PatientDetailId,
+                        PatientId = plan.PatientDetail?.PatientId,
+                        plan.Method,
+                        StartDate = plan.StartDate.HasValue ? DateOnly.FromDateTime(plan.StartDate.Value) : (DateOnly?)null,
+                        EndDate = plan.EndDate.HasValue ? DateOnly.FromDateTime(plan.EndDate.Value) : (DateOnly?)null,
+                        plan.Status,
+                        StatusList = plan.Status?.Split(';').Select(s => s.Trim()).ToList(),
+                        plan.TreatmentDescription,
+                        plan.Giaidoan
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi khi cập nhật kế hoạch điều trị: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Lấy danh sách các bước điều trị (treatment steps) cho một kế hoạch điều trị cụ thể
+        /// </summary>
+        /// <param name="treatmentPlanId">ID của kế hoạch điều trị</param>
+        /// <returns>Danh sách các bước điều trị</returns>
+        [HttpGet("treatmentplan/{treatmentPlanId}/steps")]
+        [Authorize(Roles = "Doctor")]
+        public async Task<ActionResult<IEnumerable<object>>> GetTreatmentStepsByPlanId(string treatmentPlanId)
+        {
+            if (string.IsNullOrEmpty(treatmentPlanId))
+                return BadRequest("TreatmentPlanId is required");
+
+            // Kiểm tra xem treatment plan có tồn tại không
+            var treatmentPlan = await _context.TreatmentPlans
+                .FirstOrDefaultAsync(tp => tp.TreatmentPlanId == treatmentPlanId);
+
+            if (treatmentPlan == null)
+                return NotFound($"Không tìm thấy kế hoạch điều trị với ID {treatmentPlanId}");
+
+            // Lấy danh sách các bước điều trị theo thứ tự
+            var steps = await _context.TreatmentSteps
+                .Where(ts => ts.TreatmentPlanId == treatmentPlanId)
+                .OrderBy(ts => ts.StepOrder)
+                .Select(ts => new
+                {
+                    ts.TreatmentStepId,
+                    ts.TreatmentPlanId,
+                    ts.StepOrder,
+                    ts.StepName,
+                    // Có thể thêm các trường khác của TreatmentStep nếu cần
+                })
+                .ToListAsync();
+
+            if (!steps.Any())
+                return Ok(new { Message = "Kế hoạch điều trị này chưa có bước điều trị nào", Steps = new List<object>() });
+
+            return Ok(new
+            {
+                TreatmentPlanId = treatmentPlanId,
+                Steps = steps
+            });
+        }
+
+        /// <summary>
+        /// Tạo mới hoặc cập nhật danh sách các bước điều trị cho một kế hoạch điều trị
+        /// </summary>
+        /// <param name="treatmentPlanId">ID của kế hoạch điều trị</param>
+        /// <param name="steps">Danh sách các bước điều trị cần thêm/cập nhật</param>
+        /// <returns>Kết quả thực hiện</returns>
+        [HttpPost("treatmentplan/{treatmentPlanId}/steps")]
+        [Authorize(Roles = "Doctor")]
+        public async Task<ActionResult> CreateOrUpdateTreatmentSteps(string treatmentPlanId, [FromBody] List<TreatmentStepDTO> steps)
+        {
+            if (string.IsNullOrEmpty(treatmentPlanId))
+                return BadRequest("TreatmentPlanId is required");
+
+            if (steps == null || !steps.Any())
+                return BadRequest("Danh sách các bước điều trị không được trống");
+
+            // Kiểm tra xem treatment plan có tồn tại và bác sĩ có quyền truy cập không
+            var treatmentPlan = await _context.TreatmentPlans
+                .FirstOrDefaultAsync(tp => tp.TreatmentPlanId == treatmentPlanId);
+
+            if (treatmentPlan == null)
+                return NotFound($"Không tìm thấy kế hoạch điều trị với ID {treatmentPlanId}");
+
+            // Lấy DoctorId từ request (có thể sử dụng từ claims token hoặc từ body request)
+            var doctorId = HttpContext.User.FindFirst("DoctorId")?.Value;
+
+            // Nếu không có trong token, cần yêu cầu truyền vào
+            if (string.IsNullOrEmpty(doctorId))
+            {
+                // Nếu không có trong token, kiểm tra xem có trong query parameter không
+                if (Request.Query.ContainsKey("doctorId"))
+                {
+                    doctorId = Request.Query["doctorId"];
+                }
+                else
+                {
+                    return BadRequest("DoctorId is required");
+                }
+            }
+
+            // Kiểm tra quyền: chỉ bác sĩ phụ trách mới được cập nhật
+            if (treatmentPlan.DoctorId != doctorId)
+                return Forbid("Bạn không có quyền cập nhật các bước điều trị cho kế hoạch này");
+
+            try
+            {
+                // Lấy danh sách các bước hiện tại (nếu có)
+                var existingSteps = await _context.TreatmentSteps
+                    .Where(ts => ts.TreatmentPlanId == treatmentPlanId)
+                    .ToListAsync();
+
+                // Xóa các bước cũ nếu yêu cầu thay thế hoàn toàn
+                _context.TreatmentSteps.RemoveRange(existingSteps);
+
+                // Thêm các bước mới
+                foreach (var stepDto in steps)
+                {
+                    var newStep = new TreatmentStep
+                    {
+                        TreatmentStepId = "TS_" + Guid.NewGuid().ToString().Substring(0, 8),
+                        TreatmentPlanId = treatmentPlanId,
+                        StepOrder = stepDto.StepOrder,
+                        StepName = stepDto.StepName
+                    };
+
+                    _context.TreatmentSteps.Add(newStep);
+                }
+
+                await _context.SaveChangesAsync();
+
+                // Tạo thông báo cho bệnh nhân
+                var patient = await _context.PatientDetails
+                    .FirstOrDefaultAsync(pd => pd.PatientDetailId == treatmentPlan.PatientDetailId);
+
+                if (patient != null)
+                {
+                    var notification = new Notification
+                    {
+                        NotificationId = "NOTIF_" + Guid.NewGuid().ToString().Substring(0, 8),
+                        PatientId = patient.PatientId,
+                        DoctorId = doctorId,
+                        Message = "Bác sĩ đã cập nhật các bước trong kế hoạch điều trị của bạn. Vui lòng kiểm tra thông tin mới.",
+                        Time = DateTime.Now,
+                        Type = "TreatmentPlan"
+                    };
+
+                    _context.Notifications.Add(notification);
+                    await _context.SaveChangesAsync();
+                }
+
+                // Lấy danh sách các bước sau khi cập nhật
+                var updatedSteps = await _context.TreatmentSteps
+                    .Where(ts => ts.TreatmentPlanId == treatmentPlanId)
+                    .OrderBy(ts => ts.StepOrder)
+                    .Select(ts => new
+                    {
+                        ts.TreatmentStepId,
+                        ts.TreatmentPlanId,
+                        ts.StepOrder,
+                        ts.StepName
+                    })
+                    .ToListAsync();
+
+                return Ok(new
+                {
+                    Message = "Cập nhật các bước điều trị thành công",
+                    TreatmentPlanId = treatmentPlanId,
+                    Steps = updatedSteps
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi khi cập nhật các bước điều trị: {ex.Message}");
+            }
+        }
+
+        // DTO for treatment steps
+        public class TreatmentStepDTO
+        {
+            public int StepOrder { get; set; }
+            public string StepName { get; set; }
+        }
+
     }
 }
