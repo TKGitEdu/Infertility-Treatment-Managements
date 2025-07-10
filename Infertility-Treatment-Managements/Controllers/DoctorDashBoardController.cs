@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace Infertility_Treatment_Managements.Controllers
@@ -1121,57 +1122,92 @@ namespace Infertility_Treatment_Managements.Controllers
 
             if (steps == null || !steps.Any())
                 return BadRequest("Danh sách các bước điều trị không được trống");
-
-            // Kiểm tra xem treatment plan có tồn tại và bác sĩ có quyền truy cập không
-            var treatmentPlan = await _context.TreatmentPlans
-                .FirstOrDefaultAsync(tp => tp.TreatmentPlanId == treatmentPlanId);
-
-            if (treatmentPlan == null)
-                return NotFound($"Không tìm thấy kế hoạch điều trị với ID {treatmentPlanId}");
-
-            // Lấy DoctorId từ request (có thể sử dụng từ claims token hoặc từ body request)
-            var doctorId = HttpContext.User.FindFirst("DoctorId")?.Value;
-
-            // Nếu không có trong token, cần yêu cầu truyền vào
-            if (string.IsNullOrEmpty(doctorId))
-            {
-                // Nếu không có trong token, kiểm tra xem có trong query parameter không
-                if (Request.Query.ContainsKey("doctorId"))
-                {
-                    doctorId = Request.Query["doctorId"];
-                }
-                else
-                {
-                    return BadRequest("DoctorId is required");
-                }
-            }
-
-            // Kiểm tra quyền: chỉ bác sĩ phụ trách mới được cập nhật
-            if (treatmentPlan.DoctorId != doctorId)
-                return Forbid("Bạn không có quyền cập nhật các bước điều trị cho kế hoạch này");
-
+            //Nếu bạn muốn cho phép xóa hết các bước cũ(tức là cập nhật về rỗng), thì sửa đoạn đó thành:
+            //if (steps == null)
+            //    return BadRequest("Danh sách các bước điều trị không được null");
             try
             {
-                // Lấy danh sách các bước hiện tại (nếu có)
+                // Lấy userId từ token
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("User ID not found in token");
+                }
+
+                // Truy xuất DoctorId từ UserId
+                var doctor = await _context.Doctors
+                    .FirstOrDefaultAsync(d => d.UserId == userId);
+
+                if (doctor == null)
+                {
+                    return NotFound("Doctor not found for the authenticated user");
+                }
+
+                string doctorId = doctor.DoctorId;
+
+                // Kiểm tra xem treatment plan có tồn tại không
+                var treatmentPlan = await _context.TreatmentPlans
+                    .FirstOrDefaultAsync(tp => tp.TreatmentPlanId == treatmentPlanId);
+
+                if (treatmentPlan == null)
+                    return NotFound($"Không tìm thấy kế hoạch điều trị với ID {treatmentPlanId}");
+
+                // Kiểm tra quyền: chỉ bác sĩ phụ trách mới được cập nhật
+                if (treatmentPlan.DoctorId != doctorId)
+                    return Forbid("Bạn không có quyền cập nhật các bước điều trị cho kế hoạch này");
+
+                // Lấy danh sách các bước hiện tại
                 var existingSteps = await _context.TreatmentSteps
                     .Where(ts => ts.TreatmentPlanId == treatmentPlanId)
                     .ToListAsync();
 
-                // Xóa các bước cũ nếu yêu cầu thay thế hoàn toàn
-                _context.TreatmentSteps.RemoveRange(existingSteps);
+                // Tạo từ điển để tra cứu nhanh các bước hiện có theo StepOrder
+                var existingStepsDict = existingSteps.ToDictionary(s => s.StepOrder);
 
-                // Thêm các bước mới
+                // Theo dõi các bước đã được xử lý
+                var processedStepOrders = new HashSet<int>();
+                var stepsUpdated = 0;
+                var stepsCreated = 0;
+
+                // Duyệt qua từng bước được gửi lên
                 foreach (var stepDto in steps)
                 {
-                    var newStep = new TreatmentStep
+                    if (existingStepsDict.TryGetValue(stepDto.StepOrder, out var existingStep))
                     {
-                        TreatmentStepId = "TS_" + Guid.NewGuid().ToString().Substring(0, 8),
-                        TreatmentPlanId = treatmentPlanId,
-                        StepOrder = stepDto.StepOrder,
-                        StepName = stepDto.StepName
-                    };
+                        // Nếu đã có bước với StepOrder này, cập nhật thông tin
+                        existingStep.StepName = stepDto.StepName;
+                        existingStep.Description = stepDto.Description ?? $"Mô tả cho bước {stepDto.StepOrder}: {stepDto.StepName}";
 
-                    _context.TreatmentSteps.Add(newStep);
+                        _context.Entry(existingStep).State = EntityState.Modified;
+                        stepsUpdated++;
+                    }
+                    else
+                    {
+                        // Nếu chưa có bước với StepOrder này, tạo mới
+                        var newStep = new TreatmentStep
+                        {
+                            TreatmentStepId = "TS_" + Guid.NewGuid().ToString().Substring(0, 8),
+                            TreatmentPlanId = treatmentPlanId,
+                            StepOrder = stepDto.StepOrder,
+                            StepName = stepDto.StepName,
+                            Description = stepDto.Description ?? $"Mô tả cho bước {stepDto.StepOrder}: {stepDto.StepName}"
+                        };
+
+                        _context.TreatmentSteps.Add(newStep);
+                        stepsCreated++;
+                    }
+
+                    processedStepOrders.Add(stepDto.StepOrder);
+                }
+
+                // Xóa các bước không còn trong danh sách mới
+                var stepsToRemove = existingSteps
+                    .Where(step => !processedStepOrders.Contains(step.StepOrder))
+                    .ToList();
+
+                if (stepsToRemove.Any())
+                {
+                    _context.TreatmentSteps.RemoveRange(stepsToRemove);
                 }
 
                 await _context.SaveChangesAsync();
@@ -1188,8 +1224,11 @@ namespace Infertility_Treatment_Managements.Controllers
                         PatientId = patient.PatientId,
                         DoctorId = doctorId,
                         Message = "Bác sĩ đã cập nhật các bước trong kế hoạch điều trị của bạn. Vui lòng kiểm tra thông tin mới.",
+                        MessageForDoctor = $"Bạn đã cập nhật các bước điều trị cho bệnh nhân {patient.Name}.",
                         Time = DateTime.Now,
-                        Type = "TreatmentPlan"
+                        Type = "TreatmentPlan",
+                        PatientIsRead = false,
+                        DoctorIsRead = false
                     };
 
                     _context.Notifications.Add(notification);
@@ -1205,13 +1244,15 @@ namespace Infertility_Treatment_Managements.Controllers
                         ts.TreatmentStepId,
                         ts.TreatmentPlanId,
                         ts.StepOrder,
-                        ts.StepName
+                        ts.StepName,
+                        ts.Description
                     })
                     .ToListAsync();
 
                 return Ok(new
                 {
-                    Message = "Cập nhật các bước điều trị thành công",
+                    Message = $"Đã cập nhật các bước điều trị thành công: {stepsCreated} bước mới, {stepsUpdated} bước cập nhật, {stepsToRemove.Count} bước đã xóa",
+                    DoctorId = doctorId,
                     TreatmentPlanId = treatmentPlanId,
                     Steps = updatedSteps
                 });
@@ -1222,11 +1263,12 @@ namespace Infertility_Treatment_Managements.Controllers
             }
         }
 
-        // DTO for treatment steps
+        // Cập nhật DTO để bao gồm trường Description
         public class TreatmentStepDTO
         {
             public int StepOrder { get; set; }
             public string StepName { get; set; }
+            public string? Description { get; set; } // Thêm trường Description
         }
 
     }
