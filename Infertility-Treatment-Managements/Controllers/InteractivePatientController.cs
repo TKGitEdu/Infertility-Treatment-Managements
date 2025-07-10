@@ -204,71 +204,66 @@ namespace Infertility_Treatment_Managements.Controllers
                 Message = "Examination record created successfully"
             });
         }
-
         /// <summary>
-        /// Cập nhật trạng thái của bản ghi khám bệnh (Examination) thành "completed"
+        /// Lấy tất cả bản ghi khám bệnh của một bệnh nhân theo ID
         /// </summary>
-        /// <param name="examinationId">ID của bản ghi khám bệnh cần cập nhật</param>
-        /// <returns>Thông báo kết quả cập nhật</returns>
-        [HttpPut("examination/{examinationId}/complete")]
-        [Authorize(Roles = "Doctor")]
-        public async Task<ActionResult<object>> CompleteExamination(string examinationId)
+        /// <param name="patientId">ID của bệnh nhân</param>
+        /// <returns>Danh sách các bản ghi khám bệnh của bệnh nhân</returns>
+        [HttpGet("patient/{patientId}/examinations")]
+        [Authorize(Roles = "Doctor,Patient")]
+        public async Task<ActionResult<IEnumerable<object>>> GetExaminationsByPatientId(string patientId)
         {
-            if (string.IsNullOrEmpty(examinationId))
+            if (string.IsNullOrEmpty(patientId))
             {
-                return BadRequest("ExaminationId is required");
+                return BadRequest("PatientId là bắt buộc");
             }
 
-            // Tìm examination theo ID
-            var examination = await _context.Examinations
+            // Kiểm tra bệnh nhân tồn tại
+            var patientExists = await _context.Patients.AnyAsync(p => p.PatientId == patientId);
+            if (!patientExists)
+            {
+                return NotFound($"Không tìm thấy bệnh nhân với ID {patientId}");
+            }
+
+            // Lấy tất cả bản ghi khám bệnh của bệnh nhân
+            var examinations = await _context.Examinations
+                .Include(e => e.Doctor)
                 .Include(e => e.Booking)
-                .FirstOrDefaultAsync(e => e.ExaminationId == examinationId);
-
-            if (examination == null)
-            {
-                return NotFound($"Examination with ID {examinationId} not found");
-            }
-
-            // Cập nhật trạng thái examination thành "completed"
-            examination.Status = "completed";
-            _context.Entry(examination).State = EntityState.Modified;
-
-            // Cập nhật trạng thái booking thành "completed" nếu liên kết với examination này
-            if (examination.Booking != null)
-            {
-                examination.Booking.Status = "completed";
-                _context.Entry(examination.Booking).State = EntityState.Modified;
-            }
-
-            // Tạo thông báo cho bệnh nhân
-            if (!string.IsNullOrEmpty(examination.PatientId))
-            {
-                var notification = new Notification
+                    .ThenInclude(b => b.Service)
+                .Where(e => e.PatientId == patientId)
+                .OrderByDescending(e => e.ExaminationDate)
+                .Select(e => new
                 {
-                    NotificationId = "NOTIF_" + Guid.NewGuid().ToString().Substring(0, 8),
-                    PatientId = examination.PatientId,
-                    DoctorId = examination.DoctorId,
-                    Message = "Kết quả khám bệnh của bạn đã được hoàn thành.",
-                    Time = DateTime.Now,
-                    Type = "Examination",
-                    BookingId = examination.BookingId,
-                    DoctorIsRead = false,
-                    PatientIsRead = false
-                };
+                    ExaminationId = e.ExaminationId,
+                    DoctorId = e.DoctorId,
+                    DoctorName = e.Doctor != null ? e.Doctor.DoctorName : null,
+                    PatientId = e.PatientId,
+                    BookingId = e.BookingId,
+                    ExaminationDate = e.ExaminationDate,
+                    ExaminationDescription = e.ExaminationDescription,
+                    Status = e.Status,
+                    Result = e.Result,
+                    Note = e.Note,
+                    CreateAt = e.CreateAt,
+                    ServiceName = e.Booking != null && e.Booking.Service != null ? e.Booking.Service.Name : null
+                })
+                .ToListAsync();
 
-                _context.Notifications.Add(notification);
+            if (!examinations.Any())
+            {
+                return Ok(new
+                {
+                    Message = "Bệnh nhân chưa có bản ghi khám bệnh nào",
+                    Examinations = new List<object>()
+                });
             }
 
-            await _context.SaveChangesAsync();
-
-            // Trả về kết quả
             return Ok(new
             {
-                ExaminationId = examination.ExaminationId,
-                Status = examination.Status,
-                Message = "Examination status updated to completed successfully"
+                PatientId = patientId,
+                ExaminationCount = examinations.Count,
+                Examinations = examinations
             });
         }
-
     }
 }

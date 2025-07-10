@@ -90,82 +90,58 @@ namespace Infertility_Treatment_Managements.Controllers
         }
 
         /// <summary>
-        /// Lấy lịch sử điều trị của bệnh nhân
+        /// Lấy tiền sử bệnh của bệnh nhân (lịch sử bệnh lý và thông tin y tế)
         /// </summary>
         /// <param name="patientId">ID của bệnh nhân</param>
-        /// <returns>Danh sách các bản ghi điều trị và kế hoạch điều trị của bệnh nhân</returns>
-        [HttpGet("patient/{patientId}/treatment-history")]
-        public async Task<ActionResult<object>> GetPatientTreatmentHistory(string patientId)
+        /// <returns>Thông tin tiền sử bệnh của bệnh nhân</returns>
+        [HttpGet("patient/{patientId}/tienSuBenh")]
+        public async Task<ActionResult<object>> GetPatientMedicalHistory(string patientId)
         {
             if (string.IsNullOrEmpty(patientId))
             {
-                return BadRequest("PatientId is required");
+                return BadRequest("PatientId là bắt buộc");
             }
 
             // Kiểm tra bệnh nhân tồn tại
-            var patientExists = await _context.Patients.AnyAsync(p => p.PatientId == patientId);
-            if (!patientExists)
+            var patient = await _context.Patients
+                .FirstOrDefaultAsync(p => p.PatientId == patientId);
+
+            if (patient == null)
             {
-                return NotFound($"Patient with ID {patientId} not found");
+                return NotFound($"Không tìm thấy bệnh nhân với ID {patientId}");
             }
 
-            // Lấy danh sách PatientDetail của bệnh nhân
+            // Lấy danh sách thông tin PatientDetail của bệnh nhân
             var patientDetails = await _context.PatientDetails
                 .Where(pd => pd.PatientId == patientId)
+                .Select(pd => new
+                {
+                    PatientDetailId = pd.PatientDetailId,
+                    PatientId = pd.PatientId,
+                    PatientName = patient.Name,
+                    TreatmentStatus = pd.TreatmentStatus,
+                    MedicalHistory = pd.MedicalHistory ?? "Chưa có thông tin tiền sử bệnh",
+                    Name = pd.Name ?? patient.Name
+                })
                 .ToListAsync();
 
             if (!patientDetails.Any())
             {
-                return Ok(new { TreatmentPlans = new List<object>(), TreatmentProcesses = new List<object>() });
+                // Nếu chưa có bản ghi nào, trả về thông báo
+                return Ok(new
+                {
+                    PatientId = patientId,
+                    PatientName = patient.Name,
+                    Message = "Bệnh nhân chưa có thông tin tiền sử bệnh",
+                    MedicalRecords = new List<object>()
+                });
             }
 
-            // Lấy ID của các PatientDetail
-            var patientDetailIds = patientDetails.Select(pd => pd.PatientDetailId).ToList();
-
-            // Lấy danh sách TreatmentPlan dựa trên PatientDetailId
-            var treatmentPlans = await _context.TreatmentPlans
-                .Include(tp => tp.Doctor)
-                .Where(tp => patientDetailIds.Contains(tp.PatientDetailId))
-                .OrderByDescending(tp => tp.StartDate)
-                .ToListAsync();
-
-            // Lấy ID của các TreatmentPlan
-            var treatmentPlanIds = treatmentPlans.Select(tp => tp.TreatmentPlanId).ToList();
-
-            // Lấy danh sách TreatmentProcess dựa trên TreatmentPlanId
-            var treatmentProcesses = await _context.TreatmentProcesses
-                .Include(tp => tp.Doctor)
-                .Include(tp => tp.TreatmentPlan)
-                .Where(tp => treatmentPlanIds.Contains(tp.TreatmentPlanId))
-                .OrderByDescending(tp => tp.ScheduledDate)
-                .ToListAsync();
-
-            // Trả về kết quả
             return Ok(new
             {
-                TreatmentPlans = treatmentPlans.Select(tp => new
-                {
-                    TreatmentPlanId = tp.TreatmentPlanId,
-                    DoctorId = tp.DoctorId,
-                    DoctorName = tp.Doctor?.DoctorName,
-                    PatientDetailId = tp.PatientDetailId,
-                    StartDate = tp.StartDate,
-                    EndDate = tp.EndDate,
-                    Status = tp.Status,
-                    TreatmentDescription = tp.TreatmentDescription,
-                    Method = tp.Method
-                }),
-                TreatmentProcesses = treatmentProcesses.Select(tp => new
-                {
-                    TreatmentProcessId = tp.TreatmentProcessId,
-                    TreatmentPlanId = tp.TreatmentPlanId,
-                    DoctorId = tp.DoctorId,
-                    DoctorName = tp.Doctor?.DoctorName,
-                    ProcessDate = tp.ScheduledDate,
-                    Result = tp.Result,
-                    Status = tp.Status,
-                    TreatmentPlanDescription = tp.TreatmentPlan?.TreatmentDescription
-                })
+                PatientId = patientId,
+                PatientName = patient.Name,
+                MedicalRecords = patientDetails
             });
         }
 

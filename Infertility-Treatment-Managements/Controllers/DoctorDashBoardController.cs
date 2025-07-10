@@ -864,6 +864,7 @@ namespace Infertility_Treatment_Managements.Controllers
                     PatientId = dto.PatientId,
                     DoctorId = dto.DoctorId,
                     Message = $"Bác sĩ {doctor.DoctorName} đã tạo kế hoạch điều trị mới cho bạn. Vui lòng kiểm tra thông tin chi tiết.",
+                    MessageForDoctor = $"Bạn đã tạo kế hoạch điều trị mới cho bệnh nhân {patientDetail.Patient?.Name}. Vui lòng kiểm tra thông tin chi tiết.",
                     Time = DateTime.Now,
                     Type = "TreatmentPlan"
                 };
