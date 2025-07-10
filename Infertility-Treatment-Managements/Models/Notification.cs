@@ -13,6 +13,7 @@ namespace Infertility_Treatment_Managements.Models
         // Trường mới
         public string Type { get; set; } // "appointment" | "test" | "treatment"
         public string Message { get; set; }
+        public string MessageForDoctor { get; set; } // Thông báo cho bác sĩ
         public DateTime Time { get; set; }
         public bool? DoctorIsRead { get; set; } // Trạng thái đã đọc hay chưa, mặc định là false
         public bool? PatientIsRead { get; set; }

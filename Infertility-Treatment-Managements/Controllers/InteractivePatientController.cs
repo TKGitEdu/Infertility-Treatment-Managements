@@ -129,27 +129,28 @@ namespace Infertility_Treatment_Managements.Controllers
                 return NotFound($"Booking with ID {examinationCreateDTO.BookingId} not found");
             }
 
-            // Kiểm tra xem đã có examination cho booking này chưa
-            //var existingExamination = await _context.Examinations
-            //    .FirstOrDefaultAsync(e => e.BookingId == examinationCreateDTO.BookingId);
+            // ✅ 1. Kiểm tra xem đã có examination cho booking này chưa
+            var existingExamination = await _context.Examinations
+                .FirstOrDefaultAsync(e => e.BookingId == examinationCreateDTO.BookingId);
 
-            //if (existingExamination != null)
-            //{
-            //    return BadRequest("An examination already exists for this booking");
-            //}
+            if (existingExamination != null)
+            {
+                return BadRequest("Examination already exists for this booking.");
+            }
 
             // Lấy thông tin từ booking
             string patientId = booking.PatientId;
             string doctorId = booking.DoctorId;
 
-            // Tạo mới examination
+            // ✅ 2. Tạo mới examination
             var examination = new Examination
             {
                 ExaminationId = "EXM_" + Guid.NewGuid().ToString().Substring(0, 8),
                 BookingId = examinationCreateDTO.BookingId,
                 PatientId = patientId,
                 DoctorId = doctorId,
-                ExaminationDate = examinationCreateDTO.ExaminationDate,
+                // With this corrected line:
+                ExaminationDate = examinationCreateDTO.ExaminationDate != default ? examinationCreateDTO.ExaminationDate : DateTime.Now,
                 ExaminationDescription = examinationCreateDTO.ExaminationDescription,
                 Result = examinationCreateDTO.Result,
                 Status = examinationCreateDTO.Status,
@@ -159,20 +160,21 @@ namespace Infertility_Treatment_Managements.Controllers
 
             _context.Examinations.Add(examination);
 
-            // Cập nhật trạng thái booking thành "completed" nếu examination đã hoàn thành
-            if (examination.Status.ToLower() == "completed" || examination.Status.ToLower() == "hoàn thành")
+            // ✅ 3. Cập nhật trạng thái booking thành "completed" nếu examination đã hoàn thành
+            if (examination.Status?.Trim().ToLower() == "completed" || examination.Status?.Trim().ToLower() == "hoàn thành")
             {
                 booking.Status = "completed";
                 _context.Entry(booking).State = EntityState.Modified;
             }
 
-            // Tạo thông báo cho bệnh nhân
+            // ✅ 4. Tạo thông báo cho bệnh nhân
             var notification = new Notification
             {
                 NotificationId = "NOTIF_" + Guid.NewGuid().ToString().Substring(0, 8),
                 PatientId = patientId,
                 DoctorId = doctorId,
-                Message = $"Kết quả khám bệnh của bạn đã được cập nhật. Trạng thái: {examination.Status}",
+                Message = $"Bạn đã hoàn tất buổi khám. Mã khám: {examination.ExaminationId}",
+                MessageForDoctor = $"Bạn đã hoàn tất buổi khám cho bệnh nhân {booking.Patient?.Name}. Mã khám: {examination.ExaminationId}",
                 Time = DateTime.Now,
                 Type = "Examination",
                 BookingId = examination.BookingId,

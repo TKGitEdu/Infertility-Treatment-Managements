@@ -176,6 +176,11 @@ namespace Infertility_Treatment_Managements.Controllers
             {
                 booking.Status = updateBookingDTO.Status;
             }
+            else
+            {
+                // Nếu không có status được cung cấp, mặc định đánh dấu là "confirmed"
+                booking.Status = "confirmed";
+            }
 
             // Update the record
             _context.Entry(booking).State = EntityState.Modified;
@@ -184,64 +189,21 @@ namespace Infertility_Treatment_Managements.Controllers
             {
                 await _context.SaveChangesAsync();
 
-                // Tìm PatientDetail tương ứng với PatientId
-                var patientDetail = await _context.PatientDetails
-                    .FirstOrDefaultAsync(pd => pd.PatientId == booking.PatientId);
-
-                if (patientDetail == null)
-                {
-                    // Nếu không tồn tại, tạo mới PatientDetail
-                    patientDetail = new PatientDetail
-                    {
-                        PatientDetailId = "PATD_" + Guid.NewGuid().ToString().Substring(0, 8),
-                        PatientId = booking.PatientId,
-                        TreatmentStatus = "Đang điều trị"
-                    };
-
-                    _context.PatientDetails.Add(patientDetail);
-                    await _context.SaveChangesAsync();
-                }
-
-                // Create TreatmentPlan first
-                var treatmentPlan = new TreatmentPlan
-                {
-                    TreatmentPlanId = "TP_" + Guid.NewGuid().ToString().Substring(0, 8),
-                    DoctorId = booking.DoctorId,
-                    PatientDetailId = patientDetail.PatientDetailId,
-                    StartDate = booking.DateBooking,
-                    Status = "chờ bác sĩ lên lịch",
-                    TreatmentDescription = "chờ bác sĩ lên lịch",
-                    Method = "Chưa xác định"
-                };
-                _context.TreatmentPlans.Add(treatmentPlan);
-                await _context.SaveChangesAsync();
-
-                // Then create TreatmentProcess
-                var treatmentProcess = new TreatmentProcess
-                {
-                    TreatmentProcessId = "TP_" + Guid.NewGuid().ToString().Substring(0, 8),
-                    DoctorId = booking.DoctorId,
-                    PatientDetailId = patientDetail.PatientDetailId,
-                    ScheduledDate = booking.DateBooking,
-                    Result = "Updated",
-                    Status = booking.Status,
-                    TreatmentPlanId = treatmentPlan.TreatmentPlanId
-                };
-                _context.TreatmentProcesses.Add(treatmentProcess);
-                await _context.SaveChangesAsync();
-
-                // Finally create Notification
+                // Tạo thông báo xác nhận cho bệnh nhân
                 var notification = new Notification
                 {
                     NotificationId = "NOTIF_" + Guid.NewGuid().ToString().Substring(0, 8),
                     PatientId = booking.PatientId,
                     DoctorId = booking.DoctorId,
-                    Message = $"Lịch hẹn của bạn với ID {booking.BookingId} đã được bác sĩ cập nhật. Vui lòng kiểm tra thông tin mới.",
+                    Message = $"Lịch hẹn của bạn với ID {booking.BookingId} đã được bác sĩ {booking.Doctor?.DoctorName} xác nhận cho ngày {booking.DateBooking:dd/MM/yyyy}.",
+                    MessageForDoctor = $"Bạn đã xác nhận lịch hẹn với bệnh nhân {booking.Patient?.Name} (ID: {booking.PatientId}) vào ngày {booking.DateBooking:dd/MM/yyyy}.",
                     Time = DateTime.Now,
                     Type = "Booking",
                     BookingId = booking.BookingId,
-                    TreatmentProcessId = treatmentProcess.TreatmentProcessId // Reference the created process
+                    PatientIsRead = false,
+                    DoctorIsRead = false
                 };
+
                 _context.Notifications.Add(notification);
                 await _context.SaveChangesAsync();
 
@@ -253,7 +215,11 @@ namespace Infertility_Treatment_Managements.Controllers
                     .Include(b => b.Doctor)
                     .FirstOrDefaultAsync(b => b.BookingId == bookingId);
 
-                return Ok("bác sĩ đã nhận lịch, đang gửi thông báo tới bệnh nhân");
+                return Ok(new
+                {
+                    Message = "Đã xác nhận lịch hẹn và gửi thông báo tới bệnh nhân",
+                    Booking = booking.ToDTO()
+                });
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -265,6 +231,11 @@ namespace Infertility_Treatment_Managements.Controllers
                 {
                     throw;
                 }
+            }
+            catch (Exception ex)
+            {
+                // Xử lý lỗi chung
+                return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
 
@@ -355,19 +326,24 @@ namespace Infertility_Treatment_Managements.Controllers
             {
                 await _context.SaveChangesAsync();
 
-                // Tạo thông báo cho bệnh nhân
-                string message;
+                // Tạo thông báo cho bệnh nhân và bác sĩ
+                string messageForPatient;
+                string messageForDoctor;
+
                 if (changeRequest.Status == "cancelled")
                 {
-                    message = $"Lịch hẹn của bạn với ID {booking.BookingId} đã bị hủy bởi bác sĩ {booking.Doctor?.DoctorName}. Lý do: {changeRequest.Note}";
+                    messageForPatient = $"Lịch hẹn của bạn với ID {booking.BookingId} đã bị hủy bởi bác sĩ {booking.Doctor?.DoctorName}. Lý do: {changeRequest.Note}";
+                    messageForDoctor = $"Bạn đã hủy lịch hẹn với bệnh nhân {booking.Patient?.Name} (ID: {booking.PatientId}). Lý do: {changeRequest.Note}";
                 }
                 else if (changeRequest.Status == "rescheduled")
                 {
-                    message = $"Lịch hẹn của bạn với ID {booking.BookingId} đã được đổi sang ngày {changeRequest.NewDate?.ToString("dd/MM/yyyy")}. Vui lòng kiểm tra thông tin mới.";
+                    messageForPatient = $"Lịch hẹn của bạn với ID {booking.BookingId} đã được đổi sang ngày {changeRequest.NewDate?.ToString("dd/MM/yyyy")}. Vui lòng kiểm tra thông tin mới.";
+                    messageForDoctor = $"Bạn đã đổi lịch hẹn với bệnh nhân {booking.Patient?.Name} (ID: {booking.PatientId}) sang ngày {changeRequest.NewDate?.ToString("dd/MM/yyyy")}. Vui lòng kiểm tra thông tin mới.";
                 }
                 else
                 {
-                    message = $"Trạng thái lịch hẹn của bạn với ID {booking.BookingId} đã được cập nhật thành: {changeRequest.Status}";
+                    messageForPatient = $"Trạng thái lịch hẹn của bạn với ID {booking.BookingId} đã được cập nhật thành: {changeRequest.Status}";
+                    messageForDoctor = $"Bạn đã cập nhật trạng thái lịch hẹn với bệnh nhân {booking.Patient?.Name} (ID: {booking.PatientId}) thành: {changeRequest.Status}";
                 }
 
                 var notification = new Notification
@@ -375,10 +351,13 @@ namespace Infertility_Treatment_Managements.Controllers
                     NotificationId = "NOTIF_" + Guid.NewGuid().ToString().Substring(0, 8),
                     PatientId = booking.PatientId,
                     DoctorId = booking.DoctorId,
-                    Message = message,
+                    Message = messageForPatient,
+                    MessageForDoctor = messageForDoctor,
                     Time = DateTime.Now,
                     Type = "Booking",
-                    BookingId = booking.BookingId
+                    BookingId = booking.BookingId,
+                    PatientIsRead = false,
+                    DoctorIsRead = false
                 };
 
                 _context.Notifications.Add(notification);
@@ -462,8 +441,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [Authorize(Roles = "Doctor")]
         public async Task<ActionResult<IEnumerable<object>>> GetDoctorNotifications(
             [FromQuery] string userId,
-            [FromQuery] int limit = 20,
-            [FromQuery] bool docvachuadoc = false || true)
+            [FromQuery] int limit = 20)
         {
             if (string.IsNullOrEmpty(userId))
             {
@@ -488,11 +466,6 @@ namespace Infertility_Treatment_Managements.Controllers
                 .Include(n => n.TreatmentProcess)
                 .Where(n => n.DoctorId == doctorId);
 
-            // Lọc theo trạng thái đã đọc nếu cần
-            if (docvachuadoc)
-            {
-                query = query.Where(n => n.DoctorIsRead == null || n.DoctorIsRead == false);
-            }
 
             // Thực hiện truy vấn
             var notificationList = await query
@@ -511,6 +484,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 TreatmentProcessId = n.TreatmentProcessId,
                 Type = n.Type,
                 Message = n.Message,
+                MessageForDoctor = n.MessageForDoctor,
                 Time = n.Time,
                 DoctorIsRead = n.DoctorIsRead ?? false,
                 BookingDate = n.Booking?.DateBooking,
@@ -523,25 +497,32 @@ namespace Infertility_Treatment_Managements.Controllers
         /// <summary>
         /// Đánh dấu tất cả thông báo của bác sĩ là đã đọc
         /// </summary>
-        /// <param name="notificationIds">Danh sách ID của các thông báo cần đánh dấu</param>
-        /// <returns>Số lượng thông báo đã được cập nhật</returns>
+        /// <param name="doctorId">ID của bác sĩ</param>
+        /// <returns>Kết quả cập nhật trạng thái</returns>
         [HttpPut("notifications/read-all")]
         [Authorize(Roles = "Doctor")]
-        public async Task<ActionResult> MarkAllNotificationsAsRead([FromBody] List<string> notificationIds)
+        public async Task<ActionResult> MarkAllNotificationsAsRead([FromQuery] string doctorId)
         {
-            if (notificationIds == null || !notificationIds.Any())
+            if (string.IsNullOrEmpty(doctorId))
             {
-                return BadRequest("At least one notificationId is required");
+                return BadRequest("DoctorId is required");
             }
 
-            // Lấy tất cả thông báo cần đánh dấu
+            // Kiểm tra bác sĩ tồn tại
+            var doctorExists = await _context.Doctors.AnyAsync(d => d.DoctorId == doctorId);
+            if (!doctorExists)
+            {
+                return NotFound($"Doctor with ID {doctorId} not found");
+            }
+
+            // Lấy tất cả thông báo chưa đọc của bác sĩ
             var notifications = await _context.Notifications
-                .Where(n => notificationIds.Contains(n.NotificationId))
+                .Where(n => n.DoctorId == doctorId && (n.DoctorIsRead == null || n.DoctorIsRead == false))
                 .ToListAsync();
 
             if (!notifications.Any())
             {
-                return NotFound("No notifications found with the provided IDs");
+                return Ok(new { Message = "Không có thông báo nào cần đánh dấu đã đọc" });
             }
 
             // Đánh dấu tất cả thông báo đã đọc
@@ -553,60 +534,170 @@ namespace Infertility_Treatment_Managements.Controllers
 
             await _context.SaveChangesAsync();
 
-            // Chuyển đổi thành NotificationDTO để trả về
-            var notificationDTOs = notifications.Select(n => new NotificationDTO
-            {
-                NotificationId = n.NotificationId,
-                PatientId = n.PatientId,
-                DoctorId = n.DoctorId,
-                BookingId = n.BookingId,
-                TreatmentProcessId = n.TreatmentProcessId,
-                Type = n.Type,
-                Message = n.Message,
-                Time = n.Time
-            }).ToList();
-
             return Ok(new
             {
                 UpdatedCount = notifications.Count,
-                Message = $"{notifications.Count} notifications marked as read",
-                Notifications = notificationDTOs
+                Message = $"Đã đánh dấu {notifications.Count} thông báo là đã đọc"
             });
         }
+
+        /// <summary>
+        /// Lấy danh sách các buổi khám của bác sĩ theo doctorId
+        /// </summary>
+        /// <param name="doctorId">ID của bác sĩ</param>
+        /// <returns>Danh sách các buổi khám của bác sĩ</returns>
         [HttpGet("examinations")]
         [Authorize(Roles = "Doctor")]
-        public async Task<ActionResult<IEnumerable<ExaminationDTO>>> GetExaminationsByDoctor([FromQuery] string doctorId)
+        public async Task<ActionResult<IEnumerable<object>>> GetDoctorExaminations([FromQuery] string doctorId)
         {
             if (string.IsNullOrEmpty(doctorId))
+            {
                 return BadRequest("doctorId is required");
+            }
 
-            var exists = await _context.Doctors.AnyAsync(d => d.DoctorId == doctorId);
-            if (!exists)
+            // Kiểm tra bác sĩ tồn tại
+            var doctorExists = await _context.Doctors.AnyAsync(d => d.DoctorId == doctorId);
+            if (!doctorExists)
+            {
                 return NotFound($"Doctor with ID {doctorId} not found");
+            }
 
-             var examinations = await (
-                 from e in _context.Examinations
-                 where e.DoctorId == doctorId
-                 orderby e.ExaminationDate descending
-                 select new
-                 {
-                        e.ExaminationId,
-                        e.BookingId,
-                        e.ExaminationDate,
-                        e.ExaminationDescription,
-                        e.Result,
-                        e.Status,
-                        e.Note,
-                        e.CreateAt,
-                        PatientName = _context.Patients
-                            .Where(p => p.PatientId == e.PatientId)
-                            .Select(p => p.Name)
-                            .FirstOrDefault(),
-                        // Nếu muốn trả về ExaminationDTO thì map các trường cần thiết
-                 }
-             ).ToListAsync();
+            // Lấy danh sách các buổi khám của bác sĩ
+            var examinations = await _context.Examinations
+                .Include(e => e.Booking)
+                    .ThenInclude(b => b.Patient)
+                .Include(e => e.Booking)
+                    .ThenInclude(b => b.Service)
+                .Where(e => e.DoctorId == doctorId)
+                .OrderByDescending(e => e.ExaminationDate)
+                .ToListAsync();
 
-            return Ok(examinations);
+            // Chuyển đổi kết quả thành đối tượng phù hợp để trả về
+            var result = examinations.Select(e => new
+            {
+                ExaminationId = e.ExaminationId,
+                BookingId = e.BookingId,
+                PatientId = e.PatientId,
+                PatientName = e.Booking?.Patient?.Name,
+                DoctorId = e.DoctorId,
+                ExaminationDate = e.ExaminationDate,
+                ExaminationDescription = e.ExaminationDescription,
+                Result = e.Result,
+                Status = e.Status,
+                Note = e.Note,
+                CreateAt = e.CreateAt,
+                ServiceName = e.Booking?.Service?.Name,
+                ServiceId = e.Booking?.ServiceId
+            }).ToList();
+
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Tạo mới một bản ghi khám bệnh (Examination)
+        /// </summary>
+        /// <param name="examinationCreateDTO">Dữ liệu để tạo bản ghi khám bệnh</param>
+        /// <returns>Bản ghi khám bệnh đã được tạo</returns>
+        [HttpPost("examination")]
+        [Authorize(Roles = "Doctor")]
+        public async Task<ActionResult<object>> CreateExamination([FromBody] ExaminationCreateDTO examinationCreateDTO)
+        {
+            if (examinationCreateDTO == null)
+            {
+                return BadRequest("Examination data is required");
+            }
+
+            if (string.IsNullOrEmpty(examinationCreateDTO.BookingId))
+            {
+                return BadRequest("BookingId is required");
+            }
+
+            // Tìm booking liên quan
+            var booking = await _context.Bookings
+                .Include(b => b.Patient)
+                .Include(b => b.Doctor)
+                .FirstOrDefaultAsync(b => b.BookingId == examinationCreateDTO.BookingId);
+
+            if (booking == null)
+            {
+                return NotFound($"Booking with ID {examinationCreateDTO.BookingId} not found");
+            }
+
+            // ✅ 1. Kiểm tra xem đã có examination cho booking này chưa
+            var existingExamination = await _context.Examinations
+                .FirstOrDefaultAsync(e => e.BookingId == examinationCreateDTO.BookingId);
+
+            if (existingExamination != null)
+            {
+                return BadRequest("Examination already exists for this booking.");
+            }
+
+            // Lấy thông tin từ booking
+            string patientId = booking.PatientId;
+            string doctorId = booking.DoctorId;
+
+            // ✅ 2. Tạo mới examination
+            var examination = new Examination
+            {
+                ExaminationId = "EXM_" + Guid.NewGuid().ToString().Substring(0, 8),
+                BookingId = examinationCreateDTO.BookingId,
+                PatientId = patientId,
+                DoctorId = doctorId,
+                // Fix for CS0019: Operator '??' cannot be applied to operands of type 'DateTime' and 'DateTime'
+                // The issue occurs because DateTime is a value type and cannot be null. Instead, use Nullable<DateTime> (DateTime?) for null checks.
+                ExaminationDate = examinationCreateDTO.ExaminationDate != default ? examinationCreateDTO.ExaminationDate : DateTime.Now,
+                ExaminationDescription = examinationCreateDTO.ExaminationDescription,
+                Result = examinationCreateDTO.Result,
+                Status = examinationCreateDTO.Status,
+                Note = examinationCreateDTO.Note,
+                CreateAt = DateTime.Now
+            };
+
+            _context.Examinations.Add(examination);
+
+            // ✅ 3. Cập nhật trạng thái booking thành "completed" nếu examination đã hoàn thành
+            if (examination.Status?.Trim().ToLower() == "completed" || examination.Status?.Trim().ToLower() == "hoàn thành")
+            {
+                booking.Status = "completed";
+                _context.Entry(booking).State = EntityState.Modified;
+            }
+
+            // ✅ 4. Tạo thông báo cho bệnh nhân
+            var notification = new Notification
+            {
+                NotificationId = "NOTIF_" + Guid.NewGuid().ToString().Substring(0, 8),
+                PatientId = patientId,
+                DoctorId = doctorId,
+                Message = $"Bạn đã hoàn tất buổi khám. Mã khám: {examination.ExaminationId}",
+                MessageForDoctor = $"Bạn đã hoàn tất buổi khám cho bệnh nhân {booking.Patient?.Name}. Mã khám: {examination.ExaminationId}",
+                Time = DateTime.Now,
+                Type = "Examination",
+                BookingId = examination.BookingId,
+                DoctorIsRead = false,
+                PatientIsRead = false
+            };
+
+            _context.Notifications.Add(notification);
+
+            await _context.SaveChangesAsync();
+
+            // Trả về kết quả
+            return Ok(new
+            {
+                ExaminationId = examination.ExaminationId,
+                BookingId = examination.BookingId,
+                PatientId = patientId,
+                DoctorId = doctorId,
+                PatientName = booking.Patient?.Name,
+                DoctorName = booking.Doctor?.DoctorName,
+                ExaminationDate = examination.ExaminationDate,
+                ExaminationDescription = examination.ExaminationDescription,
+                Result = examination.Result,
+                Status = examination.Status,
+                Note = examination.Note,
+                CreateAt = examination.CreateAt,
+                Message = "Examination record created successfully"
+            });
         }
 
         [HttpGet("treatmentplans")]

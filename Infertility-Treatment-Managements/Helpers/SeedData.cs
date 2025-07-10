@@ -703,6 +703,7 @@ namespace Infertility_Treatment_Managements.Helpers
                     TreatmentProcessId = "TPR_1",
                     Type = "appointment",
                     Message = "Vui lòng đến phòng khám để bắt đầu quy trình kích trứng",
+                    MessageForDoctor = "xxxxxxxxxxxx x   xxx xx xx xx xx xxxxxxaxxxx xxxxxxx xxxxxxx xxxxxxxx xxxxxxxx xxxxxxxxxxxxx xxxxxxxxxxx xxxxxx xxx",
                     Time = DateTime.Now.AddDays(4)
                 },
                 new Notification
@@ -713,6 +714,7 @@ namespace Infertility_Treatment_Managements.Helpers
                     BookingId = "BKG_2",
                     Type = "appointment",
                     Message = "Vui lòng đến phòng khám để được tư vấn về quy trình IUI",
+                    MessageForDoctor = "xxxaxxxxx xxxxxxxx x x x  x x x x x x x asdsa  dsa dá asd sa xxxxx xxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxx xxxxxxx xxxxx",
                     Time = DateTime.Now.AddDays(2)
                 },
                 new Notification
@@ -724,6 +726,7 @@ namespace Infertility_Treatment_Managements.Helpers
                     TreatmentProcessId = "TPR_6",
                     Type = "treatment",
                     Message = "Vui lòng đến phòng khám để thực hiện quy trình trữ đông tinh trùng",
+                    MessageForDoctor = "xxxaxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
                     Time = DateTime.Now.AddDays(2)
                 }
             };
@@ -854,7 +857,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         ExaminationDate = DateTime.Now.AddDays(-1),
                         ExaminationDescription = "Vô sinh nguyên phát do tắc ống dẫn trứng. Điều trị bằng phương pháp IVF.",
                         Result = "Kết quả kiểm tra sức khỏe tốt, đủ điều kiện để bắt đầu chu trình IVF",
-                        Status = "Hoàn thành",
+                        Status = "completed",
                         Note = "Cần tiến hành kích trứng theo lịch đã đề ra",
                         CreateAt = DateTime.Now.AddDays(-1)
                     },
@@ -867,7 +870,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         ExaminationDate = DateTime.Now,
                         ExaminationDescription = "Vô sinh do không rụng trứng. Điều trị bằng phương pháp IUI.",
                         Result = "Kết quả siêu âm cho thấy có 3 nang trứng phát triển tốt",
-                        Status = "Hoàn thành",
+                        Status = "in-progress",
                         Note = "Cần theo dõi thêm 3 ngày nữa trước khi tiến hành IUI",
                         CreateAt = DateTime.Now
                     }

@@ -1,6 +1,7 @@
 ﻿using Infertility_Treatment_Managements.DTOs;
 using Infertility_Treatment_Managements.Helpers;
 using Infertility_Treatment_Managements.Models;
+using Infertility_Treatment_Managements.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -18,10 +19,12 @@ namespace Infertility_Treatment_Managements.Controllers
     public class DoctorPatientsController : ControllerBase
     {
         private readonly InfertilityTreatmentManagementContext _context;
+        private readonly IEmailService _emailService;
 
-        public DoctorPatientsController(InfertilityTreatmentManagementContext context)
+        public DoctorPatientsController(InfertilityTreatmentManagementContext context, IEmailService emailService)
         {
             _context = context;
+            _emailService = emailService;
         }
 
         /// <summary>
@@ -209,7 +212,7 @@ namespace Infertility_Treatment_Managements.Controllers
             return Ok(examinations);
         }
 
-        
+
         /// <summary>
         /// Cập nhật ghi chú cho bệnh nhân trong phiên khám
         /// </summary>
@@ -559,6 +562,26 @@ namespace Infertility_Treatment_Managements.Controllers
 
             _context.Notifications.Add(notification);
             await _context.SaveChangesAsync();
+
+            // Gửi email thông báo cho bệnh nhân
+            var emailSubject = "Thông báo: Lịch hẹn mới được tạo";
+            var emailBody = $@"
+                <h2>Thông báo lịch hẹn mới</h2>
+                <p>Kính gửi <b>{patient.Name}</b>,</p>
+                <p>Bác sĩ <b>{doctor.DoctorName}</b> đã tạo một lịch hẹn mới cho bạn với thông tin như sau:</p>
+                <ul>
+                    <li><b>Mã lịch hẹn:</b> {booking.BookingId}</li>
+                    <li><b>Dịch vụ:</b> {service.Name}</li>
+                    <li><b>Ngày hẹn:</b> {booking.DateBooking:dd/MM/yyyy}</li>
+                    <li><b>Thời gian:</b> {slot.StartTime} - {slot.EndTime}</li>
+                    <li><b>Mô tả:</b> {booking.Description}</li>
+                    <li><b>Ghi chú:</b> {booking.Note ?? "Không có"}</li>
+                </ul>
+                <p>Vui lòng đến đúng giờ. Nếu bạn cần thay đổi lịch hẹn, vui lòng liên hệ với chúng tôi ít nhất 24 giờ trước thời gian hẹn.</p>
+                <p>Trân trọng,<br><b>Phòng khám của chúng tôi</b></p>
+            ";
+
+            await _emailService.SendEmailAsync(patient.Email, emailSubject, emailBody);
 
             // Lấy thông tin đầy đủ của booking
             var createdBooking = await _context.Bookings
