@@ -140,6 +140,7 @@ namespace Infertility_Treatment_Managements.Models
                 entity.Property(tp => tp.Status).HasMaxLength(50).IsRequired();
                 entity.Property(tp => tp.TreatmentDescription).HasMaxLength(500).IsRequired();
                 entity.Property(tp => tp.Giaidoan).HasMaxLength(100).IsRequired(false); // Added Giaidoan
+                entity.Property(tp => tp.GhiChu).HasMaxLength(500).IsRequired(false); // Added GhiChu
             });
 
             modelBuilder.Entity<TreatmentProcess>(entity =>

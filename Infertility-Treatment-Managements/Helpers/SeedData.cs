@@ -493,7 +493,8 @@ namespace Infertility_Treatment_Managements.Helpers
                         EndDate = DateTime.Now.AddDays(35),
                         Status = "Thụ tinh trong ống nghiệm",
                         TreatmentDescription = "Khám tổng quát; Kích thích buồng trứng; Chọc hút trứng; Thụ tinh trong ống nghiệm; Nuôi phôi; Chuyển phôi vào tử cung",
-                        Giaidoan = "in-progress" //completed
+                        Giaidoan = "in-progress", //completed
+                        GhiChu = "Bác sĩ thêm ghi chú cho kê hoạch điều trị ở đây" // Thêm ghi chú
                     },
 
                     new TreatmentPlan
@@ -507,7 +508,8 @@ namespace Infertility_Treatment_Managements.Helpers
                         EndDate = DateTime.Now.AddDays(21),
                         Status = "Kích thích nhẹ buồng trứng",
                         TreatmentDescription = "Khám tổng quát; Kích thích nhẹ buồng trứng; Theo dõi nang noãn; Lọc rửa tinh trùng; Bơm tinh trùng vào buồng tử cung",
-                        Giaidoan = "in-progress" 
+                        Giaidoan = "in-progress",
+                        GhiChu = "Bác sĩ thêm ghi chú cho kê hoạch điều trị ở đây" // Thêm ghi chú
                     },
 
                     new TreatmentPlan
@@ -522,7 +524,8 @@ namespace Infertility_Treatment_Managements.Helpers
                         Status = "Lấy mẫu tinh dịch",
                         TreatmentDescription = "Lấy mẫu tinh dịch; Đánh giá chất lượng; Tiến hành trữ đông; Lưu trữ mẫu tại ngân hàng tinh trùng",
                         //Giaidoan = "cancelled" 
-                        Giaidoan = "in-progress" //completed
+                        Giaidoan = "in-progress", //completed
+                        GhiChu = "Bác sĩ thêm ghi chú cho kê hoạch điều trị ở đây" // Thêm ghi chú
                     },
 
 
@@ -537,7 +540,8 @@ namespace Infertility_Treatment_Managements.Helpers
                         EndDate = DateTime.Now.AddDays(10),
                         Status = "Chuẩn bị nội mạc tử cung",
                         TreatmentDescription = "Chuẩn bị nội mạc tử cung; Rã đông phôi; Chuyển phôi vào tử cung",
-                        Giaidoan = "completed" //completed
+                        Giaidoan = "completed", //completed
+                        GhiChu = "Bác sĩ thêm ghi chú cho kê hoạch điều trị ở đây" // Thêm ghi chú
                     }
 
                 };

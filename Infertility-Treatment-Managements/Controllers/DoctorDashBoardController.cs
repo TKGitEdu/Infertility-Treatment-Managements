@@ -635,7 +635,10 @@ namespace Infertility_Treatment_Managements.Controllers
                     EndDate = tp.EndDate != null ? DateOnly.FromDateTime(tp.EndDate.Value) : (DateOnly?)null,
                     tp.Status,
                     tp.TreatmentDescription,
-                    PatientDetailName = tp.PatientDetail != null ? tp.PatientDetail.Name : null
+                    PatientDetailName = tp.PatientDetail != null ? tp.PatientDetail.Name : null,
+                    tp.Giaidoan,
+                    tp.GhiChu
+
                 })
                 .ToListAsync();
 
@@ -665,6 +668,8 @@ namespace Infertility_Treatment_Managements.Controllers
             plan.EndDate = dto.EndDate?.ToDateTime(TimeOnly.MinValue);
             plan.Status = dto.Status;
             plan.TreatmentDescription = dto.TreatmentDescription;
+            plan.Giaidoan = dto.Giaidoan; // Giai đoạn điều trị
+            plan.GhiChu = dto.GhiChu; // Ghi chú nếu có
 
             _context.TreatmentPlans.Update(plan);
             await _context.SaveChangesAsync();
@@ -687,6 +692,7 @@ namespace Infertility_Treatment_Managements.Controllers
             public string? Status { get; set; }
             public string? TreatmentDescription { get; set; }
             public string? Giaidoan { get; set; } // Treatment stage
+            public string? GhiChu { get; set; } // Notes, can be null
         }
 
         [HttpPost("treatmentplan/create")]
@@ -750,7 +756,8 @@ namespace Infertility_Treatment_Managements.Controllers
                 EndDate = dto.EndDate?.ToDateTime(TimeOnly.MinValue),
                 Status = dto.Status ?? "Mới tạo",
                 TreatmentDescription = dto.TreatmentDescription ?? "Chờ bác sĩ cập nhật thông tin",
-                Giaidoan = dto.Giaidoan ?? "Giai đoạn 1"
+                Giaidoan = dto.Giaidoan ?? "Giai đoạn 1",
+                GhiChu = dto.GhiChu
             };
 
             try
@@ -797,6 +804,7 @@ namespace Infertility_Treatment_Managements.Controllers
                         result.Status,
                         result.TreatmentDescription,
                         result.Giaidoan,
+                        result.GhiChu,
                         Doctor = result.Doctor != null ? new
                         {
                             result.Doctor.DoctorId,
@@ -835,6 +843,7 @@ namespace Infertility_Treatment_Managements.Controllers
             public string? TreatmentDescription { get; set; }
             public string? Status { get; set; } // List of stages as semicolon-separated string
             public string? Giaidoan { get; set; } // Current stage, default: "in-progress"
+            public string? GhiChu { get; set; } // Notes, can be null
         }
 
         /// <summary>
@@ -951,7 +960,8 @@ namespace Infertility_Treatment_Managements.Controllers
                         plan.Status,
                         StatusList = plan.Status?.Split(';').Select(s => s.Trim()).ToList(),
                         plan.TreatmentDescription,
-                        plan.Giaidoan
+                        plan.Giaidoan,
+                        plan.GhiChu
                     }
                 });
             }

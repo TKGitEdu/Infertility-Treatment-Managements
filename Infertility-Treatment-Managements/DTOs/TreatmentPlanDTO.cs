@@ -15,6 +15,7 @@ namespace Infertility_Treatment_Managements.DTOs
         public string Status { get; set; }
         public string TreatmentDescription { get; set; }
         public string Giaidoan { get; set; } // New property for treatment stage
+        public string? GhiChu { get; set; } // Thêm trường GhiChu
 
         // Navigation properties
         public DoctorBasicDTO Doctor { get; set; }
@@ -53,5 +54,7 @@ namespace Infertility_Treatment_Managements.DTOs
         public DateOnly? EndDate { get; set; }
         public string Status { get; set; }
         public string TreatmentDescription { get; set; }
+        public string Giaidoan { get; set; } // New property for treatment stage
+        public string? GhiChu { get; set; } // Thêm trường GhiChu
     }
 }
