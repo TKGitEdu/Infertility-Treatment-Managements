@@ -8,6 +8,13 @@ using Infertility_Treatment_Managements.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Thêm đoạn này để đảm bảo ứng dụng lắng nghe trên cổng đúng
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(port))
+{
+    builder.WebHost.UseUrls($"http://*:{port}");
+}
+
 // Add services to the container.
 builder.Services.AddControllers();
 
@@ -108,40 +115,18 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Xóa điều kiện app.Environment.IsDevelopment() để Swagger hoạt động trong mọi môi trường
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Infertility Treatment Management API v1");
+    c.RoutePrefix = "swagger";
+});
+
+// Chỉ sử dụng HTTPS Redirection trong môi trường phát triển
 if (app.Environment.IsDevelopment())
 {
-    app.UseHttpsRedirection(); // Chỉ chuyển hướng HTTPS trong phát triển
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Infertility Treatment Management API v1");
-        c.RoutePrefix = "swagger";
-    });
-
-    // Database setup
-    using (var scope = app.Services.CreateScope())
-    {
-        var services = scope.ServiceProvider;
-        var dbContext = services.GetRequiredService<InfertilityTreatmentManagementContext>();
-
-        //không được chỉnh sửa ******************************
-        // Truncate all tables instead of dropping database
-        //TruncateAllTables(dbContext);
-        //// Recreate database
-        //// Không cần EnsureDeleted/EnsureCreated khi dùng migration
-        //dbContext.Database.EnsureDeleted();
-        //dbContext.Database.EnsureCreated();
-
-        // Seed data
-        //SeedData.Initialize(services);
-        //***************************************************
-    }
-}
-else
-{
-    // Trong môi trường sản xuất không cần chuyển hướng HTTPS
-    // vì Render đã xử lý điều đó
+    app.UseHttpsRedirection();
 }
 
 // Thay thế hàm TruncateAllTables hiện tại bằng hàm sau
