@@ -20,6 +20,9 @@
 **/obj
 **/secrets.dev.yaml
 **/values.dev.yaml
+**/appsettings.Development.json
+**/*Development.json
+**/*.Development.*
 LICENSE
 README.md
 !**/.gitignore
