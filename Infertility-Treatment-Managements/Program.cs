@@ -1,32 +1,38 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Infertility_Treatment_Managements.Models;
+﻿using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+
+using Infertility_Treatment_Managements.Models;
 using Infertility_Treatment_Managements.Services;
 using Infertility_Treatment_Managements.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Thêm đoạn này để đảm bảo ứng dụng lắng nghe trên cổng đúng
+// Cấu hình để lắng nghe trên cổng từ biến môi trường PORT (Render sử dụng)
 var port = Environment.GetEnvironmentVariable("PORT");
-if (!string.IsNullOrEmpty(port))
+if (!string.IsNullOrEmpty(port) && int.TryParse(port, out var parsedPort))
 {
-    builder.WebHost.UseUrls($"http://*:{port}");
+    builder.WebHost.UseUrls($"http://*:{parsedPort}");
 }
 
-// Add services to the container.
-builder.Services.AddControllers();
+// Cấu hình ForwardedHeaders để xử lý đúng proxy headers từ Render
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
+// Đăng ký các dịch vụ
+builder.Services.AddControllers();
 builder.Services.AddDbContext<InfertilityTreatmentManagementContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// Register EmailService
 builder.Services.AddScoped<IEmailService, EmailService>();
-
 builder.Services.AddEndpointsApiExplorer();
 
-// Configure Swagger
+// Cấu hình Swagger
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
@@ -36,7 +42,6 @@ builder.Services.AddSwaggerGen(c =>
         Description = "API for Infertility Treatment Management System"
     });
 
-    // Add JWT authentication to Swagger
     c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -58,23 +63,23 @@ builder.Services.AddSwaggerGen(c =>
                     Id = "Bearer"
                 }
             },
-            new string[] {}
+            Array.Empty<string>()
         }
     });
 });
 
-// Add CORS configuration
+// Cấu hình CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
-        builder => builder
+        policyBuilder => policyBuilder
             .AllowAnyOrigin()
             .AllowAnyMethod()
             .AllowAnyHeader()
             .WithExposedHeaders("Authorization"));
 });
 
-// Add JWT configuration
+// Cấu hình JWT
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = Encoding.UTF8.GetBytes(jwtSettings["SecretKey"] ?? "defaultsecretkey12345678901234567890");
 
@@ -97,30 +102,13 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// Cấu hình Kestrel để lắng nghe trên cổng do Render quy định
-builder.WebHost.ConfigureKestrel(serverOptions =>
-{
-    // Sửa đoạn code cấu hình URL để đảm bảo hỗ trợ cả HTTPS
-    var port = Environment.GetEnvironmentVariable("PORT");
-    if (!string.IsNullOrEmpty(port))
-    {
-        // Chỉ định rõ rằng ứng dụng chấp nhận cả HTTP và HTTPS
-        builder.WebHost.UseUrls($"http://*:{port}", $"https://*:{port}");
-    }
-
-    // Thêm đoạn này để cấu hình ForwardedHeaders
-    builder.Services.Configure<ForwardedHeadersOptions>(options =>
-    {
-        options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
-        options.KnownNetworks.Clear();
-        options.KnownProxies.Clear();
-    });
-});
-
+// Xây dựng ứng dụng
 var app = builder.Build();
-// Thêm dòng này vào đầu middleware pipeline, ngay sau var app = builder.Build();
+
+// Đảm bảo các proxy header được xử lý đúng
 app.UseForwardedHeaders();
-// Xóa điều kiện app.Environment.IsDevelopment() để Swagger hoạt động trong mọi môi trường
+
+// Luôn hiển thị Swagger UI bất kể môi trường
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
@@ -128,27 +116,40 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger";
 });
 
-// Chỉ sử dụng HTTPS Redirection trong môi trường phát triển
-if (app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
-// Bật HSTS trong môi trường sản xuất
-if (!app.Environment.IsDevelopment())
-{
-    app.UseHsts();
-}
-// Thêm middleware xử lý ngoại lệ
+// Xử lý ngoại lệ và bảo mật dựa trên môi trường
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
+    app.UseHttpsRedirection();
+
+    // Database setup chỉ trong môi trường phát triển
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        var dbContext = services.GetRequiredService<InfertilityTreatmentManagementContext>();
+        // Seed data hoặc các tác vụ database khác nếu cần
+    }
 }
 else
 {
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
-// Thay thế hàm TruncateAllTables hiện tại bằng hàm sau
+
+// Đăng ký và cấu hình các middleware
+app.UseDefaultFiles(); // Cho phép file mặc định như index.html
+app.UseStaticFiles(); // Cho phép phục vụ file tĩnh từ thư mục wwwroot
+app.UseCors("AllowAll");
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
+
+// Thêm fallback route để đảm bảo route không tìm thấy được xử lý đúng
+app.MapFallbackToController("Get", "Home");
+
+app.Run();
+
+// Hàm hỗ trợ - giữ lại nếu cần
 static void TruncateAllTables(InfertilityTreatmentManagementContext context)
 {
     try
@@ -156,7 +157,7 @@ static void TruncateAllTables(InfertilityTreatmentManagementContext context)
         // Cách an toàn: Xóa dữ liệu theo thứ tự phù hợp với ràng buộc khóa ngoại
         Console.WriteLine("Bắt đầu xóa dữ liệu từ tất cả các bảng...");
 
-        // 1. Xóa dữ liệu từ các bảng con trước (không có bảng khác phụ thuộc)
+        // 1. Xóa dữ liệu từ các bảng con trước
         context.Database.ExecuteSqlRaw("DELETE FROM \"Examinations\";");
         context.Database.ExecuteSqlRaw("DELETE FROM \"Payments\";");
         context.Database.ExecuteSqlRaw("DELETE FROM \"Ratings\";");
@@ -169,7 +170,7 @@ static void TruncateAllTables(InfertilityTreatmentManagementContext context)
         context.Database.ExecuteSqlRaw("DELETE FROM \"TreatmentProcesses\";");
         context.Database.ExecuteSqlRaw("DELETE FROM \"Bookings\";");
 
-        // 3. Xóa các bảng cha trước khi xóa các liên kết
+        // 3. Xóa các bảng cha
         context.Database.ExecuteSqlRaw("DELETE FROM \"TreatmentPlans\";");
         context.Database.ExecuteSqlRaw("DELETE FROM \"PatientDetails\";");
         context.Database.ExecuteSqlRaw("DELETE FROM \"Patients\";");
@@ -180,9 +181,8 @@ static void TruncateAllTables(InfertilityTreatmentManagementContext context)
         context.Database.ExecuteSqlRaw("DELETE FROM \"BlogPosts\";");
         context.Database.ExecuteSqlRaw("DELETE FROM \"ContentPages\";");
 
-        // 4. Cuối cùng xóa các bảng cơ bản
-        context.Database.ExecuteSqlRaw("DELETE FROM \"Users\" WHERE \"Username\" != 'admin';"); // Giữ lại admin
-                                                                                                // context.Database.ExecuteSqlRaw("DELETE FROM \"Roles\";"); // Không xóa Roles
+        // 4. Giữ lại admin
+        context.Database.ExecuteSqlRaw("DELETE FROM \"Users\" WHERE \"Username\" != 'admin';");
 
         Console.WriteLine("Đã xóa dữ liệu thành công");
     }
@@ -195,10 +195,3 @@ static void TruncateAllTables(InfertilityTreatmentManagementContext context)
         }
     }
 }
-
-app.UseCors("AllowAll");
-app.UseAuthentication();
-app.UseAuthorization();
-app.MapControllers();
-
-app.Run();
