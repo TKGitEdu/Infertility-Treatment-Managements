@@ -703,7 +703,7 @@ namespace Infertility_Treatment_Managements.Helpers
                     TreatmentProcessId = "TPR_1",
                     Type = "appointment",
                     Message = "Vui lòng đến phòng khám để bắt đầu quy trình kích trứng",
-                    MessageForDoctor = "xxxxxxxxxxxx x   xxx xx xx xx xx xxxxxxaxxxx xxxxxxx xxxxxxx xxxxxxxx xxxxxxxx xxxxxxxxxxxxx xxxxxxxxxxx xxxxxx xxx",
+                    MessageForDoctor = "Bạn vui lòng chuẩn bị để tiến hành quy trình kích trứng với lịch được đặt",
                     Time = DateTime.Now.AddDays(4)
                 },
                 new Notification
@@ -714,7 +714,7 @@ namespace Infertility_Treatment_Managements.Helpers
                     BookingId = "BKG_2",
                     Type = "appointment",
                     Message = "Vui lòng đến phòng khám để được tư vấn về quy trình IUI",
-                    MessageForDoctor = "xxxaxxxxx xxxxxxxx x x x  x x x x x x x asdsa  dsa dá asd sa xxxxx xxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxx xxxxxxx xxxxx",
+                    MessageForDoctor = "Bệnh nhân đã đặt lịch khám với bạn để tư vấn về quy trình IUI",
                     Time = DateTime.Now.AddDays(2)
                 },
                 new Notification
@@ -726,7 +726,8 @@ namespace Infertility_Treatment_Managements.Helpers
                     TreatmentProcessId = "TPR_6",
                     Type = "treatment",
                     Message = "Vui lòng đến phòng khám để thực hiện quy trình trữ đông tinh trùng",
-                    MessageForDoctor = "xxxaxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                    //tạo cho tui cái thông báo doctor
+                    MessageForDoctor= "Bệnh nhân đã đặt lịch khám dịch vụ thực hiện quy trình trữ đông tinh trùng",
                     Time = DateTime.Now.AddDays(2)
                 }
             };

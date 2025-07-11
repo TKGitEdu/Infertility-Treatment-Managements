@@ -12,14 +12,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 builder.Services.AddDbContext<InfertilityTreatmentManagementContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
-        sqlServerOptionsAction: sqlOptions =>
-        {
-            sqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 5,
-                maxRetryDelay: TimeSpan.FromSeconds(30),
-                errorNumbersToAdd: null);
-        }));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 
 // Register EmailService
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -124,9 +118,9 @@ if (app.Environment.IsDevelopment())
         var services = scope.ServiceProvider;
         var dbContext = services.GetRequiredService<InfertilityTreatmentManagementContext>();
 
-        // Recreate database
-        dbContext.Database.EnsureDeleted();
-        dbContext.Database.EnsureCreated();
+        //// Recreate database
+        //dbContext.Database.EnsureDeleted();
+        //dbContext.Database.EnsureCreated();
 
         // Seed data
         SeedData.Initialize(services);
