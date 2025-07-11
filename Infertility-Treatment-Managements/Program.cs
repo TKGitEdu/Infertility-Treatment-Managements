@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Infertility_Treatment_Managements.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -118,14 +118,67 @@ if (app.Environment.IsDevelopment())
         var services = scope.ServiceProvider;
         var dbContext = services.GetRequiredService<InfertilityTreatmentManagementContext>();
 
+        //không được chỉnh sửa ******************************
+        // Truncate all tables instead of dropping database
+        //TruncateAllTables(dbContext);
         //// Recreate database
+        //// Không cần EnsureDeleted/EnsureCreated khi dùng migration
         //dbContext.Database.EnsureDeleted();
         //dbContext.Database.EnsureCreated();
 
         // Seed data
-        SeedData.Initialize(services);
+        //SeedData.Initialize(services);
+        //***************************************************
     }
 }
+// Thay thế hàm TruncateAllTables hiện tại bằng hàm sau
+static void TruncateAllTables(InfertilityTreatmentManagementContext context)
+{
+    try
+    {
+        // Cách an toàn: Xóa dữ liệu theo thứ tự phù hợp với ràng buộc khóa ngoại
+        Console.WriteLine("Bắt đầu xóa dữ liệu từ tất cả các bảng...");
+
+        // 1. Xóa dữ liệu từ các bảng con trước (không có bảng khác phụ thuộc)
+        context.Database.ExecuteSqlRaw("DELETE FROM \"Examinations\";");
+        context.Database.ExecuteSqlRaw("DELETE FROM \"Payments\";");
+        context.Database.ExecuteSqlRaw("DELETE FROM \"Ratings\";");
+        context.Database.ExecuteSqlRaw("DELETE FROM \"Feedbacks\";");
+        context.Database.ExecuteSqlRaw("DELETE FROM \"Notifications\";");
+        context.Database.ExecuteSqlRaw("DELETE FROM \"TreatmentMedications\";");
+        context.Database.ExecuteSqlRaw("DELETE FROM \"TreatmentSteps\";");
+
+        // 2. Xóa các bảng trung gian
+        context.Database.ExecuteSqlRaw("DELETE FROM \"TreatmentProcesses\";");
+        context.Database.ExecuteSqlRaw("DELETE FROM \"Bookings\";");
+
+        // 3. Xóa các bảng cha trước khi xóa các liên kết
+        context.Database.ExecuteSqlRaw("DELETE FROM \"TreatmentPlans\";");
+        context.Database.ExecuteSqlRaw("DELETE FROM \"PatientDetails\";");
+        context.Database.ExecuteSqlRaw("DELETE FROM \"Patients\";");
+        context.Database.ExecuteSqlRaw("DELETE FROM \"Doctors\";");
+        context.Database.ExecuteSqlRaw("DELETE FROM \"Users\";");
+        context.Database.ExecuteSqlRaw("DELETE FROM \"Services\";");
+        context.Database.ExecuteSqlRaw("DELETE FROM \"Slots\";");
+        context.Database.ExecuteSqlRaw("DELETE FROM \"BlogPosts\";");
+        context.Database.ExecuteSqlRaw("DELETE FROM \"ContentPages\";");
+
+        // 4. Cuối cùng xóa các bảng cơ bản
+        context.Database.ExecuteSqlRaw("DELETE FROM \"Users\" WHERE \"Username\" != 'admin';"); // Giữ lại admin
+                                                                                                // context.Database.ExecuteSqlRaw("DELETE FROM \"Roles\";"); // Không xóa Roles
+
+        Console.WriteLine("Đã xóa dữ liệu thành công");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Lỗi khi xóa dữ liệu: {ex.Message}");
+        if (ex.InnerException != null)
+        {
+            Console.WriteLine($"Chi tiết: {ex.InnerException.Message}");
+        }
+    }
+}
+
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");

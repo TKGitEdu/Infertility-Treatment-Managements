@@ -1,7 +1,5 @@
-﻿// Tạo file SeedData.cs trong thư mục Data hoặc Helpers
-using Infertility_Treatment_Managements.Models;
+﻿using Infertility_Treatment_Managements.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Drawing;
 
 namespace Infertility_Treatment_Managements.Helpers
 {
@@ -11,6 +9,17 @@ namespace Infertility_Treatment_Managements.Helpers
         {
             using var context = new InfertilityTreatmentManagementContext(
                 serviceProvider.GetRequiredService<DbContextOptions<InfertilityTreatmentManagementContext>>());
+
+            // Đảm bảo database tồn tại
+            try
+            {
+                context.Database.CanConnect();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Không thể kết nối tới database: {ex.Message}");
+                return;
+            }
 
             // Thêm roles
             if (!context.Roles.Any())
@@ -30,237 +39,38 @@ namespace Infertility_Treatment_Managements.Helpers
                 {
                     UserId = "USR_1",
                     Username = "admin",
-                    Password = "admin123", // Trong thực tế nên mã hóa mật khẩu
+                    Password = "admin123",
                     FullName = "Administrator",
                     Email = "admin@example.com",
-                    RoleId = "ROLE_1" // Admin role
+                    RoleId = "ROLE_1"
                 };
                 context.Users.Add(adminUser);
                 context.SaveChanges();
             }
 
-            // Thêm bác sĩ mẫu
-            if (!context.Doctors.Any())
+            // Thêm slots
+            if (!context.Slots.Any())
             {
-                // Danh sách bác sĩ mẫu
-                var doctorUsers = new List<(User User, Doctor Doctor)>
+                var slots = new List<Slot>
                 {
-                    (
-                        new User
-                        {
-                            UserId = "USR_DOC1",
-                            Username = "doctor1",
-                            Password = "Doctor@123",
-                            FullName = "Nguyễn Văn An",
-                            Email = "nguyenvanan@example.com",
-                            Phone = "0901234567",
-                            Address = "123 Lê Lợi, Q.1, TP.HCM",
-                            Gender = "Nam",
-                            DateOfBirth = new DateTime(1980, 5, 15),
-                            RoleId = "ROLE_2" // Doctor role
-                        },
-                        new Doctor
-                        {
-                            DoctorId = "DOC_1",
-                            UserId = "USR_DOC1",
-                            DoctorName = "Nguyễn Văn An",
-                            Specialization = "Chuyên gia điều trị hiếm muộn",
-                            Phone = "0901234567",
-                            Email = "nguyenvanan@example.com"
-                        }
-                    ),
-                    (
-                        new User
-                        {
-                            UserId = "USR_DOC2",
-                            Username = "doctor2",
-                            Password = "Doctor@123",
-                            FullName = "Trần Thị Bình",
-                            Email = "tranthibinh@example.com",
-                            Phone = "0912345678",
-                            Address = "456 Nguyễn Huệ, Q.1, TP.HCM",
-                            Gender = "Nữ",
-                            DateOfBirth = new DateTime(1982, 8, 20),
-                            RoleId = "ROLE_2" // Doctor role
-                        },
-                        new Doctor
-                        {
-                            DoctorId = "DOC_2",
-                            UserId = "USR_DOC2",
-                            DoctorName = "Trần Thị Bình",
-                            Specialization = "Chuyên gia IVF",
-                            Phone = "0912345678",
-                            Email = "tranthibinh@example.com"
-                        }
-                    ),
-                    (
-                        new User
-                        {
-                            UserId = "USR_DOC3",
-                            Username = "doctor3",
-                            Password = "Doctor@123",
-                            FullName = "Lê Văn Cường",
-                            Email = "levancuong@example.com",
-                            Phone = "0923456789",
-                            Address = "789 Võ Văn Tần, Q.3, TP.HCM",
-                            Gender = "Nam",
-                            DateOfBirth = new DateTime(1975, 3, 10),
-                            RoleId = "ROLE_2" // Doctor role
-                        },
-                        new Doctor
-                        {
-                            DoctorId = "DOC_3",
-                            UserId = "USR_DOC3",
-                            DoctorName = "Lê Văn Cường",
-                            Specialization = "Chuyên gia IUI",
-                            Phone = "0923456789",
-                            Email = "levancuong@example.com"
-                        }
-                    )
+                    new Slot { SlotId = "SLOT_01", SlotName = "Sáng sớm 06:00-07:00", StartTime = "06:00", EndTime = "07:00" },
+                    new Slot { SlotId = "SLOT_02", SlotName = "Sáng sớm 07:00-08:00", StartTime = "07:00", EndTime = "08:00" },
+                    new Slot { SlotId = "SLOT_03", SlotName = "Sáng 08:00-09:00", StartTime = "08:00", EndTime = "09:00" },
+                    new Slot { SlotId = "SLOT_04", SlotName = "Sáng 09:00-10:00", StartTime = "09:00", EndTime = "10:00" },
+                    new Slot { SlotId = "SLOT_05", SlotName = "Sáng 10:00-11:00", StartTime = "10:00", EndTime = "11:00" },
+                    new Slot { SlotId = "SLOT_06", SlotName = "Sáng 11:00-12:00", StartTime = "11:00", EndTime = "12:00" },
+                    new Slot { SlotId = "SLOT_07", SlotName = "Trưa 12:00-13:00", StartTime = "12:00", EndTime = "13:00" },
+                    new Slot { SlotId = "SLOT_08", SlotName = "Trưa 13:00-14:00", StartTime = "13:00", EndTime = "14:00" },
+                    new Slot { SlotId = "SLOT_09", SlotName = "Chiều 14:00-15:00", StartTime = "14:00", EndTime = "15:00" },
+                    new Slot { SlotId = "SLOT_10", SlotName = "Chiều 15:00-16:00", StartTime = "15:00", EndTime = "16:00" },
+                    new Slot { SlotId = "SLOT_11", SlotName = "Chiều 16:00-17:00", StartTime = "16:00", EndTime = "17:00" },
+                    new Slot { SlotId = "SLOT_12", SlotName = "Chiều 17:00-18:00", StartTime = "17:00", EndTime = "18:00" },
+                    new Slot { SlotId = "SLOT_13", SlotName = "Tối 18:00-19:00", StartTime = "18:00", EndTime = "19:00" },
+                    new Slot { SlotId = "SLOT_14", SlotName = "Tối 19:00-20:00", StartTime = "19:00", EndTime = "20:00" },
+                    new Slot { SlotId = "SLOT_15", SlotName = "Tối 20:00-21:00", StartTime = "20:00", EndTime = "21:00" }
                 };
-
-                // Thêm các bác sĩ vào database
-                foreach (var doctorPair in doctorUsers)
-                {
-                    if (!context.Users.Any(u => u.UserId == doctorPair.User.UserId))
-                    {
-                        context.Users.Add(doctorPair.User);
-                        context.SaveChanges();
-
-                        context.Doctors.Add(doctorPair.Doctor);
-                        context.SaveChanges();
-                    }
-                }
-            }
-
-            // Thêm bệnh nhân mẫu
-            if (!context.Patients.Any())
-            {
-                // Danh sách bệnh nhân mẫu
-                var patientUsers = new List<(User User, Patient Patient, PatientDetail PatientDetail)>
-                {
-                    (
-                        new User
-                        {
-                            UserId = "USR_PAT1",
-                            Username = "patient1",
-                            Password = "Patient@123",
-                            FullName = "Phạm Thị Dung",
-                            Email = "phamthidung@example.com",
-                            Phone = "0934567890",
-                            Address = "123 Lý Tự Trọng, Q.1, TP.HCM",
-                            Gender = "Nữ",
-                            DateOfBirth = new DateTime(1990, 5, 15),
-                            RoleId = "ROLE_3" // Patient role
-                        },
-                        new Patient
-                        {
-                            PatientId = "PAT_1",
-                            UserId = "USR_PAT1",
-                            Name = "Phạm Thị Dung",
-                            Email = "phamthidung@example.com",
-                            Phone = "0934567890",
-                            Address = "123 Lý Tự Trọng, Q.1, TP.HCM",
-                            Gender = "Nữ",
-                            DateOfBirth = new DateTime(1990, 5, 15),
-                            BloodType = "A+",
-                            EmergencyPhoneNumber = "0945678901"
-                        },
-                        new PatientDetail
-                        {
-                            PatientDetailId = "PATD_1",
-                            PatientId = "PAT_1",
-                            Name = "Phạm Thị Dung",
-                            TreatmentStatus = "Đang điều trị"
-                        }
-                    ),
-                    (
-                        new User
-                        {
-                            UserId = "USR_PAT2",
-                            Username = "patient2",
-                            Password = "Patient@123",
-                            FullName = "Nguyễn Thị Em",
-                            Email = "nguyenthiem@example.com",
-                            Phone = "0945678901",
-                            Address = "456 Điện Biên Phủ, Q.3, TP.HCM",
-                            Gender = "Nữ",
-                            DateOfBirth = new DateTime(1988, 7, 25),
-                            RoleId = "ROLE_3" // Patient role
-                        },
-                        new Patient
-                        {
-                            PatientId = "PAT_2",
-                            UserId = "USR_PAT2",
-                            Name = "Nguyễn Thị Em",
-                            Email = "nguyenthiem@example.com",
-                            Phone = "0945678901",
-                            Address = "456 Điện Biên Phủ, Q.3, TP.HCM",
-                            Gender = "Nữ",
-                            DateOfBirth = new DateTime(1988, 7, 25),
-                            BloodType = "B+",
-                            EmergencyPhoneNumber = "0956789012"
-                        },
-                        new PatientDetail
-                        {
-                            PatientDetailId = "PATD_2",
-                            PatientId = "PAT_2",
-                            Name = "Nguyễn Thị Em",
-                            TreatmentStatus = "Mới đăng ký"
-                        }
-                    ),
-                    (
-                        new User
-                        {
-                            UserId = "USR_PAT3",
-                            Username = "patient3",
-                            Password = "Patient@123",
-                            FullName = "Trần Văn Phong",
-                            Email = "tranvanphong@example.com",
-                            Phone = "0956789012",
-                            Address = "789 Cách Mạng Tháng 8, Q.10, TP.HCM",
-                            Gender = "Nam",
-                            DateOfBirth = new DateTime(1985, 11, 10),
-                            RoleId = "ROLE_3" // Patient role
-                        },
-                        new Patient
-                        {
-                            PatientId = "PAT_3",
-                            UserId = "USR_PAT3",
-                            Name = "Trần Văn Phong",
-                            Email = "tranvanphong@example.com",
-                            Phone = "0956789012",
-                            Address = "789 Cách Mạng Tháng 8, Q.10, TP.HCM",
-                            Gender = "Nam",
-                            DateOfBirth = new DateTime(1985, 11, 10),
-                            BloodType = "O+",
-                            EmergencyPhoneNumber = "0967890123"
-                        },
-                        new PatientDetail
-                        {
-                            PatientDetailId = "PATD_3",
-                            PatientId = "PAT_3",
-                            Name = "Trần Văn Phong",
-                            TreatmentStatus = "Đang điều trị"
-                        }
-                    )
-                };
-
-                // Thêm các bệnh nhân vào database
-                foreach (var patientPair in patientUsers)
-                {
-                    if (!context.Users.Any(u => u.UserId == patientPair.User.UserId))
-                    {
-                        context.Users.Add(patientPair.User);
-                        context.SaveChanges();
-
-                        context.Patients.Add(patientPair.Patient);
-                        context.SaveChanges();
-
-                        context.PatientDetails.Add(patientPair.PatientDetail);
-                        context.SaveChanges();
-                    }
-                }
+                context.Slots.AddRange(slots);
+                context.SaveChanges();
             }
 
             // Thêm dịch vụ
@@ -268,7 +78,6 @@ namespace Infertility_Treatment_Managements.Helpers
             {
                 var services = new List<Service>
                 {
-                    // Dịch vụ tư vấn
                     new Service
                     {
                         ServiceId = "SRV_1",
@@ -287,8 +96,6 @@ namespace Infertility_Treatment_Managements.Helpers
                         Price = 800000M,
                         Status = "Active"
                     },
-
-                    // Dịch vụ điều trị hiếm muộn
                     new Service
                     {
                         ServiceId = "SRV_3",
@@ -343,8 +150,6 @@ namespace Infertility_Treatment_Managements.Helpers
                         Price = 60000000M,
                         Status = "Active"
                     },
-
-                    // Dịch vụ xét nghiệm
                     new Service
                     {
                         ServiceId = "SRV_9",
@@ -363,523 +168,770 @@ namespace Infertility_Treatment_Managements.Helpers
                         Price = 800000M,
                         Status = "Active"
                     },
-                    // Add new FET service
-                        new Service
-                        {
-                            ServiceId = "SRV_FET",
-                            Name = "Chuyển phôi đông lạnh (FET)",
-                            Description = "Quy trình rã đông và chuyển phôi đã trữ đông vào tử cung của bệnh nhân",
-                            Category = "InfertilityTreatment",
-                            Price = 35000000M,
-                            Status = "Active"
-                        }
+                    new Service
+                    {
+                        ServiceId = "SRV_FET",
+                        Name = "Chuyển phôi đông lạnh (FET)",
+                        Description = "Quy trình rã đông và chuyển phôi đã trữ đông vào tử cung của bệnh nhân",
+                        Category = "InfertilityTreatment",
+                        Price = 35000000M,
+                        Status = "Active"
+                    }
                 };
-
                 context.Services.AddRange(services);
                 context.SaveChanges();
             }
 
-            // Thêm slots
-            // Thêm slots (24 khung giờ trong ngày)
-            if (!context.Slots.Any())
+            // Thêm bác sĩ mẫu
+            if (!context.Doctors.Any())
             {
-                var slots = new List<Slot>();
+                var doctorUsers = new List<(User User, Doctor Doctor)>
+                {
+                    (
+                        new User
+                        {
+                            UserId = "USR_DOC1",
+                            Username = "doctor1",
+                            Password = "Doctor@123",
+                            FullName = "Nguyễn Văn An",
+                            Email = "nguyenvanan@example.com",
+                            Phone = "0901234567",
+                            Address = "123 Lê Lợi, Q.1, TP.HCM",
+                            Gender = "Nam",
+                            DateOfBirth = DateTime.SpecifyKind(new DateTime(1980, 5, 15), DateTimeKind.Utc),
+                            RoleId = "ROLE_2"
+                        },
+                        new Doctor
+                        {
+                            DoctorId = "DOC_1",
+                            UserId = "USR_DOC1",
+                            DoctorName = "Nguyễn Văn An",
+                            Specialization = "Chuyên gia điều trị hiếm muộn",
+                            Phone = "0901234567",
+                            Email = "nguyenvanan@example.com"
+                        }
+                    ),
+                    (
+                        new User
+                        {
+                            UserId = "USR_DOC2",
+                            Username = "doctor2",
+                            Password = "Doctor@123",
+                            FullName = "Trần Thị Bình",
+                            Email = "tranthibinh@example.com",
+                            Phone = "0912345678",
+                            Address = "456 Nguyễn Huệ, Q.1, TP.HCM",
+                            Gender = "Nữ",
+                            DateOfBirth = DateTime.SpecifyKind(new DateTime(1982, 8, 20), DateTimeKind.Utc),
+                            RoleId = "ROLE_2"
+                        },
+                        new Doctor
+                        {
+                            DoctorId = "DOC_2",
+                            UserId = "USR_DOC2",
+                            DoctorName = "Trần Thị Bình",
+                            Specialization = "Chuyên gia IVF",
+                            Phone = "0912345678",
+                            Email = "tranthibinh@example.com"
+                        }
+                    ),
+                    (
+                        new User
+                        {
+                            UserId = "USR_DOC3",
+                            Username = "doctor3",
+                            Password = "Doctor@123",
+                            FullName = "Lê Văn Cường",
+                            Email = "levancuong@example.com",
+                            Phone = "0923456789",
+                            Address = "789 Võ Văn Tần, Q.3, TP.HCM",
+                            Gender = "Nam",
+                            DateOfBirth = DateTime.SpecifyKind(new DateTime(1975, 3, 10), DateTimeKind.Utc),
+                            RoleId = "ROLE_2"
+                        },
+                        new Doctor
+                        {
+                            DoctorId = "DOC_3",
+                            UserId = "USR_DOC3",
+                            DoctorName = "Lê Văn Cường",
+                            Specialization = "Chuyên gia IUI",
+                            Phone = "0923456789",
+                            Email = "levancuong@example.com"
+                        }
+                    )
+                };
 
-                // Khung giờ sáng sớm (06:00 - 07:59)
-                slots.Add(new Slot { SlotId = "SLOT_01", SlotName = "Sáng sớm 06:00-07:00", StartTime = "06:00", EndTime = "07:00" });
-                slots.Add(new Slot { SlotId = "SLOT_02", SlotName = "Sáng sớm 07:00-08:00", StartTime = "07:00", EndTime = "08:00" });
+                foreach (var doctorPair in doctorUsers)
+                {
+                    if (!context.Users.Any(u => u.UserId == doctorPair.User.UserId))
+                    {
+                        context.Users.Add(doctorPair.User);
+                        context.SaveChanges();
+                        context.Doctors.Add(doctorPair.Doctor);
+                        context.SaveChanges();
+                    }
+                }
+            }
 
-                // Khung giờ sáng (08:00 - 11:59)
-                slots.Add(new Slot { SlotId = "SLOT_03", SlotName = "Sáng 08:00-09:00", StartTime = "08:00", EndTime = "09:00" });
-                slots.Add(new Slot { SlotId = "SLOT_04", SlotName = "Sáng 09:00-10:00", StartTime = "09:00", EndTime = "10:00" });
-                slots.Add(new Slot { SlotId = "SLOT_05", SlotName = "Sáng 10:00-11:00", StartTime = "10:00", EndTime = "11:00" });
-                slots.Add(new Slot { SlotId = "SLOT_06", SlotName = "Sáng 11:00-12:00", StartTime = "11:00", EndTime = "12:00" });
+            // Thêm bệnh nhân mẫu
+            if (!context.Patients.Any())
+            {
+                var patientUsers = new List<(User User, Patient Patient, PatientDetail PatientDetail)>
+                {
+                    (
+                        new User
+                        {
+                            UserId = "USR_PAT1",
+                            Username = "patient1",
+                            Password = "Patient@123",
+                            FullName = "Phạm Thị Dung",
+                            Email = "phamthidung@example.com",
+                            Phone = "0934567890",
+                            Address = "123 Lý Tự Trọng, Q.1, TP.HCM",
+                            Gender = "Nữ",
+                            DateOfBirth = DateTime.SpecifyKind(new DateTime(1990, 5, 15), DateTimeKind.Utc),
+                            RoleId = "ROLE_3"
+                        },
+                        new Patient
+                        {
+                            PatientId = "PAT_1",
+                            UserId = "USR_PAT1",
+                            Name = "Phạm Thị Dung",
+                            Email = "phamthidung@example.com",
+                            Phone = "0934567890",
+                            Address = "123 Lý Tự Trọng, Q.1, TP.HCM",
+                            Gender = "Nữ",
+                            DateOfBirth = DateTime.SpecifyKind(new DateTime(1990, 5, 15), DateTimeKind.Utc),
+                            BloodType = "A+",
+                            EmergencyPhoneNumber = "0945678901"
+                        },
+                        new PatientDetail
+                        {
+                            PatientDetailId = "PATD_1",
+                            PatientId = "PAT_1",
+                            Name = "Phạm Thị Dung",
+                            TreatmentStatus = "Đang điều trị"
+                        }
+                    ),
+                    (
+                        new User
+                        {
+                            UserId = "USR_PAT2",
+                            Username = "patient2",
+                            Password = "Patient@123",
+                            FullName = "Nguyễn Thị Em",
+                            Email = "nguyenthiem@example.com",
+                            Phone = "0945678901",
+                            Address = "456 Điện Biên Phủ, Q.3, TP.HCM",
+                            Gender = "Nữ",
+                            DateOfBirth = DateTime.SpecifyKind(new DateTime(1988, 7, 25), DateTimeKind.Utc),
+                            RoleId = "ROLE_3"
+                        },
+                        new Patient
+                        {
+                            PatientId = "PAT_2",
+                            UserId = "USR_PAT2",
+                            Name = "Nguyễn Thị Em",
+                            Email = "nguyenthiem@example.com",
+                            Phone = "0945678901",
+                            Address = "456 Điện Biên Phủ, Q.3, TP.HCM",
+                            Gender = "Nữ",
+                            DateOfBirth = DateTime.SpecifyKind(new DateTime(1988, 7, 25), DateTimeKind.Utc),
+                            BloodType = "B+",
+                            EmergencyPhoneNumber = "0956789012"
+                        },
+                        new PatientDetail
+                        {
+                            PatientDetailId = "PATD_2",
+                            PatientId = "PAT_2",
+                            Name = "Nguyễn Thị Em",
+                            TreatmentStatus = "Mới đăng ký"
+                        }
+                    ),
+                    (
+                        new User
+                        {
+                            UserId = "USR_PAT3",
+                            Username = "patient3",
+                            Password = "Patient@123",
+                            FullName = "Trần Văn Phong",
+                            Email = "tranvanphong@example.com",
+                            Phone = "0956789012",
+                            Address = "789 Cách Mạng Tháng 8, Q.10, TP.HCM",
+                            Gender = "Nam",
+                            DateOfBirth = DateTime.SpecifyKind(new DateTime(1985, 11, 10), DateTimeKind.Utc),
+                            RoleId = "ROLE_3"
+                        },
+                        new Patient
+                        {
+                            PatientId = "PAT_3",
+                            UserId = "USR_PAT3",
+                            Name = "Trần Văn Phong",
+                            Email = "tranvanphong@example.com",
+                            Phone = "0956789012",
+                            Address = "789 Cách Mạng Tháng 8, Q.10, TP.HCM",
+                            Gender = "Nam",
+                            DateOfBirth = DateTime.SpecifyKind(new DateTime(1985, 11, 10), DateTimeKind.Utc),
+                            BloodType = "O+",
+                            EmergencyPhoneNumber = "0967890123"
+                        },
+                        new PatientDetail
+                        {
+                            PatientDetailId = "PATD_3",
+                            PatientId = "PAT_3",
+                            Name = "Trần Văn Phong",
+                            TreatmentStatus = "Đang điều trị"
+                        }
+                    )
+                };
 
-                // Khung giờ trưa (12:00 - 13:59)
-                slots.Add(new Slot { SlotId = "SLOT_07", SlotName = "Trưa 12:00-13:00", StartTime = "12:00", EndTime = "13:00" });
-                slots.Add(new Slot { SlotId = "SLOT_08", SlotName = "Trưa 13:00-14:00", StartTime = "13:00", EndTime = "14:00" });
-
-                // Khung giờ chiều (14:00 - 17:59)
-                slots.Add(new Slot { SlotId = "SLOT_09", SlotName = "Chiều 14:00-15:00", StartTime = "14:00", EndTime = "15:00" });
-                slots.Add(new Slot { SlotId = "SLOT_10", SlotName = "Chiều 15:00-16:00", StartTime = "15:00", EndTime = "16:00" });
-                slots.Add(new Slot { SlotId = "SLOT_11", SlotName = "Chiều 16:00-17:00", StartTime = "16:00", EndTime = "17:00" });
-                slots.Add(new Slot { SlotId = "SLOT_12", SlotName = "Chiều 17:00-18:00", StartTime = "17:00", EndTime = "18:00" });
-
-                // Khung giờ tối (18:00 - 20:59)
-                slots.Add(new Slot { SlotId = "SLOT_13", SlotName = "Tối 18:00-19:00", StartTime = "18:00", EndTime = "19:00" });
-                slots.Add(new Slot { SlotId = "SLOT_14", SlotName = "Tối 19:00-20:00", StartTime = "19:00", EndTime = "20:00" });
-                slots.Add(new Slot { SlotId = "SLOT_15", SlotName = "Tối 20:00-21:00", StartTime = "20:00", EndTime = "21:00" });
-
-                context.Slots.AddRange(slots);
-                context.SaveChanges();
+                foreach (var patientPair in patientUsers)
+                {
+                    if (!context.Users.Any(u => u.UserId == patientPair.User.UserId))
+                    {
+                        context.Users.Add(patientPair.User);
+                        context.SaveChanges();
+                        context.Patients.Add(patientPair.Patient);
+                        context.SaveChanges();
+                        context.PatientDetails.Add(patientPair.PatientDetail);
+                        context.SaveChanges();
+                    }
+                }
             }
 
             // Thêm đăng ký dịch vụ hiếm muộn mẫu
-            if (!context.Bookings.Any())
+            if (!context.Bookings.Any() && context.Doctors.Any() && context.Patients.Any() && context.Services.Any() && context.Slots.Any())
             {
-                var bookings = new List<Booking>
+                try
                 {
-                    new Booking
+                    var bookings = new List<Booking>
                     {
-                        BookingId = "BKG_1",
-                        PatientId = "PAT_1",
-                        DoctorId = "DOC_1",
-                        ServiceId = "SRV_3", // IVF
-                        SlotId = "SLOT_04", // Sáng 09:00-10:00
-                        DateBooking = DateTime.Now.AddDays(1),
-                        Description = "Đăng ký điều trị IVF",
-                        CreateAt = DateTime.Now.AddDays(-2),
-                        Status = "Pending",
-                        Note = "Đã xác nhận qua điện thoại"
-                    },
-                    new Booking
-                    {
-                        BookingId = "BKG_2",
-                        PatientId = "PAT_2",
-                        DoctorId = "DOC_2",
-                        ServiceId = "SRV_4", // IUI
-                        SlotId = "SLOT_10", // Chiều 15:00-16:00
-                        DateBooking = DateTime.Now.AddDays(3),
-                        Description = "Đăng ký điều trị IUI",
-                        CreateAt = DateTime.Now.AddDays(-1),
-                        Status = "Pending",
-                        Note = "Lần đầu tiên thực hiện IUI"
-                    },
-                    new Booking
-                    {
-                        BookingId = "BKG_3",
-                        PatientId = "PAT_3",
-                        DoctorId = "DOC_3",
-                        ServiceId = "SRV_6", // trữ đông tinh trùng
-                        SlotId = "SLOT_06", // Sáng 11:00-12:00
-                        DateBooking = DateTime.Now.AddDays(2),
-                        Description = "Tư vấn về điều trị hiếm muộn",
-                        CreateAt = DateTime.Now.AddDays(-3),
-                        Status = "Pending",
-                        Note = "Cần tư vấn các phương pháp điều trị phù hợp"
-                    },
-                    new Booking
-                    {
-                        BookingId = "BKG_4",
-                        PatientId = "PAT_2",
-                        DoctorId = "DOC_2",
-                        ServiceId = "SRV_FET", // Tư vấn ban đầu
-                        SlotId = "SLOT_07", // Sáng 11:00-12:00
-                        DateBooking = DateTime.Now.AddDays(2),
-                        Description = "Trử đông tinh trùng",
-                        CreateAt = DateTime.Now.AddDays(-3),
-                        Status = "Pending",
-                        Note = "Cần tư vấn các phương pháp điều trị phù hợp"
-                    }
-                };
-
-                context.Bookings.AddRange(bookings);
-                context.SaveChanges();
-            }
-
-            // Thêm kế hoạch điều trị mẫu với ServiceId
-            if (!context.TreatmentPlans.Any())
-            {
-                var treatmentPlans = new List<TreatmentPlan>
-                {
-                    new TreatmentPlan
-                    {
-                        TreatmentPlanId = "TP_1",
-                        DoctorId = "DOC_1",
-                        PatientDetailId = "PATD_1",
-                        ServiceId = "SRV_3", // IVF service
-                        Method = "IVF",
-                        StartDate = DateTime.Now.AddDays(5),
-                        EndDate = DateTime.Now.AddDays(35),
-                        Status = "Thụ tinh trong ống nghiệm",
-                        TreatmentDescription = "Khám tổng quát; Kích thích buồng trứng; Chọc hút trứng; Thụ tinh trong ống nghiệm; Nuôi phôi; Chuyển phôi vào tử cung",
-                        Giaidoan = "in-progress", //completed
-                        GhiChu = "Bác sĩ thêm ghi chú cho kê hoạch điều trị ở đây" // Thêm ghi chú
-                    },
-
-                    new TreatmentPlan
-                    {
-                        TreatmentPlanId = "TP_2",
-                        DoctorId = "DOC_2",
-                        PatientDetailId = "PATD_2",
-                        ServiceId = "SRV_4", // IUI service
-                        Method = "IUI",
-                        StartDate = DateTime.Now.AddDays(7),
-                        EndDate = DateTime.Now.AddDays(21),
-                        Status = "Kích thích nhẹ buồng trứng",
-                        TreatmentDescription = "Khám tổng quát; Kích thích nhẹ buồng trứng; Theo dõi nang noãn; Lọc rửa tinh trùng; Bơm tinh trùng vào buồng tử cung",
-                        Giaidoan = "in-progress",
-                        GhiChu = "Bác sĩ thêm ghi chú cho kê hoạch điều trị ở đây" // Thêm ghi chú
-                    },
-
-                    new TreatmentPlan
-                    {
-                        TreatmentPlanId = "TP_3",
-                        DoctorId = "DOC_3",
-                        PatientDetailId = "PATD_3",
-                        ServiceId = "SRV_6", // Trữ đông tinh trùng
-                        Method = "Trữ đông tinh trùng",
-                        StartDate = DateTime.Now.AddDays(3),
-                        EndDate = DateTime.Now.AddDays(4),
-                        Status = "Lấy mẫu tinh dịch",
-                        TreatmentDescription = "Lấy mẫu tinh dịch; Đánh giá chất lượng; Tiến hành trữ đông; Lưu trữ mẫu tại ngân hàng tinh trùng",
-                        //Giaidoan = "cancelled" 
-                        Giaidoan = "in-progress", //completed
-                        GhiChu = "Bác sĩ thêm ghi chú cho kê hoạch điều trị ở đây" // Thêm ghi chú
-                    },
-
-
-                    new TreatmentPlan
-                    {
-                        TreatmentPlanId = "TP_FET_1",
-                        DoctorId = "DOC_2",
-                        PatientDetailId = "PATD_2",
-                        ServiceId = "SRV_FET", // Mã dịch vụ FET
-                        Method = "FET",
-                        StartDate = DateTime.Now.AddDays(5),
-                        EndDate = DateTime.Now.AddDays(10),
-                        Status = "Chuẩn bị nội mạc tử cung",
-                        TreatmentDescription = "Chuẩn bị nội mạc tử cung; Rã đông phôi; Chuyển phôi vào tử cung",
-                        Giaidoan = "completed", //completed
-                        GhiChu = "Bác sĩ thêm ghi chú cho kê hoạch điều trị ở đây" // Thêm ghi chú
-                    }
-
-                };
-
-                context.TreatmentPlans.AddRange(treatmentPlans);
-                context.SaveChanges();
-            }
-
-            // Tạo các TreatmentSteps từ TreatmentPlans đã thêm
-            if (!context.TreatmentSteps.Any())
-            {
-                var plans = context.TreatmentPlans.ToList();
-                var treatmentSteps = new List<TreatmentStep>();
-
-                foreach (var plan in plans)
-                {
-                    var steps = plan.TreatmentDescription.Split(';');
-                    for (int i = 0; i < steps.Length; i++)
-                    {
-                        var step = new TreatmentStep
+                        new Booking
                         {
-                            TreatmentStepId ="TS_"+Guid.NewGuid().ToString(), // Tạo ID ngẫu nhiên
-                            TreatmentPlanId = plan.TreatmentPlanId,
-                            StepOrder = i + 1,
-                            StepName = steps[i].Trim(),
+                            BookingId = "BKG_1",
+                            PatientId = "PAT_1",
+                            DoctorId = "DOC_1",
+                            ServiceId = "SRV_3",
+                            SlotId = "SLOT_04",
+                            DateBooking = DateTime.UtcNow.AddDays(1),
+                            Description = "Đăng ký điều trị IVF",
+                            CreateAt = DateTime.UtcNow.AddDays(-2),
+                            Status = "Pending",
+                            Note = "Đã xác nhận qua điện thoại"
+                        },
+                        new Booking
+                        {
+                            BookingId = "BKG_2",
+                            PatientId = "PAT_2",
+                            DoctorId = "DOC_2",
+                            ServiceId = "SRV_4",
+                            SlotId = "SLOT_10",
+                            DateBooking = DateTime.UtcNow.AddDays(3),
+                            Description = "Đăng ký điều trị IUI",
+                            CreateAt = DateTime.UtcNow.AddDays(-1),
+                            Status = "Pending",
+                            Note = "Lần đầu tiên thực hiện IUI"
+                        },
+                        new Booking
+                        {
+                            BookingId = "BKG_3",
+                            PatientId = "PAT_3",
+                            DoctorId = "DOC_3",
+                            ServiceId = "SRV_6",
+                            SlotId = "SLOT_06",
+                            DateBooking = DateTime.UtcNow.AddDays(2),
+                            Description = "Tư vấn về điều trị hiếm muộn",
+                            CreateAt = DateTime.UtcNow.AddDays(-3),
+                            Status = "Pending",
+                            Note = "Cần tư vấn các phương pháp điều trị phù hợp"
+                        },
+                        new Booking
+                        {
+                            BookingId = "BKG_4",
+                            PatientId = "PAT_2",
+                            DoctorId = "DOC_2",
+                            ServiceId = "SRV_FET",
+                            SlotId = "SLOT_07",
+                            DateBooking = DateTime.UtcNow.AddDays(2),
+                            Description = "Trữ đông tinh trùng",
+                            CreateAt = DateTime.UtcNow.AddDays(-3),
+                            Status = "Pending",
+                            Note = "Cần tư vấn các phương pháp điều trị phù hợp"
+                        }
+                    };
+
+                    context.Bookings.AddRange(bookings);
+                    context.SaveChanges();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Lỗi khi thêm bookings: {ex.Message}");
+                }
+            }
+
+            // Thêm kế hoạch điều trị mẫu
+            if (!context.TreatmentPlans.Any() && context.Doctors.Any() && context.PatientDetails.Any() && context.Services.Any())
+            {
+                try
+                {
+                    var treatmentPlans = new List<TreatmentPlan>
+                    {
+                        new TreatmentPlan
+                        {
+                            TreatmentPlanId = "TP_1",
+                            DoctorId = "DOC_1",
+                            PatientDetailId = "PATD_1",
+                            ServiceId = "SRV_3",
+                            Method = "IVF",
+                            StartDate = DateTime.UtcNow.AddDays(5),
+                            EndDate = DateTime.UtcNow.AddDays(35),
+                            Status = "Thụ tinh trong ống nghiệm",
+                            TreatmentDescription = "Khám tổng quát; Kích thích buồng trứng; Chọc hút trứng; Thụ tinh trong ống nghiệm; Nuôi phôi; Chuyển phôi vào tử cung",
+                            Giaidoan = "in-progress",
+                            GhiChu = "Bác sĩ thêm ghi chú cho kê hoạch điều trị ở đây"
+                        },
+                        new TreatmentPlan
+                        {
+                            TreatmentPlanId = "TP_2",
+                            DoctorId = "DOC_2",
+                            PatientDetailId = "PATD_2",
+                            ServiceId = "SRV_4",
+                            Method = "IUI",
+                            StartDate = DateTime.UtcNow.AddDays(7),
+                            EndDate = DateTime.UtcNow.AddDays(21),
+                            Status = "Kích thích nhẹ buồng trứng",
+                            TreatmentDescription = "Khám tổng quát; Kích thích nhẹ buồng trứng; Theo dõi nang noãn; Lọc rửa tinh trùng; Bơm tinh trùng vào buồng tử cung",
+                            Giaidoan = "in-progress",
+                            GhiChu = "Bác sĩ thêm ghi chú cho kê hoạch điều trị ở đây"
+                        },
+                        new TreatmentPlan
+                        {
+                            TreatmentPlanId = "TP_3",
+                            DoctorId = "DOC_3",
+                            PatientDetailId = "PATD_3",
+                            ServiceId = "SRV_6",
+                            Method = "Trữ đông tinh trùng",
+                            StartDate = DateTime.UtcNow.AddDays(3),
+                            EndDate = DateTime.UtcNow.AddDays(4),
+                            Status = "Lấy mẫu tinh dịch",
+                            TreatmentDescription = "Lấy mẫu tinh dịch; Đánh giá chất lượng; Tiến hành trữ đông; Lưu trữ mẫu tại ngân hàng tinh trùng",
+                            Giaidoan = "in-progress",
+                            GhiChu = "Bác sĩ thêm ghi chú cho kê hoạch điều trị ở đây"
+                        },
+                        new TreatmentPlan
+                        {
+                            TreatmentPlanId = "TP_FET_1",
+                            DoctorId = "DOC_2",
+                            PatientDetailId = "PATD_2",
+                            ServiceId = "SRV_FET",
+                            Method = "FET",
+                            StartDate = DateTime.UtcNow.AddDays(5),
+                            EndDate = DateTime.UtcNow.AddDays(10),
+                            Status = "Chuẩn bị nội mạc tử cung",
+                            TreatmentDescription = "Chuẩn bị nội mạc tử cung; Rã đông phôi; Chuyển phôi vào tử cung",
+                            Giaidoan = "completed",
+                            GhiChu = "Bác sĩ thêm ghi chú cho kê hoạch điều trị ở đây"
+                        }
+                    };
+
+                    context.TreatmentPlans.AddRange(treatmentPlans);
+                    context.SaveChanges();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Lỗi khi thêm treatment plans: {ex.Message}");
+                }
+            }
+
+            // Thêm TreatmentSteps
+            if (!context.TreatmentSteps.Any() && context.TreatmentPlans.Any())
+            {
+                try
+                {
+                    var plans = context.TreatmentPlans.ToList();
+                    var treatmentSteps = new List<TreatmentStep>();
+
+                    foreach (var plan in plans)
+                    {
+                        var steps = plan.TreatmentDescription.Split(';');
+                        for (int i = 0; i < steps.Length; i++)
+                        {
+                            var step = new TreatmentStep
+                            {
+                                TreatmentStepId = "TS_" + Guid.NewGuid().ToString().Substring(0, 8),
+                                TreatmentPlanId = plan.TreatmentPlanId,
+                                StepOrder = i + 1,
+                                StepName = steps[i].Trim(),
+                                Description = "placeholder(500)"
+                            };
+                            treatmentSteps.Add(step);
+                        }
+                    }
+
+                    context.TreatmentSteps.AddRange(treatmentSteps);
+                    context.SaveChanges();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Lỗi khi thêm treatment steps: {ex.Message}");
+                }
+            }
+
+            // Thêm TreatmentMedications
+            if (!context.TreatmentMedications.Any() && context.TreatmentPlans.Any())
+            {
+                try
+                {
+                    var medications = new List<TreatmentMedication>
+                    {
+                        new TreatmentMedication
+                        {
+                            MedicationId = "M_" + Guid.NewGuid().ToString().Substring(0, 8),
+                            TreatmentPlanId = "TP_1",
+                            DrugType = "Kích thích buồng trứng",
+                            DrugName = "Gonal-F",
                             Description = "placeholder(500)"
-                        };
-                        treatmentSteps.Add(step);
-                    }
-                }
-
-                context.TreatmentSteps.AddRange(treatmentSteps);
-                context.SaveChanges();
-            }
-            if (!context.TreatmentMedications.Any())
-            {
-                var medications = new List<TreatmentMedication>
-            {
-                new TreatmentMedication
-                {
-                    MedicationId = "M_"+Guid.NewGuid().ToString(),
-                    TreatmentPlanId = "TP_1",
-                    DrugType = "Kích thích buồng trứng",
-                    DrugName = "Gonal-F",
-                    Description = "placeholder(500)"
-                },
-                new TreatmentMedication
-                {
-                    MedicationId = "M_"+Guid.NewGuid().ToString(),
-                    TreatmentPlanId = "TP_2",
-                    DrugType = "Hỗ trợ rụng trứng",
-                    DrugName = "Clomid",
-                    Description = "placeholder(500)"
-                },
-                new TreatmentMedication
-                {
-                    MedicationId = "M_"+Guid.NewGuid().ToString(),
-                    TreatmentPlanId = "TP_3",
-                    DrugType = "Kháng sinh",
-                    DrugName = "Doxycycline",
-                    Description = "placeholder(500)"
-                },
-                new TreatmentMedication
-                {
-                    MedicationId = "M_" + Guid.NewGuid().ToString(),
-                    TreatmentPlanId = "TP_FET_1",
-                    DrugType = "Hỗ trợ nội mạc",
-                    DrugName = "Estrogen",
-                    Description = "placeholder(500)"
-                }
-            };
-
-                context.TreatmentMedications.AddRange(medications);
-                context.SaveChanges();
-            }
-
-            // Thêm quy trình điều trị mẫu với các trường đã cập nhật
-            if (!context.TreatmentProcesses.Any())
-            {
-                var treatmentProcesses = new List<TreatmentProcess>
-                {
-                    new TreatmentProcess
-                    {
-                        TreatmentProcessId = "TPR_1",
-                        PatientDetailId = "PATD_1",
-                        TreatmentPlanId = "TP_1",
-                        DoctorId = "DOC_1",
-                        ScheduledDate = DateTime.Now.AddDays(5),
-                        Status = "Đã lên lịch",
-                        Result = "Chưa thực hiện"
-                    },
-                    new TreatmentProcess
-                    {
-                        TreatmentProcessId = "TPR_2",
-                        PatientDetailId = "PATD_1",
-                        TreatmentPlanId = "TP_1",
-                        DoctorId = "DOC_1",
-                        ScheduledDate = DateTime.Now.AddDays(15),
-                        Status = "Đã lên lịch",
-                        Result = "Chưa thực hiện"
-                    },
-                    new TreatmentProcess
-                    {
-                        TreatmentProcessId = "TPR_3",
-                        PatientDetailId = "PATD_1",
-                        TreatmentPlanId = "TP_1",
-                        DoctorId = "DOC_1",
-                        ScheduledDate = DateTime.Now.AddDays(25),
-                        Status = "Đã lên lịch",
-                        Result = "Chưa thực hiện"
-                    },
-                    new TreatmentProcess
-                    {
-                        TreatmentProcessId = "TPR_4",
-                        PatientDetailId = "PATD_2",
-                        TreatmentPlanId = "TP_2",
-                        DoctorId = "DOC_2",
-                        ScheduledDate = DateTime.Now.AddDays(7),
-                        Status = "Chờ xác nhận",
-                        Result = "Chưa thực hiện"
-                    },
-                    new TreatmentProcess
-                    {
-                        TreatmentProcessId = "TPR_5",
-                        PatientDetailId = "PATD_2",
-                        TreatmentPlanId = "TP_2",
-                        DoctorId = "DOC_2",
-                        ScheduledDate = DateTime.Now.AddDays(14),
-                        Status = "Chờ xác nhận",
-                        Result = "Chưa thực hiện"
-                    },
-                    new TreatmentProcess
-                    {
-                        TreatmentProcessId = "TPR_6",
-                        PatientDetailId = "PATD_3",
-                        TreatmentPlanId = "TP_3",
-                        DoctorId = "DOC_3",
-                        ScheduledDate = DateTime.Now.AddDays(3),
-                        Status = "Đã lên lịch",
-                        Result = "Chưa thực hiện"
-                    }
-                };
-
-                context.TreatmentProcesses.AddRange(treatmentProcesses);
-                context.SaveChanges();
-            }
-
-            // Thêm notification mẫu
-            if (!context.Notifications.Any())
-            {
-                        var notifications = new List<Notification>
-            {
-                new Notification
-                {
-                    NotificationId = "NTF_1",
-                    PatientId = "PAT_1",
-                    DoctorId = "DOC_1",
-                    BookingId = "BKG_1",
-                    TreatmentProcessId = "TPR_1",
-                    Type = "appointment",
-                    Message = "Vui lòng đến phòng khám để bắt đầu quy trình kích trứng",
-                    MessageForDoctor = "Bạn vui lòng chuẩn bị để tiến hành quy trình kích trứng với lịch được đặt",
-                    Time = DateTime.Now.AddDays(4)
-                },
-                new Notification
-                {
-                    NotificationId = "NTF_2",
-                    PatientId = "PAT_2",
-                    DoctorId = "DOC_2",
-                    BookingId = "BKG_2",
-                    Type = "appointment",
-                    Message = "Vui lòng đến phòng khám để được tư vấn về quy trình IUI",
-                    MessageForDoctor = "Bệnh nhân đã đặt lịch khám với bạn để tư vấn về quy trình IUI",
-                    Time = DateTime.Now.AddDays(2)
-                },
-                new Notification
-                {
-                    NotificationId = "NTF_3",
-                    PatientId = "PAT_3",
-                    DoctorId = "DOC_3",
-                    BookingId = "BKG_3",
-                    TreatmentProcessId = "TPR_6",
-                    Type = "treatment",
-                    Message = "Vui lòng đến phòng khám để thực hiện quy trình trữ đông tinh trùng",
-                    //tạo cho tui cái thông báo doctor
-                    MessageForDoctor= "Bệnh nhân đã đặt lịch khám dịch vụ thực hiện quy trình trữ đông tinh trùng",
-                    Time = DateTime.Now.AddDays(2)
-                }
-            };
-
-                        context.Notifications.AddRange(notifications);
-                        context.SaveChanges();
-                    }
-
-                    // Thêm các đánh giá mẫu
-                    if (!context.Ratings.Any())
-                    {
-                        var ratings = new List<Rating>
+                        },
+                        new TreatmentMedication
                         {
-                            new Rating
-                            {
-                                RatingId = "RTG_1",
-                                PatientId = "PAT_1",
-                                DoctorId = "DOC_1",
-                                ServiceId = "SRV_1",
-                                BookingId = "BKG_1",
-                                Score = 5,
-                                Comment = "Bác sĩ tư vấn rất nhiệt tình và chuyên nghiệp",
-                                RatingDate = DateTime.Now.AddDays(-10),
-                                RatingType = "Doctor",
-                                Status = "Approved",
-                                IsAnonymous = false
-                            },
-                            new Rating
-                            {
-                                RatingId = "RTG_2",
-                                PatientId = "PAT_2",
-                                DoctorId = "DOC_2",
-                                ServiceId = "SRV_4",
-                                BookingId = "BKG_2",
-                                Score = 4,
-                                Comment = "Dịch vụ tốt, nhân viên phòng khám thân thiện",
-                                RatingDate = DateTime.Now.AddDays(-5),
-                                RatingType = "Service",
-                                Status = "Approved",
-                                IsAnonymous = false
-                            }
-                        };
-
-                        context.Ratings.AddRange(ratings);
-                        context.SaveChanges();
-                    }
-
-                    // Thêm phản hồi mẫu
-                    if (!context.Feedbacks.Any())
-                    {
-                        var feedbacks = new List<Feedback>
+                            MedicationId = "M_" + Guid.NewGuid().ToString().Substring(0, 8),
+                            TreatmentPlanId = "TP_2",
+                            DrugType = "Hỗ trợ rụng trứng",
+                            DrugName = "Clomid",
+                            Description = "placeholder(500)"
+                        },
+                        new TreatmentMedication
                         {
-                            new Feedback
-                            {
-                                FeedbackId = "FBK_1",
-                                PatientId = "PAT_1",
-                                ServiceId = "SRV_3",
-                                Title = "Phản hồi về dịch vụ IVF",
-                                Content = "Tôi rất hài lòng với quy trình điều trị IVF tại phòng khám. Đội ngũ y bác sĩ rất tận tâm và chuyên nghiệp.",
-                                CreateDate = DateTime.Now.AddDays(-15),
-                                Status = "Read",
-                                FeedbackType = "Service",
-                                IsPublic = true
-                            },
-                            new Feedback
-                            {
-                                FeedbackId = "FBK_2",
-                                PatientId = "PAT_3",
-                                Title = "Góp ý về cơ sở vật chất",
-                                Content = "Phòng khám nên bổ sung thêm khu vực chờ rộng rãi hơn cho bệnh nhân và người nhà.",
-                                CreateDate = DateTime.Now.AddDays(-7),
-                                Status = "New",
-                                FeedbackType = "General",
-                                IsPublic = false
-                            }
-                        };
+                            MedicationId = "M_" + Guid.NewGuid().ToString().Substring(0, 8),
+                            TreatmentPlanId = "TP_3",
+                            DrugType = "Kháng sinh",
+                            DrugName = "Doxycycline",
+                            Description = "placeholder(500)"
+                        },
+                        new TreatmentMedication
+                        {
+                            MedicationId = "M_" + Guid.NewGuid().ToString().Substring(0, 8),
+                            TreatmentPlanId = "TP_FET_1",
+                            DrugType = "Hỗ trợ nội mạc",
+                            DrugName = "Estrogen",
+                            Description = "placeholder(500)"
+                        }
+                    };
 
-                        context.Feedbacks.AddRange(feedbacks);
-                        context.SaveChanges();
-                    }
+                    context.TreatmentMedications.AddRange(medications);
+                    context.SaveChanges();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Lỗi khi thêm medications: {ex.Message}");
+                }
+            }
+
+            // Thêm quy trình điều trị
+            if (!context.TreatmentProcesses.Any() && context.TreatmentPlans.Any() && context.PatientDetails.Any() && context.Doctors.Any())
+            {
+                try
+                {
+                    var treatmentProcesses = new List<TreatmentProcess>
+                    {
+                        new TreatmentProcess
+                        {
+                            TreatmentProcessId = "TPR_1",
+                            PatientDetailId = "PATD_1",
+                            TreatmentPlanId = "TP_1",
+                            DoctorId = "DOC_1",
+                            ScheduledDate = DateTime.UtcNow.AddDays(5),
+                            Status = "Đã lên lịch",
+                            Result = "Chưa thực hiện"
+                        },
+                        new TreatmentProcess
+                        {
+                            TreatmentProcessId = "TPR_2",
+                            PatientDetailId = "PATD_1",
+                            TreatmentPlanId = "TP_1",
+                            DoctorId = "DOC_1",
+                            ScheduledDate = DateTime.UtcNow.AddDays(15),
+                            Status = "Đã lên lịch",
+                            Result = "Chưa thực hiện"
+                        },
+                        new TreatmentProcess
+                        {
+                            TreatmentProcessId = "TPR_3",
+                            PatientDetailId = "PATD_1",
+                            TreatmentPlanId = "TP_1",
+                            DoctorId = "DOC_1",
+                            ScheduledDate = DateTime.UtcNow.AddDays(25),
+                            Status = "Đã lên lịch",
+                            Result = "Chưa thực hiện"
+                        },
+                        new TreatmentProcess
+                        {
+                            TreatmentProcessId = "TPR_4",
+                            PatientDetailId = "PATD_2",
+                            TreatmentPlanId = "TP_2",
+                            DoctorId = "DOC_2",
+                            ScheduledDate = DateTime.UtcNow.AddDays(7),
+                            Status = "Chờ xác nhận",
+                            Result = "Chưa thực hiện"
+                        },
+                        new TreatmentProcess
+                        {
+                            TreatmentProcessId = "TPR_5",
+                            PatientDetailId = "PATD_2",
+                            TreatmentPlanId = "TP_2",
+                            DoctorId = "DOC_2",
+                            ScheduledDate = DateTime.UtcNow.AddDays(14),
+                            Status = "Chờ xác nhận",
+                            Result = "Chưa thực hiện"
+                        },
+                        new TreatmentProcess
+                        {
+                            TreatmentProcessId = "TPR_6",
+                            PatientDetailId = "PATD_3",
+                            TreatmentPlanId = "TP_3",
+                            DoctorId = "DOC_3",
+                            ScheduledDate = DateTime.UtcNow.AddDays(3),
+                            Status = "Đã lên lịch",
+                            Result = "Chưa thực hiện"
+                        }
+                    };
+
+                    context.TreatmentProcesses.AddRange(treatmentProcesses);
+                    context.SaveChanges();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Lỗi khi thêm treatment processes: {ex.Message}");
+                }
+            }
+
+            // Thêm notifications
+            if (!context.Notifications.Any() && context.Patients.Any() && context.Doctors.Any())
+            {
+                try
+                {
+                    var notifications = new List<Notification>
+                    {
+                        new Notification
+                        {
+                            NotificationId = "NTF_1",
+                            PatientId = "PAT_1",
+                            DoctorId = "DOC_1",
+                            BookingId = "BKG_1",
+                            TreatmentProcessId = "TPR_1",
+                            Type = "appointment",
+                            Message = "Vui lòng đến phòng khám để bắt đầu quy trình kích trứng",
+                            MessageForDoctor = "Bạn vui lòng chuẩn bị để tiến hành quy trình kích trứng với lịch được đặt",
+                            Time = DateTime.UtcNow.AddDays(4)
+                        },
+                        new Notification
+                        {
+                            NotificationId = "NTF_2",
+                            PatientId = "PAT_2",
+                            DoctorId = "DOC_2",
+                            BookingId = "BKG_2",
+                            Type = "appointment",
+                            Message = "Vui lòng đến phòng khám để được tư vấn về quy trình IUI",
+                            MessageForDoctor = "Bệnh nhân đã đặt lịch khám với bạn để tư vấn về quy trình IUI",
+                            Time = DateTime.UtcNow.AddDays(2)
+                        },
+                        new Notification
+                        {
+                            NotificationId = "NTF_3",
+                            PatientId = "PAT_3",
+                            DoctorId = "DOC_3",
+                            BookingId = "BKG_3",
+                            TreatmentProcessId = "TPR_6",
+                            Type = "treatment",
+                            Message = "Vui lòng đến phòng khám để thực hiện quy trình trữ đông tinh trùng",
+                            MessageForDoctor = "Bệnh nhân đã đặt lịch khám dịch vụ thực hiện quy trình trữ đông tinh trùng",
+                            Time = DateTime.UtcNow.AddDays(2)
+                        }
+                    };
+
+                    context.Notifications.AddRange(notifications);
+                    context.SaveChanges();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Lỗi khi thêm notifications: {ex.Message}");
+                }
+            }
+
+            // Thêm ratings
+            if (!context.Ratings.Any() && context.Patients.Any() && context.Doctors.Any())
+            {
+                try
+                {
+                    var ratings = new List<Rating>
+                    {
+                        new Rating
+                        {
+                            RatingId = "RTG_1",
+                            PatientId = "PAT_1",
+                            DoctorId = "DOC_1",
+                            ServiceId = "SRV_1",
+                            BookingId = "BKG_1",
+                            Score = 5,
+                            Comment = "Bác sĩ tư vấn rất nhiệt tình và chuyên nghiệp",
+                            RatingDate = DateTime.UtcNow.AddDays(-10),
+                            RatingType = "Doctor",
+                            Status = "Approved",
+                            IsAnonymous = false
+                        },
+                        new Rating
+                        {
+                            RatingId = "RTG_2",
+                            PatientId = "PAT_2",
+                            DoctorId = "DOC_2",
+                            ServiceId = "SRV_4",
+                            BookingId = "BKG_2",
+                            Score = 4,
+                            Comment = "Dịch vụ tốt, nhân viên phòng khám thân thiện",
+                            RatingDate = DateTime.UtcNow.AddDays(-5),
+                            RatingType = "Service",
+                            Status = "Approved",
+                            IsAnonymous = false
+                        }
+                    };
+
+                    context.Ratings.AddRange(ratings);
+                    context.SaveChanges();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Lỗi khi thêm ratings: {ex.Message}");
+                }
+            }
+
+            // Thêm feedbacks
+            if (!context.Feedbacks.Any() && context.Patients.Any())
+            {
+                try
+                {
+                    var feedbacks = new List<Feedback>
+                    {
+                        new Feedback
+                        {
+                            FeedbackId = "FBK_1",
+                            PatientId = "PAT_1",
+                            ServiceId = "SRV_3",
+                            Title = "Phản hồi về dịch vụ IVF",
+                            Content = "Tôi rất hài lòng với quy trình điều trị IVF tại phòng khám. Đội ngũ y bác sĩ rất tận tâm và chuyên nghiệp.",
+                            CreateDate = DateTime.UtcNow.AddDays(-15),
+                            Status = "Read",
+                            FeedbackType = "Service",
+                            IsPublic = true
+                        },
+                        new Feedback
+                        {
+                            FeedbackId = "FBK_2",
+                            PatientId = "PAT_3",
+                            Title = "Góp ý về cơ sở vật chất",
+                            Content = "Phòng khám nên bổ sung thêm khu vực chờ rộng rãi hơn cho bệnh nhân và người nhà.",
+                            CreateDate = DateTime.UtcNow.AddDays(-7),
+                            Status = "New",
+                            FeedbackType = "General",
+                            IsPublic = false
+                        }
+                    };
+
+                    context.Feedbacks.AddRange(feedbacks);
+                    context.SaveChanges();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Lỗi khi thêm feedbacks: {ex.Message}");
+                }
+            }
 
             // Thêm thanh toán mẫu
-            if (!context.Payments.Any())
+            if (!context.Payments.Any() && context.Bookings.Any())
             {
-                var payments = new List<Payment>
+                try
                 {
-                    new Payment
+                    var payments = new List<Payment>
                     {
-                        PaymentId = "PAY_1",
-                        BookingId = "BKG_1",
-                        TotalAmount = 50000000M, // 50 triệu VND cho IVF
-                        Method = "Chuyển khoản",
-                        Status = "Đã thanh toán"
-                    },
-                    new Payment
-                    {
-                        PaymentId = "PAY_2",
-                        BookingId = "BKG_2",
-                        TotalAmount = 15000000M, // 15 triệu VND cho IUI
-                        Method = "Tiền mặt",
-                        Status = "Đã thanh toán"
-                    },
-                    new Payment
-                    {
-                        PaymentId = "PAY_3",
-                        BookingId = "BKG_3",
-                        TotalAmount = 500000M, // 500k VND cho tư vấn ban đầu
-                        Method = "Thẻ tín dụng",
-                        Status = "Đã thanh toán"
-                    }
-                };
+                        new Payment
+                        {
+                            PaymentId = "PAY_1",
+                            BookingId = "BKG_1",
+                            TotalAmount = 50000000M,
+                            Method = "Chuyển khoản",
+                            Status = "Đã thanh toán"
+                        },
+                        new Payment
+                        {
+                            PaymentId = "PAY_2",
+                            BookingId = "BKG_2",
+                            TotalAmount = 15000000M,
+                            Method = "Tiền mặt",
+                            Status = "Đã thanh toán"
+                        },
+                        new Payment
+                        {
+                            PaymentId = "PAY_3",
+                            BookingId = "BKG_3",
+                            TotalAmount = 500000M,
+                            Method = "Thẻ tín dụng",
+                            Status = "Đã thanh toán"
+                        }
+                    };
 
-                context.Payments.AddRange(payments);
-                context.SaveChanges();
+                    context.Payments.AddRange(payments);
+                    context.SaveChanges();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Lỗi khi thêm payments: {ex.Message}");
+                }
             }
 
             // Thêm kiểm tra mẫu
-            if (!context.Examinations.Any())
+            if (!context.Examinations.Any() && context.Bookings.Any() && context.Patients.Any() && context.Doctors.Any())
             {
-                var examinations = new List<Examination>
+                try
                 {
-                    new Examination
+                    var examinations = new List<Examination>
                     {
-                        ExaminationId = "EXM_1",
-                        BookingId = "BKG_1",
-                        PatientId = "PAT_1",
-                        DoctorId = "DOC_1",
-                        ExaminationDate = DateTime.Now.AddDays(-1),
-                        ExaminationDescription = "Vô sinh nguyên phát do tắc ống dẫn trứng. Điều trị bằng phương pháp IVF.",
-                        Result = "Kết quả kiểm tra sức khỏe tốt, đủ điều kiện để bắt đầu chu trình IVF",
-                        Status = "completed",
-                        Note = "Cần tiến hành kích trứng theo lịch đã đề ra",
-                        CreateAt = DateTime.Now.AddDays(-1)
-                    },
-                    new Examination
-                    {
-                        ExaminationId = "EXM_2",
-                        BookingId = "BKG_2",
-                        PatientId = "PAT_2",
-                        DoctorId = "DOC_2",
-                        ExaminationDate = DateTime.Now,
-                        ExaminationDescription = "Vô sinh do không rụng trứng. Điều trị bằng phương pháp IUI.",
-                        Result = "Kết quả siêu âm cho thấy có 3 nang trứng phát triển tốt",
-                        Status = "in-progress",
-                        Note = "Cần theo dõi thêm 3 ngày nữa trước khi tiến hành IUI",
-                        CreateAt = DateTime.Now
-                    }
-                };
+                        new Examination
+                        {
+                            ExaminationId = "EXM_1",
+                            BookingId = "BKG_1",
+                            PatientId = "PAT_1",
+                            DoctorId = "DOC_1",
+                            ExaminationDate = DateTime.UtcNow.AddDays(-1),
+                            ExaminationDescription = "Vô sinh nguyên phát do tắc ống dẫn trứng. Điều trị bằng phương pháp IVF.",
+                            Result = "Kết quả kiểm tra sức khỏe tốt, đủ điều kiện để bắt đầu chu trình IVF",
+                            Status = "completed",
+                            Note = "Cần tiến hành kích trứng theo lịch đã đề ra",
+                            CreateAt = DateTime.UtcNow.AddDays(-1)
+                        },
+                        new Examination
+                        {
+                            ExaminationId = "EXM_2",
+                            BookingId = "BKG_2",
+                            PatientId = "PAT_2",
+                            DoctorId = "DOC_2",
+                            ExaminationDate = DateTime.UtcNow,
+                            ExaminationDescription = "Vô sinh do không rụng trứng. Điều trị bằng phương pháp IUI.",
+                            Result = "Kết quả siêu âm cho thấy có 3 nang trứng phát triển tốt",
+                            Status = "in-progress",
+                            Note = "Cần theo dõi thêm 3 ngày nữa trước khi tiến hành IUI",
+                            CreateAt = DateTime.UtcNow
+                        }
+                    };
 
-                context.Examinations.AddRange(examinations);
-                context.SaveChanges();
+                    context.Examinations.AddRange(examinations);
+                    context.SaveChanges();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Lỗi khi thêm examinations: {ex.Message}");
+                }
             }
+
+            Console.WriteLine("Seed data đã hoàn thành");
         }
     }
 }
