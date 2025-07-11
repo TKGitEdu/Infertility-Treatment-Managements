@@ -148,7 +148,7 @@ app.MapControllers();
 app.MapFallbackToController("Get", "Home");
 
 app.Run();
-
+ 
 // Hàm hỗ trợ - giữ lại nếu cần
 static void TruncateAllTables(InfertilityTreatmentManagementContext context)
 {
