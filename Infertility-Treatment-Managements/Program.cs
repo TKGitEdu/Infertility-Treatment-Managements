@@ -91,14 +91,14 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.WebHost.ConfigureKestrel(serverOptions =>
-{
-    serverOptions.ListenAnyIP(5156); // HTTP port
-    serverOptions.ListenAnyIP(7147, listenOptions => // HTTPS port
-    {
-        listenOptions.UseHttps();
-    });
-});
+//builder.WebHost.ConfigureKestrel(serverOptions =>
+//{
+//    serverOptions.ListenAnyIP(5156); // HTTP port
+//    serverOptions.ListenAnyIP(7147, listenOptions => // HTTPS port
+//    {
+//        listenOptions.UseHttps();
+//    });
+//});Render sẽ tự động xử lý SSL/HTTPS cho bạn:
 
 var app = builder.Build();
 
