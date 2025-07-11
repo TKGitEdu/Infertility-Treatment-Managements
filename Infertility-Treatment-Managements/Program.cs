@@ -14,7 +14,6 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<InfertilityTreatmentManagementContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-
 // Register EmailService
 builder.Services.AddScoped<IEmailService, EmailService>();
 
@@ -91,20 +90,28 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-//builder.WebHost.ConfigureKestrel(serverOptions =>
-//{
-//    serverOptions.ListenAnyIP(5156); // HTTP port
-//    serverOptions.ListenAnyIP(7147, listenOptions => // HTTPS port
-//    {
-//        listenOptions.UseHttps();
-//    });
-//});Render sẽ tự động xử lý SSL/HTTPS cho bạn:
+// Cấu hình Kestrel để lắng nghe trên cổng do Render quy định
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    // Lấy cổng từ biến môi trường PORT của Render
+    var portStr = Environment.GetEnvironmentVariable("PORT");
+    if (!string.IsNullOrEmpty(portStr) && int.TryParse(portStr, out var port))
+    {
+        serverOptions.ListenAnyIP(port);
+    }
+    else
+    {
+        // Fallback port nếu không có biến môi trường
+        serverOptions.ListenAnyIP(5000);
+    }
+});
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseHttpsRedirection(); // Chỉ chuyển hướng HTTPS trong phát triển
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
@@ -131,6 +138,12 @@ if (app.Environment.IsDevelopment())
         //***************************************************
     }
 }
+else
+{
+    // Trong môi trường sản xuất không cần chuyển hướng HTTPS
+    // vì Render đã xử lý điều đó
+}
+
 // Thay thế hàm TruncateAllTables hiện tại bằng hàm sau
 static void TruncateAllTables(InfertilityTreatmentManagementContext context)
 {
@@ -179,8 +192,6 @@ static void TruncateAllTables(InfertilityTreatmentManagementContext context)
     }
 }
 
-
-app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();

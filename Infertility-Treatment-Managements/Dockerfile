@@ -22,7 +22,6 @@ WORKDIR /app
 COPY --from=publish /app/publish .
 
 # Thiết lập biến môi trường
-ENV ASPNETCORE_URLS=http://+:80
 ENV ASPNETCORE_ENVIRONMENT=Production
 
 # Mở cổng
