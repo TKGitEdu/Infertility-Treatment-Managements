@@ -100,21 +100,26 @@ builder.Services.AddAuthentication(options =>
 // Cấu hình Kestrel để lắng nghe trên cổng do Render quy định
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
-    // Lấy cổng từ biến môi trường PORT của Render
-    var portStr = Environment.GetEnvironmentVariable("PORT");
-    if (!string.IsNullOrEmpty(portStr) && int.TryParse(portStr, out var port))
+    // Sửa đoạn code cấu hình URL để đảm bảo hỗ trợ cả HTTPS
+    var port = Environment.GetEnvironmentVariable("PORT");
+    if (!string.IsNullOrEmpty(port))
     {
-        serverOptions.ListenAnyIP(port);
+        // Chỉ định rõ rằng ứng dụng chấp nhận cả HTTP và HTTPS
+        builder.WebHost.UseUrls($"http://*:{port}", $"https://*:{port}");
     }
-    else
+
+    // Thêm đoạn này để cấu hình ForwardedHeaders
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
     {
-        // Fallback port nếu không có biến môi trường
-        serverOptions.ListenAnyIP(5000);
-    }
+        options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+        options.KnownNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
 });
 
 var app = builder.Build();
-
+// Thêm dòng này vào đầu middleware pipeline, ngay sau var app = builder.Build();
+app.UseForwardedHeaders();
 // Xóa điều kiện app.Environment.IsDevelopment() để Swagger hoạt động trong mọi môi trường
 app.UseSwagger();
 app.UseSwaggerUI(c =>
@@ -128,7 +133,21 @@ if (app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
-
+// Bật HSTS trong môi trường sản xuất
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
+// Thêm middleware xử lý ngoại lệ
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+else
+{
+    app.UseExceptionHandler("/Error");
+    app.UseHsts();
+}
 // Thay thế hàm TruncateAllTables hiện tại bằng hàm sau
 static void TruncateAllTables(InfertilityTreatmentManagementContext context)
 {

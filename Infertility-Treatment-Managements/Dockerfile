@@ -23,11 +23,7 @@ COPY --from=publish /app/publish .
 
 # Thiết lập biến môi trường - ĐÃ SỬA
 ENV ASPNETCORE_ENVIRONMENT=Production
-# Thêm dòng này - để ứng dụng sử dụng PORT từ biến môi trường
-ENV ASPNETCORE_URLS=http://+:${PORT:-80}
-
-# Không cần thiết lập EXPOSE vì Render sẽ sử dụng biến môi trường PORT
-# EXPOSE 80 
-# EXPOSE 443
+ENV ASPNETCORE_URLS=http://+:${PORT:-80};https://+:${PORT:-443}
+ENV ASPNETCORE_HTTPS_PORT=${PORT:-443}
 
 ENTRYPOINT ["dotnet", "Infertility-Treatment-Managements.dll"]
