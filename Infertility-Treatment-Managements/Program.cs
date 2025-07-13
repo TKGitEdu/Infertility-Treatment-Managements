@@ -107,7 +107,7 @@ builder.Services.AddAuthentication(options =>
 });
 
 // Xây dựng ứng dụng
-var app = builder.Build();
+//var app = builder.Build();
 
 // Thêm sau phần khai báo các service khác và trước phần builder.Build()
 
@@ -119,7 +119,7 @@ builder.Services.Configure<ZaloPayOptions>(
 // Nếu bạn muốn sử dụng SignalR để thông báo kết quả thanh toán
 builder.Services.AddSignalR();
 
-//var app = builder.Build();
+var app = builder.Build();
 
 // Luôn hiển thị Swagger UI bất kể môi trường
 app.UseSwagger();
