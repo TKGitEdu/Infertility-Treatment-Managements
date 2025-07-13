@@ -11,8 +11,13 @@
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+<<<<<<< HEAD
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.5" />
+=======
+    <PackageReference Include="Microsoft.CodeAnalysis.Scripting.Common" Version="4.14.0" />
+    <PackageReference Include="QRCoder" Version="1.6.0" />
+>>>>>>> Tam
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.5">
@@ -20,6 +25,11 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.5" />
+<<<<<<< HEAD
+=======
+	  <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.14.0" />
+	  <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
+>>>>>>> Tam
   </ItemGroup>
 
 </Project>

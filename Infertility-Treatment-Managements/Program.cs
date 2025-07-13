@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 ﻿using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+=======
+﻿using Microsoft.EntityFrameworkCore;
+using Infertility_Treatment_Managements.Models;
+>>>>>>> Tam
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -7,6 +12,10 @@ using System.Text;
 using Infertility_Treatment_Managements.Models;
 using Infertility_Treatment_Managements.Services;
 using Infertility_Treatment_Managements.Helpers;
+
+// Thêm using statements
+using Infertility_Treatment_Managements.Services.ZaloPay;
+using Infertility_Treatment_Managements.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -102,7 +111,29 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+<<<<<<< HEAD
 // Xây dựng ứng dụng
+=======
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.ListenAnyIP(5156); // HTTP port
+    serverOptions.ListenAnyIP(7147, listenOptions => // HTTPS port
+    {
+        listenOptions.UseHttps();
+    });
+});
+
+// Thêm sau phần khai báo các service khác và trước phần builder.Build()
+
+// Đăng ký ZaloPay service
+builder.Services.AddSingleton<IZaloPayService, ZaloPayService>();
+builder.Services.Configure<ZaloPayOptions>(
+    builder.Configuration.GetSection("ZaloPay"));
+
+// Nếu bạn muốn sử dụng SignalR để thông báo kết quả thanh toán
+builder.Services.AddSignalR();
+
+>>>>>>> Tam
 var app = builder.Build();
 
 // Đảm bảo các proxy header được xử lý đúng
@@ -143,6 +174,11 @@ app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+// Thêm vào phần sau app.MapControllers() và trước app.Run()
+
+// Map SignalR hub cho thông báo thanh toán
+app.MapHub<PaymentHub>("/paymentHub");
+
 
 // Thêm fallback route để đảm bảo route không tìm thấy được xử lý đúng
 app.MapFallbackToController("Get", "Home");
