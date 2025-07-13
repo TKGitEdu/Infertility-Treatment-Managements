@@ -825,7 +825,7 @@ namespace Infertility_Treatment_Managements.Helpers
                     {
                         PaymentId = "PAY_2",
                         BookingId = "BKG_2",
-                        TotalAmount = 15000000M, // 15 triệu VND cho IUI
+                        TotalAmount = 1000M, // 15 triệu VND cho IUI
                         Method = "Tiền mặt",
                         Status = "Đã thanh toán"
                     },
