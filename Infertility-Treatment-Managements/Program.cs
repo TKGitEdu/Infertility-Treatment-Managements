@@ -119,7 +119,7 @@ builder.Services.Configure<ZaloPayOptions>(
 // Nếu bạn muốn sử dụng SignalR để thông báo kết quả thanh toán
 builder.Services.AddSignalR();
 
-var app = builder.Build();
+//var app = builder.Build();
 
 // Luôn hiển thị Swagger UI bất kể môi trường
 app.UseSwagger();
