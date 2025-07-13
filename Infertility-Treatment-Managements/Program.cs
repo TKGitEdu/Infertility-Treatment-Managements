@@ -1,10 +1,5 @@
-<<<<<<< HEAD
 ﻿using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
-=======
-﻿using Microsoft.EntityFrameworkCore;
-using Infertility_Treatment_Managements.Models;
->>>>>>> Tam
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -111,17 +106,8 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-<<<<<<< HEAD
 // Xây dựng ứng dụng
-=======
-builder.WebHost.ConfigureKestrel(serverOptions =>
-{
-    serverOptions.ListenAnyIP(5156); // HTTP port
-    serverOptions.ListenAnyIP(7147, listenOptions => // HTTPS port
-    {
-        listenOptions.UseHttps();
-    });
-});
+var app = builder.Build();
 
 // Thêm sau phần khai báo các service khác và trước phần builder.Build()
 
@@ -133,11 +119,7 @@ builder.Services.Configure<ZaloPayOptions>(
 // Nếu bạn muốn sử dụng SignalR để thông báo kết quả thanh toán
 builder.Services.AddSignalR();
 
->>>>>>> Tam
 var app = builder.Build();
-
-// Đảm bảo các proxy header được xử lý đúng
-app.UseForwardedHeaders();
 
 // Luôn hiển thị Swagger UI bất kể môi trường
 app.UseSwagger();
