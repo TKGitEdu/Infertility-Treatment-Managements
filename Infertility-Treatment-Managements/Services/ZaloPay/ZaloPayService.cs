@@ -43,7 +43,7 @@ namespace Infertility_Treatment_Managements.Services.ZaloPay
                 ["bank_code"] = "zalopayapp",
                 ["embed_data"] = embedData,
                 ["item"] = "[]",
-                ["callback_url"] = _options.CallbackUrl,
+                ["callback_url"] = "https://bev2-kt7c.onrender.com/api/ZaloPay/callback", //  _options.CallbackUrl,// Lấy từ cấu hình
                 ["description"] = request.Description
             };
 
