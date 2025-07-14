@@ -105,35 +105,40 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpGet("available-slots")]
         [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<SlotBasicDTO>>> GetAvailableSlots(
-            [FromQuery] string doctorId,
-            [FromQuery] DateTime date)
+    [FromQuery] string doctorId,
+    [FromQuery] DateTime date)
         {
-            // Kiểm tra dữ liệu đầu vào
+            // Convert date to UTC to avoid PostgreSQL errors
+            if (date.Kind == DateTimeKind.Unspecified)
+            {
+                date = DateTime.SpecifyKind(date, DateTimeKind.Utc);
+            }
+            else
+            {
+                date = date.ToUniversalTime();
+            }
+
             if (string.IsNullOrEmpty(doctorId))
             {
                 return BadRequest("Vui lòng chọn bác sĩ");
             }
 
-            // Kiểm tra bác sĩ tồn tại
             var doctor = await _context.Doctors.FindAsync(doctorId);
             if (doctor == null)
             {
                 return NotFound($"Không tìm thấy bác sĩ với ID {doctorId}");
             }
 
-            // Lấy danh sách tất cả các khung giờ
             var allSlots = await _context.Slots
                 .OrderBy(s => s.StartTime)
                 .ToListAsync();
 
-            // Lấy danh sách các khung giờ đã được đặt cho bác sĩ trong ngày đó
             var bookedSlots = await _context.Bookings
                 .Where(b => b.DoctorId == doctorId &&
                        b.DateBooking.Date == date.Date)
                 .Select(b => b.SlotId)
                 .ToListAsync();
 
-            // Lọc ra các khung giờ còn trống
             var availableSlots = allSlots
                 .Where(s => !bookedSlots.Contains(s.SlotId))
                 .Select(s => new SlotBasicDTO
@@ -215,11 +220,12 @@ namespace Infertility_Treatment_Managements.Controllers
                     ServiceId = bookingDTO.ServiceId,
                     DoctorId = bookingDTO.DoctorId,
                     SlotId = bookingDTO.SlotId,
-                    DateBooking = bookingDTO.DateBooking,
+                    DateBooking = bookingDTO.DateBooking.Kind == DateTimeKind.Utc? bookingDTO.DateBooking: bookingDTO.DateBooking.ToUniversalTime(),
                     Description = bookingDTO.Description ?? $"Đặt lịch sử dụng dịch vụ {service.Name}",
                     Status = "Pending",
                     Note = bookingDTO.Note,
-                    CreateAt = DateTime.Now
+                    CreateAt = DateTime.UtcNow
+
                 };
 
                 _context.Bookings.Add(booking);
@@ -251,6 +257,7 @@ namespace Infertility_Treatment_Managements.Controllers
                     .Include(b => b.Service)
                     .Include(b => b.Doctor)
                     .Include(b => b.Slot)
+                    .Include(b => b.Payment)
                     .FirstOrDefaultAsync(b => b.BookingId == booking.BookingId);
 
                 return Ok(bookingFull.ToDTO());

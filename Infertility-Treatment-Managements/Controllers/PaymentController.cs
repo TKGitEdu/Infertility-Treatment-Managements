@@ -1,4 +1,5 @@
-﻿using Infertility_Treatment_Managements.Models;
+﻿using Infertility_Treatment_Managements.DTOs;
+using Infertility_Treatment_Managements.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
@@ -16,24 +17,31 @@ namespace Infertility_Treatment_Managements.Controllers
             _context = context;
         }
 
-        /// <summary>
-        /// Tạo mới một payment dựa trên BookingId, không cho phép tạo nếu đã có payment cho booking này
-        /// </summary>
         [HttpPost]
-        public async Task<IActionResult> CreatePayment([FromBody] Payment payment)
+        public async Task<IActionResult> CreatePayment([FromBody] PaymentCreateDTO paymentDto)
         {
-            if (payment == null || string.IsNullOrEmpty(payment.BookingId))
+            if (paymentDto == null || string.IsNullOrEmpty(paymentDto.BookingId))
             {
                 return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ hoặc thiếu BookingId" });
             }
 
             var existingPayment = await _context.Payments
-                .FirstOrDefaultAsync(p => p.BookingId == payment.BookingId);
+                .FirstOrDefaultAsync(p => p.BookingId == paymentDto.BookingId);
 
             if (existingPayment != null)
             {
                 return BadRequest(new { success = false, message = "Đã tồn tại hóa đơn cho lịch hẹn này" });
             }
+
+            var payment = new Payment
+            {
+                PaymentId = Guid.NewGuid().ToString(),
+                BookingId = paymentDto.BookingId,
+                TotalAmount = paymentDto.TotalAmount,
+                Status = paymentDto.Status,
+                Method = paymentDto.Method,
+                Confirmed = paymentDto.Confirmed
+            };
 
             _context.Payments.Add(payment);
             await _context.SaveChangesAsync();
