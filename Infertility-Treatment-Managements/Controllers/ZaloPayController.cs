@@ -107,7 +107,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 var queryResponse = await _zaloPayService.QueryOrderAsync(callbackData.AppTransId);
                 if (queryResponse.ReturnCode == 1 && !queryResponse.IsProcessing && queryResponse.Amount > 0)
                 {
-                    payment.Status = "Đã thanh toán";
+                    payment.Status = "chưa thanh toán";//"Đã thanh toán"
                     await _context.SaveChangesAsync();
 
                     await _hubContext.Clients.Group(callbackData.AppTransId).SendAsync(
