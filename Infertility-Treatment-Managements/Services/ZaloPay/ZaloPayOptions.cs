@@ -9,6 +9,6 @@
         public string QueryOrderUrl { get; set; } = "https://sb-openapi.zalopay.vn/v2/query";
         public string RefundUrl { get; set; } = "https://sb-openapi.zalopay.vn/v2/refund";
         public string QueryRefundUrl { get; set; } = "https://sb-openapi.zalopay.vn/v2/query_refund";
-        public string CallbackUrl { get; set; } 
+        public string CallbackUrl { get; set; } = "https://bev2-kt7c.onrender.com/api/ZaloPay/callback";
     }
 }
