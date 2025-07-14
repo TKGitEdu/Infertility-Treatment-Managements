@@ -14,6 +14,7 @@ public partial class Payment
     public decimal? TotalAmount { get; set; }
 
     public string Status { get; set; }
+    public bool? Confirmed { get; set; } // Trạng thái đã xác nhận lần 2 bởi admin thực hiện, thanh toán hay chưa
 
     public string Method { get; set; }
 

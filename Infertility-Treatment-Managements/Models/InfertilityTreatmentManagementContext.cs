@@ -100,6 +100,7 @@ namespace Infertility_Treatment_Managements.Models
                 entity.Property(p => p.BookingId).HasColumnName("BookingID").HasMaxLength(50);
                 entity.Property(p => p.TotalAmount).HasColumnType("decimal(10,2)");
                 entity.Property(p => p.Status).HasMaxLength(50);
+                entity.Property(p => p.Confirmed).HasDefaultValue(false); // Default value for Confirmed
                 entity.Property(p => p.Method).HasMaxLength(50);
             });
 
