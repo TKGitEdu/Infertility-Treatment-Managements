@@ -305,6 +305,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 .Include(b => b.Service)
                 .Include(b => b.Doctor)
                 .Include(b => b.Slot)
+                .Include(b => b.Payment)
                 .FirstOrDefaultAsync(b => b.BookingId == id);
 
             if (booking == null)

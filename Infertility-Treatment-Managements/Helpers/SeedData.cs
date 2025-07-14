@@ -864,7 +864,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         {
                             PaymentId = "PAY_2",
                             BookingId = "BKG_2",
-                            TotalAmount = 15000000M,
+                            TotalAmount = 1000,//15000000M
                             Method = "Tiền mặt",
                             Status = "Đã thanh toán"
                         },
