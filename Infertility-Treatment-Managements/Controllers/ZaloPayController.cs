@@ -1,13 +1,14 @@
-﻿using System;
+﻿using Infertility_Treatment_Managements.Hubs;
+using Infertility_Treatment_Managements.Models.ZaloPay;
+using Infertility_Treatment_Managements.Services.ZaloPay;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
+using QRCoder;
+using System;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.SignalR;
-using QRCoder;
-using Infertility_Treatment_Managements.Services.ZaloPay;
-using Infertility_Treatment_Managements.Models.ZaloPay;
-using Infertility_Treatment_Managements.Hubs;
 
 namespace Infertility_Treatment_Managements.Controllers
 {
@@ -74,6 +75,7 @@ namespace Infertility_Treatment_Managements.Controllers
         /// Nhận callback từ ZaloPay khi thanh toán thành công/thất bại
         /// </summary>
         [HttpPost("callback")]
+        [AllowAnonymous]
         public IActionResult HandleCallback([FromBody] ZaloPayCallback callback)
         {
             try
