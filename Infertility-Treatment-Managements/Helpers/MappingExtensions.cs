@@ -427,6 +427,7 @@ namespace Infertility_Treatment_Managements.Helpers
                 BookingId = entity.BookingId,
                 TotalAmount = entity.TotalAmount,
                 Status = entity.Status,
+                Confirmed = entity.Confirmed,
                 Method = entity.Method,
                 Booking = entity.Booking?.ToBasicDTO()
             };
@@ -441,6 +442,7 @@ namespace Infertility_Treatment_Managements.Helpers
                 PaymentId = entity.PaymentId,
                 TotalAmount = entity.TotalAmount,
                 Status = entity.Status,
+                Confirmed = entity.Confirmed,
                 Method = entity.Method
             };
         }
@@ -452,6 +454,7 @@ namespace Infertility_Treatment_Managements.Helpers
                 BookingId = dto.BookingId,
                 TotalAmount = dto.TotalAmount,
                 Status = dto.Status,
+                Confirmed = dto.Confirmed,
                 Method = dto.Method
             };
         }
@@ -461,6 +464,7 @@ namespace Infertility_Treatment_Managements.Helpers
             entity.BookingId = dto.BookingId;
             entity.TotalAmount = dto.TotalAmount;
             entity.Status = dto.Status;
+            entity.Confirmed = dto.Confirmed; // Trạng thái đã xác nhận lần 2 bởi admin thực hiện, thanh toán hay chưa
             entity.Method = dto.Method;
         }
         #endregion

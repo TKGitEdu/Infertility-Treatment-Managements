@@ -9,6 +9,7 @@ namespace Infertility_Treatment_Managements.DTOs
         public string? BookingId { get; set; }
         public decimal? TotalAmount { get; set; }
         public string Status { get; set; }
+        public bool? Confirmed { get; set; } // Indicates if the payment has been confirmed by admin
         public string Method { get; set; }
 
         // Related entity
@@ -20,6 +21,7 @@ namespace Infertility_Treatment_Managements.DTOs
         public string PaymentId { get; set; }
         public decimal? TotalAmount { get; set; }
         public string Status { get; set; }
+        public bool? Confirmed { get; set; } // Indicates if the payment has been confirmed by admin
         public string Method { get; set; }
     }
 
@@ -28,6 +30,7 @@ namespace Infertility_Treatment_Managements.DTOs
         public string? BookingId { get; set; }
         public decimal TotalAmount { get; set; }
         public string Status { get; set; }
+        public bool? Confirmed { get; set; } // Indicates if the payment has been confirmed by admin
         public string Method { get; set; }
     }
 
@@ -37,6 +40,7 @@ namespace Infertility_Treatment_Managements.DTOs
         public string? BookingId { get; set; }
         public decimal TotalAmount { get; set; }
         public string Status { get; set; }
+        public bool? Confirmed { get; set; } // Indicates if the payment has been confirmed by admin
         public string Method { get; set; }
     }
 }
