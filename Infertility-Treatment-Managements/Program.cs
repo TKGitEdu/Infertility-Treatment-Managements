@@ -120,14 +120,14 @@ if (app.Environment.IsDevelopment())
 
         //không được chỉnh sửa ******************************
         // Truncate all tables instead of dropping database
-        TruncateAllTables(dbContext);
+        //TruncateAllTables(dbContext);
         //// Recreate database
         //// Không cần EnsureDeleted/EnsureCreated khi dùng migration
         //dbContext.Database.EnsureDeleted();
         //dbContext.Database.EnsureCreated();
 
         // Seed data
-        SeedData.Initialize(services);
+        //SeedData.Initialize(services);
         //***************************************************
     }
 }
