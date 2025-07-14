@@ -284,9 +284,12 @@ namespace Infertility_Treatment_Managements.Controllers
             }
 
             var bookings = await _context.Bookings
+                .Include(b => b.Patient)
                 .Include(b => b.Service)
                 .Include(b => b.Doctor)
                 .Include(b => b.Slot)
+                .Include(b => b.Payment)
+                .Include(b => b.Examinations)
                 .Where(b => b.PatientId == patient.PatientId)
                 .OrderByDescending(b => b.DateBooking)
                 .ToListAsync();

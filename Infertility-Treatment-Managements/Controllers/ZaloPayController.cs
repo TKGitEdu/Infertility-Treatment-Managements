@@ -148,5 +148,34 @@ namespace Infertility_Treatment_Managements.Controllers
             var pngBytes = new PngByteQRCode(qrCodeData).GetGraphic(20);
             return Convert.ToBase64String(pngBytes);
         }
+
+        /// <summary>
+        /// Cập nhật trạng thái payment thành completed sau khi thanh toán thành công (gọi từ frontend)
+        /// </summary>
+        [HttpPut("update-payment-status/{paymentId}")]
+        [Authorize(Roles = "Admin,Patient")]
+        public async Task<IActionResult> UpdatePaymentStatus(string paymentId)
+        {
+            var payment = await _context.Payments.FirstOrDefaultAsync(p => p.PaymentId == paymentId);
+            if (payment == null)
+            {
+                return NotFound(new { success = false, message = "Không tìm thấy payment" });
+            }
+
+            payment.Status = "completed";
+
+            if (User.IsInRole("Admin"))
+            {
+                payment.Confirmed = true; // Admin xác nhận thanh toán
+            }
+            else if (User.IsInRole("Patient"))
+            {
+                payment.Confirmed = false; // Patient chỉ đánh dấu chưa xác nhận
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, message = "Cập nhật trạng thái thành công", paymentId = payment.PaymentId });
+        }
     }
 }
