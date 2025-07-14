@@ -287,6 +287,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 .Include(b => b.Service)
                 .Include(b => b.Doctor)
                 .Include(b => b.Slot)
+                .Include(b => b.Payment)
                 .Where(b => b.PatientId == patient.PatientId)
                 .OrderByDescending(b => b.DateBooking)
                 .ToListAsync();

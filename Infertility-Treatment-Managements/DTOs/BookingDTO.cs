@@ -32,6 +32,7 @@ namespace Infertility_Treatment_Managements.DTOs
         public SlotBasicDTO Slot { get; set; }
 
         // Basic examination information
+        public PaymentDTO PaymentDetails { get; set; }
         public ICollection<ExaminationBasicDTO> Examinations { get; set; } = new List<ExaminationBasicDTO>();
     }
     public class BookingBasicDTO
