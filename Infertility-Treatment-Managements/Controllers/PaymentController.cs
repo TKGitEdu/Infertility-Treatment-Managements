@@ -48,5 +48,27 @@ namespace Infertility_Treatment_Managements.Controllers
 
             return Ok(new { success = true, message = "Tạo payment thành công", payment });
         }
+
+        //thêm hàm update trường status và confirmed của payment
+        [HttpPut("{paymentId}")]
+        public async Task<IActionResult> UpdatePayment(string paymentId, [FromBody] PaymentUpdateDTO paymentDto)
+        {
+            if (paymentDto == null || string.IsNullOrEmpty(paymentId))
+            {
+                return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ hoặc thiếu PaymentId" });
+            }
+            var payment = await _context.Payments.FindAsync(paymentId);
+            if (payment == null)
+            {
+                return NotFound(new { success = false, message = "Không tìm thấy hóa đơn" });
+            }
+            payment.BookingId = paymentDto.BookingId;
+            payment.TotalAmount = paymentDto.TotalAmount;
+            payment.Status = paymentDto.Status;
+            payment.Method = paymentDto.Method;
+            _context.Payments.Update(payment);
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true, message = "Cập nhật payment thành công", payment });
+        }
     }
 }
