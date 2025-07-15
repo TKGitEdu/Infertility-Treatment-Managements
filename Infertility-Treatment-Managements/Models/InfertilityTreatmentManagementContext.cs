@@ -522,7 +522,8 @@ namespace Infertility_Treatment_Managements.Models
                 .HasOne(m => m.TreatmentPlan)
                 .WithMany(p => p.TreatmentMedications)
                 .HasForeignKey(m => m.TreatmentPlanId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .IsRequired(false) // Không bắt buộc Cho phép null
+                .OnDelete(DeleteBehavior.SetNull);// Khi xóa TreatmentPlan, set null chứ không xóa thuốc
 
             // Configure User-Role relationship
             modelBuilder.Entity<User>()
