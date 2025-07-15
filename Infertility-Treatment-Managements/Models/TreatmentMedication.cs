@@ -7,8 +7,7 @@ namespace Infertility_Treatment_Managements.Models
         [Key]
         public string MedicationId { get; set; }
 
-        [Required]
-        public string TreatmentPlanId { get; set; }
+        public string? TreatmentPlanId { get; set; }
 
         [Required]
         public string DrugType { get; set; }
