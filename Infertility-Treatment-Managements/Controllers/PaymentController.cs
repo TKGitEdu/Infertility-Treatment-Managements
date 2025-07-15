@@ -66,6 +66,7 @@ namespace Infertility_Treatment_Managements.Controllers
             payment.TotalAmount = paymentDto.TotalAmount;
             payment.Status = paymentDto.Status;
             payment.Method = paymentDto.Method;
+            payment.Confirmed = paymentDto.Confirmed != null? paymentDto.Confirmed:false; // Chỉ cập nhật trường Confirmed nếu cần, mặc định là false
             _context.Payments.Update(payment);
             await _context.SaveChangesAsync();
             return Ok(new { success = true, message = "Cập nhật payment thành công", payment });
