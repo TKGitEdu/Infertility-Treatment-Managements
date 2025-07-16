@@ -10,6 +10,7 @@ namespace Infertility_Treatment_Managements.DTOs
         public decimal? TotalAmount { get; set; }
         public string Status { get; set; }
         public string Method { get; set; }
+        public bool? Confirmed { get; set; }
 
         // Related entity
         public BookingBasicDTO Booking { get; set; }
@@ -21,6 +22,7 @@ namespace Infertility_Treatment_Managements.DTOs
         public decimal? TotalAmount { get; set; }
         public string Status { get; set; }
         public string Method { get; set; }
+        public bool? Confirmed { get; set; } // Trạng thái đã xác nhận lần 2 bởi admin thực hiện, thanh toán hay chưa
     }
 
     public class PaymentCreateDTO
@@ -29,6 +31,7 @@ namespace Infertility_Treatment_Managements.DTOs
         public decimal TotalAmount { get; set; }
         public string Status { get; set; }
         public string Method { get; set; }
+        public bool? Confirmed { get; set; } // Trạng thái đã xác nhận lần 2 bởi admin thực hiện, thanh toán hay chưa
     }
 
     public class PaymentUpdateDTO
@@ -38,5 +41,6 @@ namespace Infertility_Treatment_Managements.DTOs
         public decimal TotalAmount { get; set; }
         public string Status { get; set; }
         public string Method { get; set; }
+        public bool? Confirmed { get; set; } // Trạng thái đã xác nhận lần 2 bởi admin thực hiện, thanh toán hay chưa
     }
 }

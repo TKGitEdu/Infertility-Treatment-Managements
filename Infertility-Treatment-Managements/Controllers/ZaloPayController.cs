@@ -1,13 +1,16 @@
-﻿using System;
+﻿using Infertility_Treatment_Managements.Hubs;
+using Infertility_Treatment_Managements.Models;
+using Infertility_Treatment_Managements.Models.ZaloPay;
+using Infertility_Treatment_Managements.Services.ZaloPay;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using QRCoder;
+using System;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.SignalR;
-using QRCoder;
-using Infertility_Treatment_Managements.Services.ZaloPay;
-using Infertility_Treatment_Managements.Models.ZaloPay;
-using Infertility_Treatment_Managements.Hubs;
 
 namespace Infertility_Treatment_Managements.Controllers
 {
@@ -15,15 +18,18 @@ namespace Infertility_Treatment_Managements.Controllers
     [Route("api/[controller]")]
     public class ZaloPayController : ControllerBase
     {
+        private readonly InfertilityTreatmentManagementContext _context;
         private readonly IZaloPayService _zaloPayService;
         private readonly IHubContext<PaymentHub> _hubContext;
         private readonly ILogger<ZaloPayController> _logger;
 
         public ZaloPayController(
-            IZaloPayService zaloPayService,
-            IHubContext<PaymentHub> hubContext,
-            ILogger<ZaloPayController> logger)
+        InfertilityTreatmentManagementContext context,
+        IZaloPayService zaloPayService,
+        IHubContext<PaymentHub> hubContext,
+        ILogger<ZaloPayController> logger)
         {
+            _context = context;
             _zaloPayService = zaloPayService;
             _hubContext = hubContext;
             _logger = logger;
@@ -74,35 +80,58 @@ namespace Infertility_Treatment_Managements.Controllers
         /// Nhận callback từ ZaloPay khi thanh toán thành công/thất bại
         /// </summary>
         [HttpPost("callback")]
-        public IActionResult HandleCallback([FromBody] ZaloPayCallback callback)
+        [AllowAnonymous]
+        public async Task<IActionResult> HandleCallback([FromBody] ZaloPayCallback callback)
         {
             try
             {
-                // Xác thực chữ ký callback
                 if (!_zaloPayService.VerifyCallback(callback.Data, callback.Mac))
                 {
                     _logger.LogWarning("Chữ ký MAC không hợp lệ");
                     return BadRequest(new { return_code = -1, return_message = "MAC không hợp lệ" });
                 }
 
-                // Phân tích dữ liệu callback
-                var callbackData = JsonSerializer.Deserialize<CallbackData>(callback.Data);
+                var callbackData = JsonSerializer.Deserialize<CallbackData>(callback.Data) ?? new CallbackData();
 
-                // Thông báo cho frontend qua SignalR (theo appTransId)
-                if (callbackData != null)
+                // Tìm Payment theo PaymentId (nếu AppTransId chính là PaymentId)
+                var payment = await _context.Payments
+                    .FirstOrDefaultAsync(p => p.PaymentId == callbackData.AppTransId);
+
+                if (payment == null)
                 {
-                    _ = _hubContext.Clients.Group(callbackData.AppTransId).SendAsync(
+                    _logger.LogWarning($"Không tìm thấy giao dịch với PaymentId: {callbackData.AppTransId}");
+                    return BadRequest(new { return_code = -1, return_message = "Không tìm thấy giao dịch" });
+                }
+
+                // Gọi ZaloPay để xác thực trạng thái đơn hàng
+                var queryResponse = await _zaloPayService.QueryOrderAsync(callbackData.AppTransId);
+                if (queryResponse.ReturnCode == 1 && !queryResponse.IsProcessing && queryResponse.Amount > 0)
+                {
+                    payment.Status = "chưa thanh toán";//"Đã thanh toán"
+                    await _context.SaveChangesAsync();
+
+                    await _hubContext.Clients.Group(callbackData.AppTransId).SendAsync(
                         "PaymentCompleted",
                         new
                         {
-                            appTransId = callbackData.AppTransId,
+                            paymentId = payment.PaymentId,
                             zpTransId = callbackData.ZpTransId,
                             amount = callbackData.Amount,
-                            status = callbackData.Status // 1: thành công, 2: thất bại
+                            status = payment.Status
                         });
                 }
+                else if (queryResponse.ReturnCode == 1 && queryResponse.IsProcessing)
+                {
+                    payment.Status = "Đang xử lý";
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    payment.Status = "Thất bại";
+                    await _context.SaveChangesAsync();
+                    _logger.LogWarning($"Truy vấn trạng thái thất bại: {queryResponse.ReturnMessage}");
+                }
 
-                // Trả về thành công cho ZaloPay
                 return Ok(new { return_code = 1, return_message = "Thành công" });
             }
             catch (Exception ex)
@@ -118,6 +147,35 @@ namespace Infertility_Treatment_Managements.Controllers
             var qrCodeData = qrGenerator.CreateQrCode(text, QRCodeGenerator.ECCLevel.Q);
             var pngBytes = new PngByteQRCode(qrCodeData).GetGraphic(20);
             return Convert.ToBase64String(pngBytes);
+        }
+
+        /// <summary>
+        /// Cập nhật trạng thái payment thành completed sau khi thanh toán thành công (gọi từ frontend)
+        /// </summary>
+        [HttpPut("update-payment-status/{paymentId}")]
+        [Authorize(Roles = "Admin,Patient")]
+        public async Task<IActionResult> UpdatePaymentStatus(string paymentId)
+        {
+            var payment = await _context.Payments.FirstOrDefaultAsync(p => p.PaymentId == paymentId);
+            if (payment == null)
+            {
+                return NotFound(new { success = false, message = "Không tìm thấy payment" });
+            }
+
+            payment.Status = "completed";
+
+            if (User.IsInRole("Admin"))
+            {
+                payment.Confirmed = true; // Admin xác nhận thanh toán
+            }
+            else if (User.IsInRole("Patient"))
+            {
+                payment.Confirmed = false; // Patient chỉ đánh dấu chưa xác nhận
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, message = "Cập nhật trạng thái thành công", paymentId = payment.PaymentId });
         }
     }
 }

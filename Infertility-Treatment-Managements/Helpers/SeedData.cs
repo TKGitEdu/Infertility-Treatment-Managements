@@ -12,6 +12,17 @@ namespace Infertility_Treatment_Managements.Helpers
             using var context = new InfertilityTreatmentManagementContext(
                 serviceProvider.GetRequiredService<DbContextOptions<InfertilityTreatmentManagementContext>>());
 
+            // Đảm bảo database tồn tại
+            try
+            {
+                context.Database.CanConnect();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Không thể kết nối tới database: {ex.Message}");
+                return;
+            }
+
             // Thêm roles
             if (!context.Roles.Any())
             {
@@ -714,7 +725,7 @@ namespace Infertility_Treatment_Managements.Helpers
                     BookingId = "BKG_2",
                     Type = "appointment",
                     Message = "Vui lòng đến phòng khám để được tư vấn về quy trình IUI",
-                    MessageForDoctor = "xxxaxxxxx xxxxxxxx x x x  x x x x x x x asdsa  dsa dá asd sa xxxxx xxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxx xxxxxxx xxxxx",
+                            MessageForDoctor = "Bệnh nhân đã đặt lịch khám với bạn để tư vấn về quy trình IUI",
                     Time = DateTime.Now.AddDays(2)
                 },
                 new Notification
@@ -726,7 +737,7 @@ namespace Infertility_Treatment_Managements.Helpers
                     TreatmentProcessId = "TPR_6",
                     Type = "treatment",
                     Message = "Vui lòng đến phòng khám để thực hiện quy trình trữ đông tinh trùng",
-                    MessageForDoctor = "xxxaxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                            MessageForDoctor = "Bệnh nhân đã đặt lịch khám dịch vụ thực hiện quy trình trữ đông tinh trùng",
                     Time = DateTime.Now.AddDays(2)
                 }
             };

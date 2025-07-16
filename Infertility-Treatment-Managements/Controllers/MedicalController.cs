@@ -58,7 +58,7 @@ namespace Infertility_Treatment_Managements.Controllers
             TreatmentMedication treatmentedication = new TreatmentMedication
             {
                 MedicationId = medicalDTO.MedicationId,
-                TreatmentPlanId = medicalDTO.TreatmentPlanId==""?null: medicalDTO.TreatmentPlanId,
+                TreatmentPlanId = medicalDTO.TreatmentPlanId == "" ? null : medicalDTO.TreatmentPlanId,
                 DrugType = medicalDTO.DrugType,
                 DrugName = medicalDTO.DrugName,
                 Description = medicalDTO.Description
@@ -67,7 +67,7 @@ namespace Infertility_Treatment_Managements.Controllers
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetById), new { id = medicalDTO.MedicationId }, medicalDTO);
         }
-        
+
         // PUT: api/Medical/treatment-medications/{id}
         [HttpPut("treatment-medications/{id}")]
         public async Task<IActionResult> Update(string id, [FromBody] MedicalDTO medicalDTO)

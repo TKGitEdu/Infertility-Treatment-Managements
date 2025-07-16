@@ -100,6 +100,7 @@ namespace Infertility_Treatment_Managements.Models
                 entity.Property(p => p.BookingId).HasColumnName("BookingID").HasMaxLength(50);
                 entity.Property(p => p.TotalAmount).HasColumnType("decimal(10,2)");
                 entity.Property(p => p.Status).HasMaxLength(50);
+                entity.Property(p => p.Confirmed).HasDefaultValue(false); // Default value for Confirmed
                 entity.Property(p => p.Method).HasMaxLength(50);
             });
 
@@ -208,7 +209,7 @@ namespace Infertility_Treatment_Managements.Models
                 entity.Property(bp => bp.BlogPostId).HasColumnName("BlogPostID").HasMaxLength(50);
                 entity.Property(bp => bp.AuthorId).HasColumnName("AuthorID").HasMaxLength(50);
                 entity.Property(bp => bp.Title).HasMaxLength(200);
-                entity.Property(bp => bp.Content).HasColumnType("nvarchar(max)");
+                entity.Property(bp => bp.Content).HasColumnType("text");
                 entity.Property(bp => bp.Summary).HasMaxLength(500);
                 entity.Property(bp => bp.ImageUrl).HasMaxLength(255);
                 entity.Property(bp => bp.Category).HasMaxLength(100);
@@ -224,7 +225,7 @@ namespace Infertility_Treatment_Managements.Models
                 entity.Property(cp => cp.CreatedById).HasColumnName("CreatedByID").HasMaxLength(50);
                 entity.Property(cp => cp.LastModifiedById).HasColumnName("LastModifiedByID").HasMaxLength(50);
                 entity.Property(cp => cp.Title).HasMaxLength(200);
-                entity.Property(cp => cp.Content).HasColumnType("nvarchar(max)");
+                entity.Property(cp => cp.Content).HasColumnType("text");
                 entity.Property(cp => cp.Slug).HasMaxLength(200);
                 entity.Property(cp => cp.MetaDescription).HasMaxLength(500);
                 entity.Property(cp => cp.MetaKeywords).HasMaxLength(500);

@@ -8,6 +8,7 @@ namespace Infertility_Treatment_Managements.Models.ZaloPay
         public string Description { get; set; } = string.Empty;
         public string AppUser { get; set; } = "user1";
         public string? EmbedData { get; set; } = null; // Nếu muốn truyền redirect_url
+        public string? CallbackUrl { get; set; } = null; // Nếu muốn truyền callback_url
     }
 
     public class CreateOrderResponse
