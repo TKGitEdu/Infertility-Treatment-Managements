@@ -562,19 +562,6 @@ namespace Infertility_Treatment_Managements.Controllers
             return CreatedAtAction(nameof(GetPatient), new { id = createdPatient.PatientId }, createdPatient.ToDTO());
         }
 
-        // PUT: api/Patient/5
-        [HttpPut("{id}")]
-        [Obsolete("Use PUT /api/Patient/Update instead. This endpoint will be removed in a future version.")]
-        public async Task<IActionResult> UpdatePatientLegacy(string id, PatientUpdateDTO patientUpdateDTO)
-        {
-            if (id != patientUpdateDTO.PatientId)
-            {
-                return BadRequest("ID mismatch");
-            }
-
-            return await UpdatePatient(patientUpdateDTO);
-        }
-
         // DELETE: api/Patient/5
         [HttpDelete("{id}")]
         [Obsolete("Use DELETE /api/Patient/Delete/{userId} instead. This endpoint will be removed in a future version.")]
