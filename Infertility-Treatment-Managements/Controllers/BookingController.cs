@@ -231,6 +231,21 @@ namespace Infertility_Treatment_Managements.Controllers
                 _context.Bookings.Add(booking);
                 await _context.SaveChangesAsync();
 
+                // tạo notification cho patient vừa booking và tạo notification cho bác sĩ
+                var notificationdto = new Notification
+                {
+                    NotificationId = Guid.NewGuid().ToString(),
+                    PatientId = patient.PatientId,
+                    DoctorId = bookingDTO.DoctorId,
+                    BookingId = booking.BookingId,
+                    Type = "appointment",
+                    Message = $"Bạn đã đặt lịch hẹn với bác sĩ {doctor.DoctorName} vào ngày {booking.DateBooking:dd/MM/yyyy} lúc {slot.StartTime:HH:mm} - {slot.EndTime:HH:mm}.",
+                    MessageForDoctor = $"{patient.Name} đã đặt lịch hẹn với bạn vào ngày {booking.DateBooking:dd/MM/yyyy} lúc {slot.StartTime:HH:mm} - {slot.EndTime:HH:mm}.",
+                    Time = DateTime.Now,
+                    PatientIsRead = false,
+                    DoctorIsRead = false
+                };
+
                 // Gửi email thông báo
                 var emailSubject = "Xác nhận đặt lịch hẹn thành công";
                 var emailBody = $@"
@@ -404,6 +419,21 @@ namespace Infertility_Treatment_Managements.Controllers
             // Cập nhật trạng thái về "canceled"
             booking.Status = "cancelled";
             await _context.SaveChangesAsync();
+
+            // tạo notification cho patient và bác sĩ về việc hủy lịch của bệnh nhân đã thực hiện
+            var notification = new Notification
+            {
+                NotificationId = Guid.NewGuid().ToString(),
+                PatientId = patient.PatientId,
+                DoctorId = booking.DoctorId,
+                BookingId = booking.BookingId,
+                Type = "appointment cancelled",
+                Message = $"Bạn đã hủy lịch hẹn với bác sĩ {booking.Doctor.DoctorName} vào ngày {booking.DateBooking:dd/MM/yyyy} lúc {booking.Slot.StartTime:HH:mm} - {booking.Slot.EndTime:HH:mm}.",
+                MessageForDoctor = $"{patient.Name} đã hủy lịch hẹn với bạn vào ngày {booking.DateBooking:dd/MM/yyyy} lúc {booking.Slot.StartTime:HH:mm} - {booking.Slot.EndTime:HH:mm}.",
+                Time = DateTime.Now,
+                PatientIsRead = false,
+                DoctorIsRead = false
+            };
 
             return Ok(new { message = "Đã cập nhật trạng thái lịch đặt thành 'canceled' thành công" });
         }
