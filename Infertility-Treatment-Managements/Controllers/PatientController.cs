@@ -330,47 +330,36 @@ namespace Infertility_Treatment_Managements.Controllers
         }
 
 
-        // PUT: api/Patient/Update (renamed to match DoctorController naming)
+        // PUT: api/Patient/Update
         [HttpPut("Update")]
         public async Task<IActionResult> UpdatePatient(PatientUpdateDTO patientUpdateDTO)
         {
+            if (patientUpdateDTO == null || string.IsNullOrEmpty(patientUpdateDTO.PatientId))
+                return BadRequest("Invalid request data.");
+
             var patient = await _context.Patients.FindAsync(patientUpdateDTO.PatientId);
             if (patient == null)
-            {
                 return NotFound($"Patient with ID {patientUpdateDTO.PatientId} not found");
-            }
 
             using var transaction = await _context.Database.BeginTransactionAsync();
-
             try
             {
-                // Validate UserId if being changed
+                // Nếu đổi UserId, kiểm tra hợp lệ và cập nhật role nếu cần
                 if (!string.IsNullOrEmpty(patientUpdateDTO.UserId) && patientUpdateDTO.UserId != patient.UserId)
                 {
                     var userExists = await _context.Users.AnyAsync(u => u.UserId == patientUpdateDTO.UserId);
                     if (!userExists)
-                    {
                         return BadRequest("Invalid UserId: User does not exist");
-                    }
 
-                    // Check if another patient already has this UserId
                     var existingPatient = await _context.Patients
                         .FirstOrDefaultAsync(p => p.UserId == patientUpdateDTO.UserId && p.PatientId != patientUpdateDTO.PatientId);
                     if (existingPatient != null)
-                    {
                         return BadRequest("Another patient is already associated with this user");
-                    }
 
-                    // Get patient role
-                    var patientRole = await _context.Roles
-                        .FirstOrDefaultAsync(r => r.RoleName == PATIENT_ROLE_NAME);
-
+                    var patientRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == PATIENT_ROLE_NAME);
                     if (patientRole == null)
-                    {
                         return BadRequest($"Patient role not found. Please create a '{PATIENT_ROLE_NAME}' role first.");
-                    }
 
-                    // Update new user's role
                     var newUser = await _context.Users.FindAsync(patientUpdateDTO.UserId);
                     if (newUser.RoleId != patientRole.RoleId)
                     {
@@ -378,62 +367,69 @@ namespace Infertility_Treatment_Managements.Controllers
                         _context.Entry(newUser).State = EntityState.Modified;
                         await _context.SaveChangesAsync();
                     }
+
+                    patient.UserId = patientUpdateDTO.UserId;
                 }
 
-                // Update patient entity
-                patientUpdateDTO.UpdateEntity(patient);
+                // Cập nhật thông tin Patient
+                patient.Name = patientUpdateDTO.Name ?? patient.Name;
+                patient.Phone = patientUpdateDTO.Phone ?? patient.Phone;
+                patient.Email = patientUpdateDTO.Email ?? patient.Email;
+                patient.Address = patientUpdateDTO.Address ?? patient.Address;
+                patient.Gender = patientUpdateDTO.Gender ?? patient.Gender;
+                patient.BloodType = patientUpdateDTO.BloodType ?? patient.BloodType;
+                patient.EmergencyPhoneNumber = patientUpdateDTO.EmergencyPhoneNumber ?? patient.EmergencyPhoneNumber;
+                if (patientUpdateDTO.DateOfBirth.HasValue)
+                {
+                    var dt = patientUpdateDTO.DateOfBirth.Value.ToDateTime(new TimeOnly(0, 0));
+                    patient.DateOfBirth = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+                }
+
                 _context.Entry(patient).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
 
-                // Also update the associated user's basic information if available
+                // Cập nhật thông tin User liên quan (nếu có)
                 if (!string.IsNullOrEmpty(patient.UserId))
                 {
                     var user = await _context.Users.FindAsync(patient.UserId);
                     if (user != null)
                     {
-                        // Update user's matching fields
                         bool userModified = false;
-
                         if (!string.IsNullOrEmpty(patientUpdateDTO.Name) && user.FullName != patientUpdateDTO.Name)
                         {
                             user.FullName = patientUpdateDTO.Name;
                             userModified = true;
                         }
-
                         if (!string.IsNullOrEmpty(patientUpdateDTO.Email) && user.Email != patientUpdateDTO.Email)
                         {
                             user.Email = patientUpdateDTO.Email;
                             userModified = true;
                         }
-
                         if (!string.IsNullOrEmpty(patientUpdateDTO.Phone) && user.Phone != patientUpdateDTO.Phone)
                         {
                             user.Phone = patientUpdateDTO.Phone;
                             userModified = true;
                         }
-
                         if (!string.IsNullOrEmpty(patientUpdateDTO.Address) && user.Address != patientUpdateDTO.Address)
                         {
                             user.Address = patientUpdateDTO.Address;
                             userModified = true;
                         }
-
                         if (!string.IsNullOrEmpty(patientUpdateDTO.Gender) && user.Gender != patientUpdateDTO.Gender)
                         {
                             user.Gender = patientUpdateDTO.Gender;
                             userModified = true;
                         }
-
                         if (patientUpdateDTO.DateOfBirth.HasValue)
                         {
                             var dateTime = patientUpdateDTO.DateOfBirth.Value.ToDateTime(new TimeOnly(0, 0));
+                            dateTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
                             if (user.DateOfBirth != dateTime)
                             {
                                 user.DateOfBirth = dateTime;
                                 userModified = true;
                             }
                         }
-
                         if (userModified)
                         {
                             _context.Entry(user).State = EntityState.Modified;
@@ -442,13 +438,26 @@ namespace Infertility_Treatment_Managements.Controllers
                     }
                 }
 
+                // Đồng bộ tên bệnh nhân trong PatientDetails
+                var patientDetailsList = await _context.PatientDetails
+                    .Where(pd => pd.PatientId == patient.PatientId)
+                    .ToListAsync();
+
+                foreach (var detail in patientDetailsList)
+                {
+                    detail.Name = patient.Name;
+                    _context.Entry(detail).State = EntityState.Modified;
+                }
+
+                await _context.SaveChangesAsync();
+
                 await transaction.CommitAsync();
-                return NoContent();
+                return Ok("Thành công cập nhật 3 tables");
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                return StatusCode(500, $"An error occurred: {ex.Message}");
+                return StatusCode(500, $"An error occurred: {ex.Message}{(ex.InnerException != null ? " - " + ex.InnerException.Message : "")}");
             }
         }
 
