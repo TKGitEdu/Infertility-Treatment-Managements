@@ -224,7 +224,22 @@ namespace Infertility_Treatment_Managements.Controllers
 
                 _context.Bookings.Add(booking);
                 await _context.SaveChangesAsync();
-
+                // tạo notification cho patient vừa booking và tạo notification cho bác sĩ
+                var notificationdto = new Notification
+                {
+                    NotificationId = Guid.NewGuid().ToString(),
+                    PatientId = patient.PatientId,
+                    DoctorId = bookingDTO.DoctorId,
+                    BookingId = booking.BookingId,
+                    Type = "appointment",
+                    Message = $"Bạn đã đặt lịch hẹn với bác sĩ {doctor.DoctorName} vào ngày {booking.DateBooking:dd/MM/yyyy} lúc {slot.StartTime:HH:mm} - {slot.EndTime:HH:mm}.",
+                    MessageForDoctor = $"{patient.Name} đã đặt lịch hẹn với bạn vào ngày {booking.DateBooking:dd/MM/yyyy} lúc {slot.StartTime:HH:mm} - {slot.EndTime:HH:mm}.",
+                    Time = DateTime.Now,
+                    PatientIsRead = false,
+                    DoctorIsRead = false
+                };
+                _context.Notifications.Add(notificationdto);
+                await _context.SaveChangesAsync();  
                 // Gửi email thông báo
                 var emailSubject = "Xác nhận đặt lịch hẹn thành công";
                 var emailBody = $@"
@@ -355,6 +370,7 @@ namespace Infertility_Treatment_Managements.Controllers
         [Authorize(Roles = "Patient")]
         public async Task<IActionResult> UpdateBookingStatusToCancelled(string id)
         {
+
             // Lấy UserId từ token
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
@@ -373,6 +389,8 @@ namespace Infertility_Treatment_Managements.Controllers
 
             // Tìm booking của bệnh nhân
             var booking = await _context.Bookings
+                .Include(b => b.Doctor)
+                .Include(b => b.Slot)
                 .FirstOrDefaultAsync(b => b.BookingId == id && b.PatientId == patient.PatientId);
 
             if (booking == null)
@@ -396,7 +414,31 @@ namespace Infertility_Treatment_Managements.Controllers
             booking.Status = "cancelled";
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Đã cập nhật trạng thái lịch đặt thành 'canceled' thành công" });
+            // tạo notification cho patient và bác sĩ về việc hủy lịch của bệnh nhân đã thực hiện
+            var notification = new Notification
+            {
+                NotificationId = Guid.NewGuid().ToString(),
+                PatientId = patient.PatientId,
+                DoctorId = booking.DoctorId,
+                BookingId = booking.BookingId,
+                Type = "appointment cancelled",
+                Message = $"Bạn đã hủy lịch hẹn với bác sĩ {booking.Doctor.DoctorName} vào ngày {booking.DateBooking:dd/MM/yyyy} lúc {booking.Slot.StartTime:HH:mm} - {booking.Slot.EndTime:HH:mm}.",
+                MessageForDoctor = $"{patient.Name} đã hủy lịch hẹn với bạn vào ngày {booking.DateBooking:dd/MM/yyyy} lúc {booking.Slot.StartTime:HH:mm} - {booking.Slot.EndTime:HH:mm}.",
+                Time = DateTime.Now,
+                PatientIsRead = false,
+                DoctorIsRead = false
+            };
+            try
+            {
+                await _context.Notifications.AddAsync(notification);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                // Log hoặc trả về lỗi chi tiết
+                return StatusCode(500, $"Lỗi khi lưu notification: {ex.Message}");
+            }
+            return Ok(new { message = "Đã cập nhật trạng thái lịch đặt thành 'cancelled' thành công" });
         }
 
 

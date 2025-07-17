@@ -39,7 +39,7 @@ namespace Infertility_Treatment_Managements.DTOs
         public string PatientId { get; set; }
         public string DoctorId { get; set; }
         public string BookingId { get; set; }
-        public string TreatmentProcessId { get; set; }
+        public string? TreatmentProcessId { get; set; }
         public string Type { get; set; }
         public string Message { get; set; }
         public string MessageForDoctor { get; set; } // Thông báo cho bác sĩ
