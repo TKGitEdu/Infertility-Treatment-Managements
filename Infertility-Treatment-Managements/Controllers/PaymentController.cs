@@ -71,5 +71,19 @@ namespace Infertility_Treatment_Managements.Controllers
             await _context.SaveChangesAsync();
             return Ok(new { success = true, message = "Cập nhật payment thành công", payment });
         }
+
+        // hàm lấy tất cả payment
+        [HttpGet]
+        public async Task<IActionResult> GetAllPayments()
+        {
+            var payments = await _context.Payments
+                .Include(p => p.Booking) // Bao gồm thông tin Booking liên quan
+                .ToListAsync();
+            if (payments == null || payments.Count == 0)
+            {
+                return NotFound(new { success = false, message = "Không tìm thấy hóa đơn" });
+            }
+            return Ok(new { success = true, payments });
+        }
     }
 }

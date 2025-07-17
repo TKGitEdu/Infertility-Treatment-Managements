@@ -34,7 +34,9 @@ namespace Infertility_Treatment_Managements.Controllers
                 .Include(d => d.Bookings)
                 .ToListAsync();
 
-            return doctors.Select(d => d.ToDTO()).ToList();
+            // Trả về danh sách DoctorDTO, mỗi DoctorDTO đã bao gồm thông tin User (UserBasicDTO)
+            var result = doctors.Select(d => d.ToDTO()).ToList();
+            return Ok(result);
         }
 
         // GET: api/Doctor/{id}

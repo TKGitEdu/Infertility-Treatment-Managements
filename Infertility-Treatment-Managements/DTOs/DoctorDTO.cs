@@ -57,6 +57,7 @@ namespace Infertility_Treatment_Managements.DTOs
         public string? Address { get; set; }
         public string? Gender { get; set; }
         public DateTime? DateOfBirth { get; set; }
+        public virtual UserBasicDTO User { get; set; } // Thêm thuộc tính User để cập nhật thông tin người dùng liên quan
     }
 
     public class DoctorRegistrationDTO

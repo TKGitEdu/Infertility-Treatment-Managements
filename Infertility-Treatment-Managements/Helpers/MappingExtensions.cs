@@ -20,6 +20,7 @@ namespace Infertility_Treatment_Managements.Helpers
         {
             return dateOnly.HasValue ? dateOnly.Value.ToDateTime(TimeOnly.MinValue) : null;
         }
+
         #endregion
 
         #region Role Mapping
@@ -124,6 +125,10 @@ namespace Infertility_Treatment_Managements.Helpers
                 Specialization = doctor.Specialization,
                 Phone = doctor.Phone,
                 Email = doctor.Email,
+                // Map thêm các trường này từ User
+                Address = doctor.User?.Address,
+                Gender = doctor.User?.Gender,
+                DateOfBirth = doctor.User?.DateOfBirth,
                 User = doctor.User != null ? new UserBasicDTO
                 {
                     UserId = doctor.User.UserId,
@@ -131,7 +136,9 @@ namespace Infertility_Treatment_Managements.Helpers
                     Email = doctor.User.Email,
                     Phone = doctor.User.Phone,
                     Username = doctor.User.Username,
-                    Gender = doctor.User.Gender
+                    Gender = doctor.User.Gender,
+                    DateOfBirth = doctor.User.DateOfBirth,
+                    Address = doctor.User.Address
                 } : null,
                 Bookings = doctor.Bookings?.Select(b => new BookingBasicDTO
                 {
