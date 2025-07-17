@@ -65,7 +65,19 @@ namespace Infertility_Treatment_Managements.Controllers
         [HttpPost]
         public async Task<ActionResult<DTOs.ServiceDTO>> CreateService(ServiceCreateDTO serviceCreateDTO)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             var service = serviceCreateDTO.ToEntity();
+
+            // Tự tạo ServiceId nếu chưa có
+            if (string.IsNullOrEmpty(service.ServiceId))
+            {
+                service.ServiceId = Guid.NewGuid().ToString();
+            }
+
             _context.Services.Add(service);
             await _context.SaveChangesAsync();
 
