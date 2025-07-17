@@ -77,13 +77,44 @@ namespace Infertility_Treatment_Managements.Controllers
         public async Task<IActionResult> GetAllPayments()
         {
             var payments = await _context.Payments
-                .Include(p => p.Booking) // Bao gồm thông tin Booking liên quan
+                .Include(p => p.Booking)
                 .ToListAsync();
+
             if (payments == null || payments.Count == 0)
             {
                 return NotFound(new { success = false, message = "Không tìm thấy hóa đơn" });
             }
-            return Ok(new { success = true, payments });
+
+            var paymentDTOs = payments.Select(p => new PaymentDTO
+            {
+                PaymentId = p.PaymentId,
+                BookingId = p.BookingId,
+                TotalAmount = p.TotalAmount ?? 0, // Fix: handle nullable decimal
+                Status = p.Status,
+                Method = p.Method,
+                Booking = p.Booking == null ? null : new BookingBasicDTO
+                {
+                    BookingId = p.Booking.BookingId,
+                    DateBooking = p.Booking.DateBooking
+                }
+            }).ToList();
+
+            return Ok(new { success = true, payments = paymentDTOs });
+        }
+        public class BookingBasicDTO
+        {
+            public string BookingId { get; set; }
+            public DateTime DateBooking { get; set; }
+        }
+        public class PaymentDTO
+        {
+            public string PaymentId { get; set; }
+            public string BookingId { get; set; }
+            public decimal TotalAmount { get; set; }
+            public string Status { get; set; }
+            public string Method { get; set; }
+            public bool Confirmed { get; set; }
+            public BookingBasicDTO Booking { get; set; } // Only basic info, no cycles
         }
     }
 }
