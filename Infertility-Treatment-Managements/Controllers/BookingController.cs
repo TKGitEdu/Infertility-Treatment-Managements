@@ -396,7 +396,10 @@ namespace Infertility_Treatment_Managements.Controllers
             }
 
             // Tìm booking của bệnh nhân
+            // Tìm booking của bệnh nhân
             var booking = await _context.Bookings
+                .Include(b => b.Doctor)
+                .Include(b => b.Slot)
                 .FirstOrDefaultAsync(b => b.BookingId == bookingid);
 
             if (booking == null)
