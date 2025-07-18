@@ -84,7 +84,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         Name = "Tư vấn ban đầu",
                         Description = "Buổi tư vấn đầu tiên với chuyên gia điều trị hiếm muộn",
                         Category = "Consultation",
-                        Price = 500000M,
+                        Price = 1000M,
                         Status = "Active"
                     },
                     new Service
@@ -93,7 +93,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         Name = "Tư vấn chuyên sâu",
                         Description = "Tư vấn chuyên sâu về các phương pháp điều trị hiếm muộn",
                         Category = "Consultation",
-                        Price = 800000M,
+                        Price = 1000M,
                         Status = "Active"
                     },
                     new Service
@@ -102,7 +102,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         Name = "Điều trị IVF (Thụ tinh trong ống nghiệm)",
                         Description = "Một chu kỳ điều trị thụ tinh trong ống nghiệm (IVF) bao gồm kích trứng, lấy trứng, thụ tinh và chuyển phôi",
                         Category = "InfertilityTreatment",
-                        Price = 50000000M,
+                        Price = 1000M,
                         Status = "Active"
                     },
                     new Service
@@ -111,7 +111,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         Name = "Điều trị IUI (Bơm tinh trùng vào buồng tử cung)",
                         Description = "Phương pháp điều trị bằng cách bơm tinh trùng đã được xử lý vào buồng tử cung",
                         Category = "InfertilityTreatment",
-                        Price = 15000000M,
+                        Price = 1000M,
                         Status = "Active"
                     },
                     new Service
@@ -120,7 +120,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         Name = "Trữ đông trứng",
                         Description = "Dịch vụ trữ đông trứng để sử dụng trong tương lai",
                         Category = "InfertilityTreatment",
-                        Price = 25000000M,
+                        Price = 1000M,
                         Status = "Active"
                     },
                     new Service
@@ -129,7 +129,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         Name = "Trữ đông tinh trùng",
                         Description = "Dịch vụ trữ đông tinh trùng để sử dụng trong tương lai",
                         Category = "InfertilityTreatment",
-                        Price = 10000000M,
+                        Price = 1000M,
                         Status = "Active"
                     },
                     new Service
@@ -138,7 +138,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         Name = "Trữ đông phôi",
                         Description = "Dịch vụ trữ đông phôi sau quá trình thụ tinh trong ống nghiệm",
                         Category = "InfertilityTreatment",
-                        Price = 30000000M,
+                        Price = 1000M,
                         Status = "Active"
                     },
                     new Service
@@ -147,7 +147,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         Name = "ICSI (Tiêm tinh trùng vào bào tương trứng)",
                         Description = "Phương pháp tiêm một tinh trùng trực tiếp vào trứng để thụ tinh",
                         Category = "InfertilityTreatment",
-                        Price = 60000000M,
+                        Price = 1000M,
                         Status = "Active"
                     },
                     new Service
@@ -156,7 +156,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         Name = "Xét nghiệm hormone",
                         Description = "Xét nghiệm các hormone liên quan đến sinh sản",
                         Category = "Testing",
-                        Price = 2000000M,
+                        Price = 1000M,
                         Status = "Active"
                     },
                     new Service
@@ -165,7 +165,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         Name = "Siêu âm theo dõi nang trứng",
                         Description = "Siêu âm để theo dõi sự phát triển của nang trứng trong quá trình kích trứng",
                         Category = "Testing",
-                        Price = 800000M,
+                        Price = 1000M,
                         Status = "Active"
                     },
                     new Service
@@ -174,7 +174,7 @@ namespace Infertility_Treatment_Managements.Helpers
                         Name = "Chuyển phôi đông lạnh (FET)",
                         Description = "Quy trình rã đông và chuyển phôi đã trữ đông vào tử cung của bệnh nhân",
                         Category = "InfertilityTreatment",
-                        Price = 35000000M,
+                        Price = 1000M,
                         Status = "Active"
                     }
                 };
