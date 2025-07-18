@@ -396,7 +396,6 @@ namespace Infertility_Treatment_Managements.Controllers
             }
 
             // Tìm booking của bệnh nhân
-            // Tìm booking của bệnh nhân
             var booking = await _context.Bookings
                 .Include(b => b.Doctor)
                 .Include(b => b.Slot)
@@ -412,6 +411,10 @@ namespace Infertility_Treatment_Managements.Controllers
             await _context.SaveChangesAsync();
 
             // tạo notification cho patient và bác sĩ về việc hủy lịch của bệnh nhân đã thực hiện
+            var doctorName = booking.Doctor?.DoctorName ?? "Không xác định";
+            var slotStart = booking.Slot?.StartTime ?? "??";
+            var slotEnd = booking.Slot?.EndTime ?? "??";
+
             var notification = new Notification
             {
                 NotificationId = Guid.NewGuid().ToString(),
@@ -419,9 +422,9 @@ namespace Infertility_Treatment_Managements.Controllers
                 DoctorId = booking.DoctorId,
                 BookingId = booking.BookingId,
                 Type = "appointment cancelled",
-                Message = $"Bạn đã hủy lịch hẹn với bác sĩ {booking.Doctor.DoctorName} vào ngày {booking.DateBooking:dd/MM/yyyy} lúc {booking.Slot.StartTime:HH:mm} - {booking.Slot.EndTime:HH:mm}.",
-                MessageForDoctor = $"{patient.Name} đã hủy lịch hẹn với bạn vào ngày {booking.DateBooking:dd/MM/yyyy} lúc {booking.Slot.StartTime:HH:mm} - {booking.Slot.EndTime:HH:mm}.",
-                Time = DateTime.Now,
+                Message = $"Bạn đã hủy lịch hẹn với bác sĩ {doctorName} vào ngày {booking.DateBooking:dd/MM/yyyy} lúc {slotStart} - {slotEnd}.",
+                MessageForDoctor = $"{patient.Name} đã hủy lịch hẹn với bạn vào ngày {booking.DateBooking:dd/MM/yyyy} lúc {slotStart} - {slotEnd}.",
+                Time = DateTime.UtcNow,
                 PatientIsRead = false,
                 DoctorIsRead = false
             };
