@@ -425,6 +425,8 @@ namespace Infertility_Treatment_Managements.Controllers
                 PatientIsRead = false,
                 DoctorIsRead = false
             };
+            _context.Notifications.Add(notification);
+            await _context.SaveChangesAsync();
 
             return Ok("Đã cập nhật trạng thái lịch đặt thành 'cancelled' thành công");
         }
