@@ -31,8 +31,10 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 
 // Đăng ký các dịch vụ
 builder.Services.AddControllers();
+
 builder.Services.AddDbContext<InfertilityTreatmentManagementContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddEndpointsApiExplorer();
 
