@@ -373,11 +373,11 @@ namespace Infertility_Treatment_Managements.Controllers
             return Ok(booking.ToDTO());
         }
 
-        // PUT: api/Booking/update/{id}
+        // PUT: api/Booking/update
         // Cập nhật thông tin đặt lịch khi patient yêu cầu hủy lịch hẹn.
-        [HttpPut("update/{id}")]
+        [HttpPut("update")]
         [Authorize(Roles = "Patient")]
-        public async Task<IActionResult> UpdateBookingStatusToCancelled(string id)
+        public async Task<IActionResult> UpdateBookingStatusToCancelled(string bookingid)
         {
             // Lấy UserId từ token
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -397,23 +397,11 @@ namespace Infertility_Treatment_Managements.Controllers
 
             // Tìm booking của bệnh nhân
             var booking = await _context.Bookings
-                .FirstOrDefaultAsync(b => b.BookingId == id && b.PatientId == patient.PatientId);
+                .FirstOrDefaultAsync(b => b.BookingId == bookingid);
 
             if (booking == null)
             {
-                return NotFound($"Không tìm thấy lịch đặt với ID {id}");
-            }
-
-            // Kiểm tra nếu đã thanh toán thì không cho hủy
-            if (booking.PaymentId != null)
-            {
-                return BadRequest("Không thể hủy lịch đã thanh toán");
-            }
-
-            // Kiểm tra nếu lịch hẹn trong vòng 24 giờ thì không cho hủy
-            if (booking.DateBooking <= DateTime.Now.AddHours(24))
-            {
-                return BadRequest("Không thể hủy lịch hẹn trong vòng 24 giờ trước khi khám");
+                return NotFound($"Không tìm thấy lịch đặt với ID {bookingid}");
             }
 
             // Cập nhật trạng thái về "canceled"
@@ -435,7 +423,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 DoctorIsRead = false
             };
 
-            return Ok(new { message = "Đã cập nhật trạng thái lịch đặt thành 'canceled' thành công" });
+            return Ok("Đã cập nhật trạng thái lịch đặt thành 'cancelled' thành công");
         }
 
 

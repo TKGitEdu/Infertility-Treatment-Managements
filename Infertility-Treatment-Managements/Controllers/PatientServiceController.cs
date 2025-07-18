@@ -186,48 +186,6 @@ namespace Infertility_Treatment_Managements.Controllers
             return Ok(bookings.Select(b => b.ToDTO()));
         }
 
-        // DELETE: api/PatientService/cancelbooking/{id}
-        // Hủy đặt lịch - yêu cầu đăng nhập
-        [HttpDelete("cancelbooking/{id}")]
-        [Authorize(Roles = "Patient")]
-        public async Task<IActionResult> CancelBooking(string id)
-        {
-            // Lấy PatientId từ token
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized("Không thể xác định người dùng");
-            }
-
-            // Tìm Patient từ UserId
-            var patient = await _context.Patients
-                .FirstOrDefaultAsync(p => p.UserId == userId);
-
-            if (patient == null)
-            {
-                return BadRequest("Không tìm thấy thông tin bệnh nhân");
-            }
-
-            var booking = await _context.Bookings
-                .FirstOrDefaultAsync(b => b.BookingId == id && b.PatientId == patient.PatientId);
-
-            if (booking == null)
-            {
-                return NotFound($"Không tìm thấy lịch đặt với ID {id}");
-            }
-
-            // Kiểm tra nếu đã thanh toán thì không cho hủy
-            if (booking.PaymentId != null)
-            {
-                return BadRequest("Không thể hủy lịch đã thanh toán");
-            }
-
-            _context.Bookings.Remove(booking);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Đã hủy lịch đặt thành công" });
-        }
-
         // GET: api/PatientService/doctors
         // Lấy danh sách bác sĩ - không yêu cầu đăng nhập
         [HttpGet("doctors")]
