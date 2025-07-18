@@ -842,10 +842,14 @@ namespace Infertility_Treatment_Managements.Controllers
                 ServiceId = dto.ServiceId,
                 PatientDetailId = patientDetail.PatientDetailId,
 
-                // Set fields with default values if not provided
+                // Đảm bảo DateTime luôn là UTC
                 Method = dto.Method ?? "Chưa xác định",
-                StartDate = dto.StartDate?.ToDateTime(TimeOnly.MinValue) ?? DateTime.UtcNow,
-                EndDate = dto.EndDate?.ToDateTime(TimeOnly.MinValue),
+                StartDate = dto.StartDate.HasValue
+                    ? DateTime.SpecifyKind(dto.StartDate.Value.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc)
+                    : DateTime.UtcNow,
+                EndDate = dto.EndDate.HasValue
+                    ? DateTime.SpecifyKind(dto.EndDate.Value.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc)
+                    : null,
                 Status = dto.Status ?? "Mới tạo",
                 TreatmentDescription = dto.TreatmentDescription ?? "Chờ bác sĩ cập nhật thông tin",
                 Giaidoan = dto.Giaidoan ?? "Giai đoạn 1",
@@ -892,8 +896,8 @@ namespace Infertility_Treatment_Managements.Controllers
                         result.PatientDetailId,
                         PatientId = result.PatientDetail?.PatientId,
                         result.Method,
-                        StartDate = result.StartDate.HasValue ? DateOnly.FromDateTime(result.StartDate.Value) : (DateOnly?)null,
-                        EndDate = result.EndDate.HasValue ? DateOnly.FromDateTime(result.EndDate.Value) :  (DateOnly?)null,
+                        StartDate = dto.StartDate.HasValue? DateTime.SpecifyKind(dto.StartDate.Value.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc): DateTime.UtcNow,
+                        EndDate = dto.EndDate.HasValue? DateTime.SpecifyKind(dto.EndDate.Value.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc): DateTime.UtcNow,
                         result.Status,
                         result.TreatmentDescription,
                         result.Giaidoan,
