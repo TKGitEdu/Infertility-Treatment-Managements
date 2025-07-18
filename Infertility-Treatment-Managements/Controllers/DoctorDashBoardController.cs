@@ -198,7 +198,7 @@ namespace Infertility_Treatment_Managements.Controllers
                     DoctorId = booking.DoctorId,
                     Message = $"Lịch hẹn của bạn với ID {booking.BookingId} đã được bác sĩ {booking.Doctor?.DoctorName} xác nhận cho ngày {booking.DateBooking:dd/MM/yyyy}.",
                     MessageForDoctor = $"Bạn đã xác nhận lịch hẹn với bệnh nhân {booking.Patient?.Name} (ID: {booking.PatientId}) vào ngày {booking.DateBooking:dd/MM/yyyy}.",
-                    Time = DateTime.Now,
+                    Time = DateTime.UtcNow,
                     Type = "Booking",
                     BookingId = booking.BookingId,
                     PatientIsRead = false,
@@ -354,7 +354,7 @@ namespace Infertility_Treatment_Managements.Controllers
                     DoctorId = booking.DoctorId,
                     Message = messageForPatient,
                     MessageForDoctor = messageForDoctor,
-                    Time = DateTime.Now,
+                    Time = DateTime.UtcNow, // Sử dụng UTC thay vì Local
                     Type = "Booking",
                     BookingId = booking.BookingId,
                     PatientIsRead = false,
@@ -646,12 +646,12 @@ namespace Infertility_Treatment_Managements.Controllers
                 DoctorId = doctorId,
                 // Fix for CS0019: Operator '??' cannot be applied to operands of type 'DateTime' and 'DateTime'
                 // The issue occurs because DateTime is a value type and cannot be null. Instead, use Nullable<DateTime> (DateTime?) for null checks.
-                ExaminationDate = examinationCreateDTO.ExaminationDate != default ? examinationCreateDTO.ExaminationDate : DateTime.Now,
+                ExaminationDate = examinationCreateDTO.ExaminationDate != default ? examinationCreateDTO.ExaminationDate : DateTime.UtcNow,
                 ExaminationDescription = examinationCreateDTO.ExaminationDescription,
                 Result = examinationCreateDTO.Result,
                 Status = examinationCreateDTO.Status,
                 Note = examinationCreateDTO.Note,
-                CreateAt = DateTime.Now
+                CreateAt = DateTime.UtcNow
             };
 
             _context.Examinations.Add(examination);
@@ -671,7 +671,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 DoctorId = doctorId,
                 Message = $"Bạn đã hoàn tất buổi khám. Mã khám: {examination.ExaminationId}",
                 MessageForDoctor = $"Bạn đã hoàn tất buổi khám cho bệnh nhân {booking.Patient?.Name}. Mã khám: {examination.ExaminationId}",
-                Time = DateTime.Now,
+                Time = DateTime.UtcNow,
                 Type = "Examination",
                 BookingId = examination.BookingId,
                 DoctorIsRead = false,
@@ -844,7 +844,7 @@ namespace Infertility_Treatment_Managements.Controllers
 
                 // Set fields with default values if not provided
                 Method = dto.Method ?? "Chưa xác định",
-                StartDate = dto.StartDate?.ToDateTime(TimeOnly.MinValue) ?? DateTime.Now,
+                StartDate = dto.StartDate?.ToDateTime(TimeOnly.MinValue) ?? DateTime.UtcNow,
                 EndDate = dto.EndDate?.ToDateTime(TimeOnly.MinValue),
                 Status = dto.Status ?? "Mới tạo",
                 TreatmentDescription = dto.TreatmentDescription ?? "Chờ bác sĩ cập nhật thông tin",
@@ -866,7 +866,7 @@ namespace Infertility_Treatment_Managements.Controllers
                     DoctorId = dto.DoctorId,
                     Message = $"Bác sĩ {doctor.DoctorName} đã tạo kế hoạch điều trị mới cho bạn. Vui lòng kiểm tra thông tin chi tiết.",
                     MessageForDoctor = $"Bạn đã tạo kế hoạch điều trị mới cho bệnh nhân {patientDetail.Patient?.Name}. Vui lòng kiểm tra thông tin chi tiết.",
-                    Time = DateTime.Now,
+                    Time = DateTime.UtcNow,
                     Type = "TreatmentPlan"
                 };
                 _context.Notifications.Add(notification);
@@ -1029,7 +1029,7 @@ namespace Infertility_Treatment_Managements.Controllers
                         PatientId = plan.PatientDetail.PatientId,
                         DoctorId = dto.DoctorId,
                         Message = $"Kế hoạch điều trị của bạn đã được cập nhật. Vui lòng kiểm tra thông tin mới.",
-                        Time = DateTime.Now,
+                        Time = DateTime.UtcNow,
                         Type = "TreatmentPlan"
                     };
                     _context.Notifications.Add(notification);
@@ -1225,7 +1225,7 @@ namespace Infertility_Treatment_Managements.Controllers
                         DoctorId = doctorId,
                         Message = "Bác sĩ đã cập nhật các bước trong kế hoạch điều trị của bạn. Vui lòng kiểm tra thông tin mới.",
                         MessageForDoctor = $"Bạn đã cập nhật các bước điều trị cho bệnh nhân {patient.Name}.",
-                        Time = DateTime.Now,
+                        Time = DateTime.UtcNow,
                         Type = "TreatmentPlan",
                         PatientIsRead = false,
                         DoctorIsRead = false

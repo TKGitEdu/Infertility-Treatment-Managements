@@ -205,7 +205,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 issuer: jwtSettings["Issuer"] ?? "InfertilityTreatmentManagement",
                 audience: jwtSettings["Audience"] ?? "InfertilityTreatmentManagementClient",
                 claims: claims,
-                expires: DateTime.Now.AddHours(1),
+                expires: DateTime.UtcNow.AddHours(1),
                 signingCredentials: new SigningCredentials(
                     new SymmetricSecurityKey(secretKey),
                     SecurityAlgorithms.HmacSha256)
@@ -902,7 +902,7 @@ namespace Infertility_Treatment_Managements.Controllers
                     issuer: jwtSettings?["Issuer"] ?? "InfertilityTreatmentManagement",
                     audience: jwtSettings?["Audience"] ?? "InfertilityTreatmentManagementClient",
                     claims: claims,
-                    expires: DateTime.Now.AddMinutes(expirationMinutes),
+                    expires: DateTime.UtcNow.AddMinutes(expirationMinutes),
                     signingCredentials: new SigningCredentials(
                         new SymmetricSecurityKey(key),
                         SecurityAlgorithms.HmacSha256)

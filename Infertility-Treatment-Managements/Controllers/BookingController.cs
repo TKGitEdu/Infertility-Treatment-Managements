@@ -241,7 +241,7 @@ namespace Infertility_Treatment_Managements.Controllers
                     Type = "appointment",
                     Message = $"Bạn đã đặt lịch hẹn với bác sĩ {doctor.DoctorName} vào ngày {booking.DateBooking:dd/MM/yyyy} lúc {slot.StartTime:HH:mm} - {slot.EndTime:HH:mm}.",
                     MessageForDoctor = $"{patient.Name} đã đặt lịch hẹn với bạn vào ngày {booking.DateBooking:dd/MM/yyyy} lúc {slot.StartTime:HH:mm} - {slot.EndTime:HH:mm}.",
-                    Time = DateTime.Now,
+                    Time = DateTime.UtcNow,
                     PatientIsRead = false,
                     DoctorIsRead = false
                 };
@@ -472,7 +472,7 @@ namespace Infertility_Treatment_Managements.Controllers
             }
 
             // Kiểm tra nếu lịch hẹn trong vòng 24 giờ thì không cho hủy
-            if (booking.DateBooking <= DateTime.Now.AddHours(24))
+            if (booking.DateBooking <= DateTime.UtcNow.AddHours(24))
             {
                 return BadRequest("Không thể hủy lịch hẹn trong vòng 24 giờ trước khi khám");
             }

@@ -384,7 +384,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 ServiceId = feedbackDTO.ServiceId,
                 FeedbackType = feedbackDTO.FeedbackType,
                 Status = "New",
-                CreateDate = DateTime.Now,
+                CreateDate = DateTime.UtcNow,
                 AdminResponse = null,
                 ResponseDate = null,
                 RespondedById = null,
@@ -461,7 +461,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 }
 
                 feedback.RespondedById = feedbackDTO.RespondedById;
-                feedback.ResponseDate = DateTime.Now;
+                feedback.ResponseDate = DateTime.UtcNow;
                 feedback.Status = "Responded";
             }
 

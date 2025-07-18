@@ -150,12 +150,12 @@ namespace Infertility_Treatment_Managements.Controllers
                 PatientId = patientId,
                 DoctorId = doctorId,
                 // With this corrected line:
-                ExaminationDate = examinationCreateDTO.ExaminationDate != default ? examinationCreateDTO.ExaminationDate : DateTime.Now,
+                ExaminationDate = examinationCreateDTO.ExaminationDate != default ? examinationCreateDTO.ExaminationDate : DateTime.UtcNow,
                 ExaminationDescription = examinationCreateDTO.ExaminationDescription,
                 Result = examinationCreateDTO.Result,
                 Status = examinationCreateDTO.Status,
                 Note = examinationCreateDTO.Note,
-                CreateAt = DateTime.Now
+                CreateAt = DateTime.UtcNow
             };
 
             _context.Examinations.Add(examination);
@@ -175,7 +175,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 DoctorId = doctorId,
                 Message = $"Bạn đã hoàn tất buổi khám. Mã khám: {examination.ExaminationId}",
                 MessageForDoctor = $"Bạn đã hoàn tất buổi khám cho bệnh nhân {booking.Patient?.Name}. Mã khám: {examination.ExaminationId}",
-                Time = DateTime.Now,
+                Time = DateTime.UtcNow,
                 Type = "Examination",
                 BookingId = examination.BookingId,
                 DoctorIsRead = false,

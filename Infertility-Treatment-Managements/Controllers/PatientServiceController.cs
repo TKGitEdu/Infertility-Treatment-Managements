@@ -131,7 +131,7 @@ namespace Infertility_Treatment_Managements.Controllers
                     DateBooking = bookingCreateDTO.DateBooking,
                     Description = bookingCreateDTO.Description ?? $"Đặt lịch sử dụng dịch vụ {service.Name}",
                     Note = bookingCreateDTO.Note,
-                    CreateAt = DateTime.Now
+                    CreateAt = DateTime.UtcNow
                 };
 
                 _context.Bookings.Add(booking);

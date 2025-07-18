@@ -351,7 +351,7 @@ namespace Infertility_Treatment_Managements.Helpers
                 DateBooking = dto.DateBooking,
                 Description = dto.Description,
                 Note = dto.Note,
-                CreateAt = DateTime.Now
+                CreateAt = DateTime.UtcNow
             };
         }
 
@@ -564,7 +564,7 @@ namespace Infertility_Treatment_Managements.Helpers
                 Result = dto.Result,
                 Status = dto.Status,
                 Note = dto.Note,
-                CreateAt = DateTime.Now
+                CreateAt = DateTime.UtcNow
             };
         }
 

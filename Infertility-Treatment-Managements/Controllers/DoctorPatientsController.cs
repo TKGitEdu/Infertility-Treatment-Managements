@@ -249,11 +249,11 @@ namespace Infertility_Treatment_Managements.Controllers
                     BookingId = booking.BookingId,
                     PatientId = patientId,
                     DoctorId = doctorId, // Sử dụng doctorId đã tìm được
-                    ExaminationDate = DateTime.Now,
+                    ExaminationDate = DateTime.UtcNow,
                     ExaminationDescription = "Examination note",
                     Note = updateNoteDTO.Note,
                     Status = "Completed",
-                    CreateAt = DateTime.Now
+                    CreateAt = DateTime.UtcNow
                 };
 
                 _context.Examinations.Add(examination);
@@ -262,7 +262,7 @@ namespace Infertility_Treatment_Managements.Controllers
             {
                 // Cập nhật ghi chú cho phiên khám hiện có
                 examination.Note = updateNoteDTO.Note;
-                examination.CreateAt = DateTime.Now;
+                examination.CreateAt = DateTime.UtcNow;
                 _context.Entry(examination).State = EntityState.Modified;
             }
 
@@ -352,7 +352,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 PatientDetailId = patientDetail.PatientDetailId,
                 Result = treatmentProcessDTO.Result,
                 Status = treatmentProcessDTO.Status ?? "Pending",
-                ScheduledDate = treatmentProcessDTO.ProcessDate ?? DateTime.Now
+                ScheduledDate = treatmentProcessDTO.ProcessDate ?? DateTime.UtcNow
             };
 
             _context.TreatmentProcesses.Add(treatmentProcess);
@@ -365,7 +365,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 PatientId = treatmentProcessDTO.PatientId,
                 DoctorId = treatmentProcessDTO.DoctorId,
                 Message = $"Quá trình điều trị mới đã được thêm vào: {treatmentDescription}",
-                Time = DateTime.Now,
+                Time = DateTime.UtcNow,
                 Type = "Treatment",
                 TreatmentProcessId = treatmentProcess.TreatmentProcessId,
                 PatientIsRead = false,
@@ -516,7 +516,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 Description = bookingDTO.Description,
                 Note = bookingDTO.Note,
                 Status = "confirmed", // Bác sĩ tạo lịch hẹn nên mặc định là đã xác nhận
-                CreateAt = DateTime.Now
+                CreateAt = DateTime.UtcNow
             };
 
             _context.Bookings.Add(booking);
@@ -529,7 +529,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 PatientId = bookingDTO.PatientId,
                 DoctorId = doctorId, // Sử dụng doctorId đã tìm được
                 Message = $"Bác sĩ {doctor.DoctorName} đã tạo lịch hẹn mới cho bạn vào ngày {bookingDTO.DateBooking.ToString("dd/MM/yyyy")}",
-                Time = DateTime.Now,
+                Time = DateTime.UtcNow,
                 Type = "Booking",
                 BookingId = booking.BookingId,
                 PatientIsRead = false,
