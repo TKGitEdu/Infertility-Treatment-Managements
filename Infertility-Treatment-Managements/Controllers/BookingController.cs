@@ -222,7 +222,7 @@ namespace Infertility_Treatment_Managements.Controllers
                     SlotId = bookingDTO.SlotId,
                     DateBooking = bookingDTO.DateBooking.Kind == DateTimeKind.Utc? bookingDTO.DateBooking: bookingDTO.DateBooking.ToUniversalTime(),
                     Description = bookingDTO.Description ?? $"Đặt lịch sử dụng dịch vụ {service.Name}",
-                    Status = "Pending",
+                    Status = "pending",
                     Note = bookingDTO.Note,
                     CreateAt = DateTime.UtcNow
 

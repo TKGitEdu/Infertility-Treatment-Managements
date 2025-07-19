@@ -282,117 +282,39 @@ namespace Infertility_Treatment_Managements.Controllers
         }
 
         /// <summary>
-        /// Thêm bản ghi điều trị mới
+        /// Lấy danh sách lịch sử điều trị của bệnh nhân (danh sách các phiên khám)
         /// </summary>
-        /// <param name="treatmentProcessDTO">Thông tin bản ghi điều trị mới</param>
-        /// <returns>Bản ghi điều trị đã được tạo</returns>
-        [HttpPost("treatment-record")]
-        public async Task<ActionResult<object>> AddNewTreatmentProcess([FromBody] AddTreatmentProcessDTO treatmentProcessDTO)
+        /// <param name="patientId">ID của bệnh nhân</param>
+        /// <returns>Danh sách lịch sử điều trị dưới dạng ExaminationBasicDTO</returns>
+        [HttpGet("patient/{patientId}/treatment-history")]
+        public async Task<ActionResult<IEnumerable<ExaminationBasicDTO>>> GetTreatmentHistoryByPatientId(string patientId)
         {
-            if (string.IsNullOrEmpty(treatmentProcessDTO.DoctorId))
-            {
-                return BadRequest("DoctorId is required");
-            }
-
-            if (string.IsNullOrEmpty(treatmentProcessDTO.PatientId))
+            if (string.IsNullOrEmpty(patientId))
             {
                 return BadRequest("PatientId is required");
             }
 
-            if (string.IsNullOrEmpty(treatmentProcessDTO.TreatmentPlanId))
-            {
-                return BadRequest("TreatmentPlanId is required");
-            }
-
-            // Kiểm tra kế hoạch điều trị tồn tại và lấy thông tin quy trình
-            var treatmentPlan = await _context.TreatmentPlans
-                .FirstOrDefaultAsync(tp => tp.TreatmentPlanId == treatmentProcessDTO.TreatmentPlanId);
-
-            if (treatmentPlan == null)
-            {
-                return NotFound("Treatment plan not found");
-            }
-
-            // Lấy TreatmentDescription từ TreatmentPlan
-            string treatmentDescription = treatmentPlan.TreatmentDescription;
-
             // Kiểm tra bệnh nhân tồn tại
-            var patient = await _context.Patients
-                .FirstOrDefaultAsync(p => p.PatientId == treatmentProcessDTO.PatientId);
-
-            if (patient == null)
+            var patientExists = await _context.Patients.AnyAsync(p => p.PatientId == patientId);
+            if (!patientExists)
             {
-                return NotFound("Patient not found");
+                return NotFound($"Patient with ID {patientId} not found");
             }
 
-            // Tìm PatientDetail
-            var patientDetail = await _context.PatientDetails
-                .FirstOrDefaultAsync(pd => pd.PatientId == treatmentProcessDTO.PatientId);
-
-            if (patientDetail == null)
-            {
-                // Tạo mới PatientDetail nếu không tồn tại
-                patientDetail = new PatientDetail
+            // Lấy danh sách lịch sử điều trị (các phiên khám) của bệnh nhân
+            var treatmentHistory = await _context.Examinations
+                .Where(e => e.PatientId == patientId)
+                .OrderByDescending(e => e.ExaminationDate)
+                .Select(e => new ExaminationBasicDTO
                 {
-                    PatientDetailId = "PATD_" + Guid.NewGuid().ToString().Substring(0, 8),
-                    PatientId = treatmentProcessDTO.PatientId,
-                    TreatmentStatus = "In Treatment"
-                };
+                    ExaminationDate = e.ExaminationDate,
+                    ExaminationDescription = e.ExaminationDescription,
+                    Result = e.Result,
+                    Status = e.Status
+                })
+                .ToListAsync();
 
-                _context.PatientDetails.Add(patientDetail);
-                await _context.SaveChangesAsync();
-            }
-
-            // Tạo bản ghi điều trị mới
-            var treatmentProcess = new TreatmentProcess
-            {
-                TreatmentProcessId = "TPR_" + Guid.NewGuid().ToString().Substring(0, 8),
-                TreatmentPlanId = treatmentProcessDTO.TreatmentPlanId,
-                DoctorId = treatmentProcessDTO.DoctorId,
-                PatientDetailId = patientDetail.PatientDetailId,
-                Result = treatmentProcessDTO.Result,
-                Status = treatmentProcessDTO.Status ?? "Pending",
-                ScheduledDate = treatmentProcessDTO.ProcessDate ?? DateTime.UtcNow
-            };
-
-            _context.TreatmentProcesses.Add(treatmentProcess);
-            await _context.SaveChangesAsync();
-
-            // Tạo thông báo cho bệnh nhân
-            var notification = new Notification
-            {
-                NotificationId = "NOTIF_" + Guid.NewGuid().ToString().Substring(0, 8),
-                PatientId = treatmentProcessDTO.PatientId,
-                DoctorId = treatmentProcessDTO.DoctorId,
-                Message = $"Quá trình điều trị mới đã được thêm vào: {treatmentDescription}",
-                Time = DateTime.UtcNow,
-                Type = "Treatment",
-                TreatmentProcessId = treatmentProcess.TreatmentProcessId,
-                PatientIsRead = false,
-                DoctorIsRead = false
-            };
-
-            _context.Notifications.Add(notification);
-            await _context.SaveChangesAsync();
-
-            // Lấy thông tin đầy đủ của quá trình điều trị bao gồm thông tin từ kế hoạch điều trị
-            var treatmentPlanDetails = await _context.TreatmentPlans
-                .Where(tp => tp.TreatmentPlanId == treatmentProcess.TreatmentPlanId)
-                .Select(tp => new { tp.TreatmentDescription, tp.Method })
-                .FirstOrDefaultAsync();
-
-            return Ok(new
-            {
-                TreatmentProcessId = treatmentProcess.TreatmentProcessId,
-                TreatmentPlanId = treatmentProcess.TreatmentPlanId,
-                DoctorId = treatmentProcess.DoctorId,
-                PatientDetailId = treatmentProcess.PatientDetailId,
-                ScheduledDate = treatmentProcess.ScheduledDate,
-                Result = treatmentProcess.Result,
-                Status = treatmentProcess.Status,
-                TreatmentDescription = treatmentPlanDetails?.TreatmentDescription,
-                Method = treatmentPlanDetails?.Method
-            });
+            return Ok(treatmentHistory);
         }
 
         /// <summary>

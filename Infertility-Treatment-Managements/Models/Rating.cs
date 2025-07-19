@@ -13,7 +13,7 @@ namespace Infertility_Treatment_Managements.Models
         public string? Comment { get; set; }
         public string RatingType { get; set; } // Doctor, Service, Overall
         public DateTime RatingDate { get; set; }
-        public string Status { get; set; } // Approved, Pending, Rejected
+        public string Status { get; set; } // approved, pending, rejected
         public bool IsAnonymous { get; set; }
 
         // Navigation properties
