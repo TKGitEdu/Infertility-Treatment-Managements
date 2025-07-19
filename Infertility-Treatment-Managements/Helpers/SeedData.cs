@@ -416,7 +416,7 @@ namespace Infertility_Treatment_Managements.Helpers
                             DateBooking = DateTime.UtcNow.AddDays(1),
                             Description = "Đăng ký điều trị IVF",
                             CreateAt = DateTime.UtcNow.AddDays(-2),
-                            Status = "pending",
+                            Status = "completed",
                             Note = "Đã xác nhận qua điện thoại"
                         },
                         new Booking
@@ -429,7 +429,7 @@ namespace Infertility_Treatment_Managements.Helpers
                             DateBooking = DateTime.UtcNow.AddDays(3),
                             Description = "Đăng ký điều trị IUI",
                             CreateAt = DateTime.UtcNow.AddDays(-1),
-                            Status = "pending",
+                            Status = "completed",
                             Note = "Lần đầu tiên thực hiện IUI"
                         },
                         new Booking
@@ -919,7 +919,7 @@ namespace Infertility_Treatment_Managements.Helpers
                             ExaminationDate = DateTime.UtcNow,
                             ExaminationDescription = "Vô sinh do không rụng trứng. Điều trị bằng phương pháp IUI.",
                             Result = "Kết quả siêu âm cho thấy có 3 nang trứng phát triển tốt",
-                            Status = "in-progress",
+                            Status = "completed",
                             Note = "Cần theo dõi thêm 3 ngày nữa trước khi tiến hành IUI",
                             CreateAt = DateTime.UtcNow
                         }
