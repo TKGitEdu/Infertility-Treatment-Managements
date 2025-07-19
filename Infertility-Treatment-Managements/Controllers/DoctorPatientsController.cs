@@ -351,7 +351,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 DoctorId = treatmentProcessDTO.DoctorId,
                 PatientDetailId = patientDetail.PatientDetailId,
                 Result = treatmentProcessDTO.Result,
-                Status = treatmentProcessDTO.Status ?? "Pending",
+                Status = treatmentProcessDTO.Status ?? "pending",
                 ScheduledDate = treatmentProcessDTO.ProcessDate ?? DateTime.Now
             };
 

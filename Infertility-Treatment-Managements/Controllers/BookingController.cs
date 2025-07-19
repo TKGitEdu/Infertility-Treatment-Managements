@@ -217,7 +217,7 @@ namespace Infertility_Treatment_Managements.Controllers
                     SlotId = bookingDTO.SlotId,
                     DateBooking = bookingDTO.DateBooking,
                     Description = bookingDTO.Description ?? $"Đặt lịch sử dụng dịch vụ {service.Name}",
-                    Status = "Pending",
+                    Status = "pending",
                     Note = bookingDTO.Note,
                     CreateAt = DateTime.Now
                 };

@@ -416,7 +416,7 @@ namespace Infertility_Treatment_Managements.Helpers
                             DateBooking = DateTime.UtcNow.AddDays(1),
                             Description = "Đăng ký điều trị IVF",
                             CreateAt = DateTime.UtcNow.AddDays(-2),
-                            Status = "Pending",
+                            Status = "pending",
                             Note = "Đã xác nhận qua điện thoại"
                         },
                         new Booking
@@ -429,7 +429,7 @@ namespace Infertility_Treatment_Managements.Helpers
                             DateBooking = DateTime.UtcNow.AddDays(3),
                             Description = "Đăng ký điều trị IUI",
                             CreateAt = DateTime.UtcNow.AddDays(-1),
-                            Status = "Pending",
+                            Status = "pending",
                             Note = "Lần đầu tiên thực hiện IUI"
                         },
                         new Booking
@@ -442,7 +442,7 @@ namespace Infertility_Treatment_Managements.Helpers
                             DateBooking = DateTime.UtcNow.AddDays(2),
                             Description = "Tư vấn về điều trị hiếm muộn",
                             CreateAt = DateTime.UtcNow.AddDays(-3),
-                            Status = "Pending",
+                            Status = "pending",
                             Note = "Cần tư vấn các phương pháp điều trị phù hợp"
                         },
                         new Booking
@@ -455,7 +455,7 @@ namespace Infertility_Treatment_Managements.Helpers
                             DateBooking = DateTime.UtcNow.AddDays(2),
                             Description = "Trữ đông tinh trùng",
                             CreateAt = DateTime.UtcNow.AddDays(-3),
-                            Status = "Pending",
+                            Status = "pending",
                             Note = "Cần tư vấn các phương pháp điều trị phù hợp"
                         }
                     };
