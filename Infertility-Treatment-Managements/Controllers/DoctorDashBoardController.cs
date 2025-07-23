@@ -983,13 +983,15 @@ namespace Infertility_Treatment_Managements.Controllers
 
             if (dto.StartDate.HasValue)
             {
-                plan.StartDate = dto.StartDate.Value.ToDateTime(TimeOnly.MinValue);
+                var startDate = dto.StartDate.Value.ToDateTime(TimeOnly.MinValue);
+                plan.StartDate = DateTime.SpecifyKind(startDate, DateTimeKind.Utc);
                 hasChanges = true;
             }
 
             if (dto.EndDate.HasValue)
             {
-                plan.EndDate = dto.EndDate.Value.ToDateTime(TimeOnly.MinValue);
+                var endDate = dto.EndDate.Value.ToDateTime(TimeOnly.MinValue);
+                plan.EndDate = DateTime.SpecifyKind(endDate, DateTimeKind.Utc);
                 hasChanges = true;
             }
 

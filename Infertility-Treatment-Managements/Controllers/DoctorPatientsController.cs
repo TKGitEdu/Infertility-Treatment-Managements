@@ -252,7 +252,7 @@ namespace Infertility_Treatment_Managements.Controllers
                     ExaminationDate = DateTime.UtcNow,
                     ExaminationDescription = "Examination note",
                     Note = updateNoteDTO.Note,
-                    Status = "Completed",
+                    Status = examination.Status,
                     CreateAt = DateTime.UtcNow
                 };
 
