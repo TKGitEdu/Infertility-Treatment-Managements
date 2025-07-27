@@ -856,9 +856,9 @@ namespace Infertility_Treatment_Managements.Helpers
                         {
                             PaymentId = "PAY_1",
                             BookingId = "BKG_1",
-                            TotalAmount = 50000000M,
+                            TotalAmount = 1000M,
                             Method = "Chuyển khoản",
-                            Status = "Đã thanh toán",
+                            Status = "pending",
                             Confirmed = false
                         },
                         new Payment
@@ -867,16 +867,16 @@ namespace Infertility_Treatment_Managements.Helpers
                             BookingId = "BKG_2",
                             TotalAmount = 1000,//15000000M
                             Method = "Tiền mặt",
-                            Status = "Đã thanh toán",
+                            Status = "pending",
                             Confirmed = false
                         },
                         new Payment
                         {
                             PaymentId = "PAY_3",
                             BookingId = "BKG_3",
-                            TotalAmount = 500000M,
+                            TotalAmount = 1000M,
                             Method = "Thẻ tín dụng",
-                            Status = "Đã thanh toán",
+                            Status = "pending",
                             Confirmed = false
                         }
                     };
