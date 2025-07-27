@@ -410,6 +410,33 @@ namespace Infertility_Treatment_Managements.Controllers
             booking.Status = "cancelled";
             await _context.SaveChangesAsync();
 
+            // Tìm tất cả PatientDetail của bệnh nhân này
+            var patientDetailIds = await _context.PatientDetails
+                .Where(pd => pd.PatientId == booking.PatientId)
+                .Select(pd => pd.PatientDetailId)
+                .ToListAsync();
+
+            // Tìm các TreatmentPlan liên quan
+            var treatmentPlans = await _context.TreatmentPlans
+                .Where(tp =>
+                    tp.DoctorId == booking.DoctorId &&
+                    tp.ServiceId == booking.ServiceId &&
+                    tp.PatientDetailId != null &&
+                    patientDetailIds.Contains(tp.PatientDetailId)
+                )
+                .ToListAsync();
+
+            // Cập nhật Giaidoan nếu có
+            foreach (var plan in treatmentPlans)
+            {
+                plan.Giaidoan = "cancelled";
+            }
+            if (treatmentPlans.Count > 0)
+            {
+                await _context.SaveChangesAsync();
+            }
+
+
             // tạo notification cho patient và bác sĩ về việc hủy lịch của bệnh nhân đã thực hiện
             var doctorName = booking.Doctor?.DoctorName ?? "Không xác định";
             var slotStart = booking.Slot?.StartTime ?? "??";
