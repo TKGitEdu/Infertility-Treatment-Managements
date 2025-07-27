@@ -756,8 +756,13 @@ namespace Infertility_Treatment_Managements.Controllers
             // Cập nhật các trường
             plan.Method = dto.Method;
             plan.PatientDetailId = dto.PatientDetailId;
-            plan.StartDate = dto.StartDate?.ToDateTime(TimeOnly.MinValue);
-            plan.EndDate = dto.EndDate?.ToDateTime(TimeOnly.MinValue);
+            plan.StartDate = dto.StartDate.HasValue
+            ? DateTime.SpecifyKind(dto.StartDate.Value.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc)
+            : plan.StartDate;
+
+            plan.EndDate = dto.EndDate.HasValue
+            ? DateTime.SpecifyKind(dto.EndDate.Value.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc)
+            : plan.EndDate;
             plan.Status = dto.Status;
             plan.TreatmentDescription = dto.TreatmentDescription;
             plan.Giaidoan = dto.Giaidoan; // Giai đoạn điều trị
