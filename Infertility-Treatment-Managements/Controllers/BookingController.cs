@@ -436,6 +436,19 @@ namespace Infertility_Treatment_Managements.Controllers
                 await _context.SaveChangesAsync();
             }
 
+            // Cập nhật tất cả Examination liên quan booking này thành cancelled
+            var examinations = await _context.Examinations
+                .Where(e => e.BookingId == booking.BookingId)
+                .ToListAsync();
+
+            foreach (var exam in examinations)
+            {
+                exam.Status = "cancelled";
+            }
+            if (examinations.Count > 0)
+            {
+                await _context.SaveChangesAsync();
+            }
 
             // tạo notification cho patient và bác sĩ về việc hủy lịch của bệnh nhân đã thực hiện
             var doctorName = booking.Doctor?.DoctorName ?? "Không xác định";
