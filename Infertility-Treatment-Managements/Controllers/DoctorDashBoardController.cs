@@ -835,7 +835,7 @@ namespace Infertility_Treatment_Managements.Controllers
                     PatientDetailId = "PATD_" + Guid.NewGuid().ToString().Substring(0, 8),
                     PatientId = dto.PatientId,
                     TreatmentStatus = "pending",
-                    Name = patient != null ? patient.Name : "Chưa xác định", // Use patient's name if found, otherwise default
+                    Name = !string.IsNullOrEmpty(patient?.Name) ? patient.Name : "Chưa xác định"
                 };
 
                 _context.PatientDetails.Add(patientDetail);
