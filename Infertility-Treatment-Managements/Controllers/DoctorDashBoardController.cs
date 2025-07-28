@@ -827,12 +827,15 @@ namespace Infertility_Treatment_Managements.Controllers
                 if (!patientExists)
                     return NotFound($"Patient with ID {dto.PatientId} not found");
 
+                // Find the patient to get their name
+                var patient = await _context.Patients.FirstOrDefaultAsync(p => p.PatientId == dto.PatientId);
                 // Create new PatientDetail if it doesn't exist
                 patientDetail = new PatientDetail
                 {
                     PatientDetailId = "PATD_" + Guid.NewGuid().ToString().Substring(0, 8),
                     PatientId = dto.PatientId,
-                    TreatmentStatus = "pending"
+                    TreatmentStatus = "pending",
+                    Name = patient != null ? patient.Name : "Chưa xác định", // Use patient's name if found, otherwise default
                 };
 
                 _context.PatientDetails.Add(patientDetail);
