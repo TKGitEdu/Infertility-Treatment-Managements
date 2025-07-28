@@ -832,7 +832,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 {
                     PatientDetailId = "PATD_" + Guid.NewGuid().ToString().Substring(0, 8),
                     PatientId = dto.PatientId,
-                    TreatmentStatus = "Đang điều trị"
+                    TreatmentStatus = "pending"
                 };
 
                 _context.PatientDetails.Add(patientDetail);
