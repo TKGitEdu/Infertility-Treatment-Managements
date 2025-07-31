@@ -264,7 +264,23 @@ namespace Infertility_Treatment_Managements.Controllers
                     <p>Trân trọng,<br><b>Phòng khám của chúng tôi</b></p>
                 ";
 
-                await _emailService.SendEmailAsync(patient.Email, emailSubject, emailBody);
+                // Gửi email thông báo
+                try
+                {
+                    if (string.IsNullOrEmpty(patient.Email))
+                    {
+                        Console.WriteLine("Email của bệnh nhân bị rỗng, không thể gửi email.");
+                    }
+                    else
+                    {
+                        await _emailService.SendEmailAsync(patient.Email, emailSubject, emailBody);
+                    }
+                }
+                catch (Exception emailEx)
+                {
+                    Console.WriteLine($"Lỗi gửi email: {emailEx.Message}");
+                    // Có thể ghi log vào file hoặc DB để kiểm tra sau
+                }
 
                 // Lấy booking đầy đủ thông tin
                 var bookingFull = await _context.Bookings

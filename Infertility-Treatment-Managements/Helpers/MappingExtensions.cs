@@ -265,6 +265,7 @@ namespace Infertility_Treatment_Managements.Helpers
                 PatientDetailId = entity.PatientDetailId,
                 PatientId = entity.PatientId,
                 TreatmentStatus = entity.TreatmentStatus,
+                Name = entity.Name, // Thêm dòng này
                 Patient = entity.Patient?.ToBasicDTO(),
                 TreatmentProcesses = entity.TreatmentProcessesFk?.Select(tp => tp.ToBasicDTO()).ToList() ?? new List<TreatmentProcessBasicDTO>(),
                 TreatmentPlans = entity.TreatmentPlansFk?.Select(tp => tp.ToBasicDTO()).ToList() ?? new List<TreatmentPlanBasicDTO>()
@@ -279,7 +280,8 @@ namespace Infertility_Treatment_Managements.Helpers
             {
                 PatientDetailId = entity.PatientDetailId,
                 PatientId = entity.PatientId,
-                TreatmentStatus = entity.TreatmentStatus
+                TreatmentStatus = entity.TreatmentStatus,
+                Name = entity.Name // Thêm dòng này nếu DTO có trường Name
             };
         }
 
@@ -296,6 +298,7 @@ namespace Infertility_Treatment_Managements.Helpers
         {
             entity.PatientId = dto.PatientId;
             entity.TreatmentStatus = dto.TreatmentStatus;
+            entity.Name = dto.Name; // Thêm dòng này nếu DTO có trường Name
         }
         #endregion
 

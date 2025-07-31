@@ -816,30 +816,38 @@ namespace Infertility_Treatment_Managements.Controllers
             if (service == null)
                 return NotFound($"Service with ID {dto.ServiceId} not found");
 
+            // Always fetch patient
+            var patient = await _context.Patients.FirstOrDefaultAsync(p => p.PatientId == dto.PatientId);
+            if (patient == null)
+                return NotFound($"Patient with ID {dto.PatientId} not found");
+
             // Find or create PatientDetail for the PatientId
             var patientDetail = await _context.PatientDetails
                 .FirstOrDefaultAsync(pd => pd.PatientId == dto.PatientId);
 
             if (patientDetail == null)
             {
-                // Verify patient exists before creating PatientDetail
-                var patientExists = await _context.Patients.AnyAsync(p => p.PatientId == dto.PatientId);
-                if (!patientExists)
-                    return NotFound($"Patient with ID {dto.PatientId} not found");
-
-                // Find the patient to get their name
-                var patient = await _context.Patients.FirstOrDefaultAsync(p => p.PatientId == dto.PatientId);
                 // Create new PatientDetail if it doesn't exist
                 patientDetail = new PatientDetail
                 {
                     PatientDetailId = "PATD_" + Guid.NewGuid().ToString().Substring(0, 8),
                     PatientId = dto.PatientId,
                     TreatmentStatus = "pending",
-                    Name = !string.IsNullOrEmpty(patient?.Name) ? patient.Name : "Chưa xác định"
+                    Name = !string.IsNullOrEmpty(patient.Name) ? patient.Name : "Chưa xác định"
                 };
 
                 _context.PatientDetails.Add(patientDetail);
                 await _context.SaveChangesAsync();
+            }
+            else
+            {
+                // Update PatientDetail.Name if missing or outdated
+                if (string.IsNullOrEmpty(patientDetail.Name) || patientDetail.Name != patient.Name)
+                {
+                    patientDetail.Name = !string.IsNullOrEmpty(patient.Name) ? patient.Name : "Chưa xác định";
+                    _context.PatientDetails.Update(patientDetail);
+                    await _context.SaveChangesAsync();
+                }
             }
 
             // Create a new treatment plan with unique ID
@@ -849,8 +857,6 @@ namespace Infertility_Treatment_Managements.Controllers
                 DoctorId = dto.DoctorId,
                 ServiceId = dto.ServiceId,
                 PatientDetailId = patientDetail.PatientDetailId,
-
-                // Đảm bảo DateTime luôn là UTC
                 Method = dto.Method ?? "Chưa xác định",
                 StartDate = dto.StartDate.HasValue
                     ? DateTime.SpecifyKind(dto.StartDate.Value.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc)
@@ -866,7 +872,6 @@ namespace Infertility_Treatment_Managements.Controllers
 
             try
             {
-                // Add and save the treatment plan
                 _context.TreatmentPlans.Add(treatmentPlan);
                 await _context.SaveChangesAsync();
 
@@ -877,7 +882,7 @@ namespace Infertility_Treatment_Managements.Controllers
                     PatientId = dto.PatientId,
                     DoctorId = dto.DoctorId,
                     Message = $"Bác sĩ {doctor.DoctorName} đã tạo kế hoạch điều trị mới cho bạn. Vui lòng kiểm tra thông tin chi tiết.",
-                    MessageForDoctor = $"Bạn đã tạo kế hoạch điều trị mới cho bệnh nhân {patientDetail.Patient?.Name}. Vui lòng kiểm tra thông tin chi tiết.",
+                    MessageForDoctor = $"Bạn đã tạo kế hoạch điều trị mới cho bệnh nhân {patientDetail.Name}. Vui lòng kiểm tra thông tin chi tiết.",
                     Time = DateTime.UtcNow,
                     Type = "TreatmentPlan"
                 };
@@ -892,7 +897,6 @@ namespace Infertility_Treatment_Managements.Controllers
                     .Include(tp => tp.Service)
                     .FirstOrDefaultAsync(tp => tp.TreatmentPlanId == treatmentPlan.TreatmentPlanId);
 
-                // Map to response object and return
                 return Ok(new
                 {
                     Message = "Tạo kế hoạch điều trị thành công",
@@ -904,8 +908,8 @@ namespace Infertility_Treatment_Managements.Controllers
                         result.PatientDetailId,
                         PatientId = result.PatientDetail?.PatientId,
                         result.Method,
-                        StartDate = dto.StartDate.HasValue? DateTime.SpecifyKind(dto.StartDate.Value.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc): DateTime.UtcNow,
-                        EndDate = dto.EndDate.HasValue? DateTime.SpecifyKind(dto.EndDate.Value.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc): DateTime.UtcNow,
+                        StartDate = dto.StartDate.HasValue ? DateTime.SpecifyKind(dto.StartDate.Value.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc) : DateTime.UtcNow,
+                        EndDate = dto.EndDate.HasValue ? DateTime.SpecifyKind(dto.EndDate.Value.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc) : DateTime.UtcNow,
                         result.Status,
                         result.TreatmentDescription,
                         result.Giaidoan,
@@ -919,7 +923,7 @@ namespace Infertility_Treatment_Managements.Controllers
                         {
                             result.PatientDetail.PatientDetailId,
                             result.PatientDetail.PatientId,
-                            PatientName = result.PatientDetail.Patient?.Name
+                            PatientName = result.PatientDetail.Name
                         } : null,
                         Service = result.Service != null ? new
                         {

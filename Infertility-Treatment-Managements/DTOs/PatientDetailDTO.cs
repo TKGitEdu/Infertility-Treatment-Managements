@@ -23,6 +23,7 @@ namespace Infertility_Treatment_Managements.DTOs
     public class PatientDetailCreateDTO
     {
         public string PatientId { get; set; }
+        public string Name { get; set; }
         public string TreatmentStatus { get; set; }
     }
 
