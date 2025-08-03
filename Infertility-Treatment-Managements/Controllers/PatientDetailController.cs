@@ -68,9 +68,11 @@ namespace Infertility_Treatment_Managements.Controllers
                 Status = tp.Status,
                 TreatmentDescription = tp.TreatmentDescription,
                 Giaidoan = tp.Giaidoan, // Thêm trường Giaidoan
+                GhiChu = tp.GhiChu, // Thêm trường GhiChu
                 Doctor = tp.Doctor != null ? new DoctorBasicDTO
                 {
                     DoctorId = tp.Doctor.DoctorId,
+                    UserId = tp.Doctor.UserId,
                     DoctorName = tp.Doctor.DoctorName,
                     Specialization = tp.Doctor.Specialization,
                     Phone = tp.Doctor.Phone,
@@ -79,6 +81,7 @@ namespace Infertility_Treatment_Managements.Controllers
                 PatientDetail = tp.PatientDetail != null ? new PatientDetailBasicDTO
                 {
                     PatientDetailId = tp.PatientDetail.PatientDetailId,
+                    Name = tp.PatientDetail.Name,
                     PatientId = tp.PatientDetail.PatientId,
                     TreatmentStatus = tp.PatientDetail.TreatmentStatus,
                     Patient = tp.PatientDetail.Patient != null ? new PatientBasicDTO
